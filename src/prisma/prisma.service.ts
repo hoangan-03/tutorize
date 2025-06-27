@@ -28,7 +28,7 @@ export class PrismaService
     } catch (error) {
       return {
         status: 'unhealthy',
-        error: error.message,
+        error: error,
         timestamp: new Date().toISOString(),
       };
     }

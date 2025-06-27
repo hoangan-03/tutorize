@@ -101,16 +101,17 @@ API Documentation: http://localhost:3000/api/docs
 Sau khi chạy `npm run db:init`, bạn sẽ có:
 
 ### Test Accounts:
-- **Admin**: admin@tutorplatform.com / Admin123!
-- **Teacher**: teacher@tutorplatform.com / Teacher123!
-- **Student 1**: student1@tutorplatform.com / Student123!
-- **Student 2**: student2@tutorplatform.com / Student123!
+- **Admin**: admin@tutorplatform.com / Password123!
+- **Teacher**: teacher@tutorplatform.com / Password123!
+- **Student 1**: student1@tutorplatform.com / Password123!
+- **Student 2**: student2@tutorplatform.com / Password123!
 
 ### Sample Content:
 - 1 Quiz Toán học với 3 câu hỏi
 - 1 Bài tập về Hàm số bậc hai
 - 1 Tài liệu PDF
 - 1 IELTS Reading test
+- 1 Writing Assessment
 
 ## 🗂 Project Structure
 
@@ -121,13 +122,11 @@ src/
 │   ├── guards/          # Auth guards
 │   ├── strategies/      # Passport strategies
 │   └── decorators/      # Custom decorators
+├── user/                # User management
 ├── quiz/                # Quiz management
 ├── exercise/            # Exercise system
 ├── document/            # Document library
-├── ielts/              # IELTS system
-├── writing/            # Writing assessment
-├── user/               # User management
-├── analytics/          # Analytics & reports
+├── writing/             # Writing assessment
 ├── common/             # Shared utilities
 │   ├── dto/            # Common DTOs
 │   ├── filters/        # Exception filters
@@ -147,6 +146,14 @@ src/
 - `POST /api/v1/auth/forgot-password` - Quên mật khẩu
 - `POST /api/v1/auth/reset-password` - Reset mật khẩu
 
+### User Management
+- `GET /api/v1/users` - Danh sách người dùng
+- `POST /api/v1/users` - Tạo người dùng mới
+- `GET /api/v1/users/:id` - Chi tiết người dùng
+- `PATCH /api/v1/users/:id` - Cập nhật người dùng
+- `PATCH /api/v1/users/:id/toggle-activation` - Bật/tắt tài khoản
+- `GET /api/v1/users/stats` - Thống kê người dùng
+
 ### Quiz Management
 - `GET /api/v1/quizzes` - Danh sách quiz
 - `POST /api/v1/quizzes` - Tạo quiz mới
@@ -155,26 +162,28 @@ src/
 - `DELETE /api/v1/quizzes/:id` - Xóa quiz
 - `POST /api/v1/quizzes/:id/submit` - Nộp bài quiz
 - `GET /api/v1/quizzes/:id/submissions` - Danh sách bài nộp
+- `PATCH /api/v1/quizzes/submissions/:id/grade` - Chấm điểm
 
 ### Exercises
 - `GET /api/v1/exercises` - Danh sách bài tập
 - `POST /api/v1/exercises` - Tạo bài tập
 - `GET /api/v1/exercises/:id` - Chi tiết bài tập
 - `POST /api/v1/exercises/:id/submit` - Nộp bài tập
+- `GET /api/v1/exercises/:id/submissions` - Danh sách bài nộp
+- `PATCH /api/v1/exercises/submissions/:id/grade` - Chấm điểm
 
 ### Documents
 - `GET /api/v1/documents` - Thư viện tài liệu
 - `POST /api/v1/documents` - Upload tài liệu
+- `GET /api/v1/documents/:id` - Chi tiết tài liệu
 - `GET /api/v1/documents/:id/download` - Tải tài liệu
-
-### IELTS
-- `GET /api/v1/ielts/tests` - Danh sách test IELTS
-- `POST /api/v1/ielts/tests/:id/start` - Bắt đầu test
-- `POST /api/v1/ielts/tests/:id/submit` - Nộp bài test
+- `GET /api/v1/documents/:id/access-history` - Lịch sử truy cập
 
 ### Writing Assessment
 - `POST /api/v1/writing/assess` - Chấm điểm bài viết
 - `GET /api/v1/writing/assessments` - Lịch sử chấm điểm
+- `GET /api/v1/writing/assessments/:id` - Chi tiết đánh giá
+- `GET /api/v1/writing/stats` - Thống kê bài viết
 
 ## 🧪 Testing
 
@@ -281,3 +290,36 @@ This project is licensed under the MIT License.
 ## 👥 Support
 
 For support, email support@tutorplatform.com or create an issue in this repository.
+
+---
+
+## ✅ Đã hoàn thành
+
+### Core Modules
+- ✅ Authentication & Authorization
+- ✅ User Management
+- ✅ Quiz System
+- ✅ Exercise System
+- ✅ Document Library
+- ✅ Writing Assessment
+
+### Database
+- ✅ Prisma Schema
+- ✅ Database Migrations
+- ✅ Sample Data Seeding
+
+### Security
+- ✅ JWT Authentication
+- ✅ Role-based Guards
+- ✅ Input Validation
+- ✅ Rate Limiting
+
+### Documentation
+- ✅ Swagger/OpenAPI
+- ✅ API Documentation
+- ✅ README Instructions
+
+### Development Tools
+- ✅ Development Environment
+- ✅ Database Scripts
+- ✅ Error Handling

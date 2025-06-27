@@ -2,13 +2,12 @@ import {
   Controller,
   Post,
   Body,
+  UseGuards,
   Get,
   Put,
-  UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiTags,
   ApiOperation,
@@ -24,205 +23,83 @@ import {
   ResetPasswordDto,
   UpdateProfileDto,
 } from './dto/auth.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Đăng ký tài khoản mới' })
-  @ApiResponse({
-    status: 201,
-    description: 'Đăng ký thành công',
-    schema: {
-      example: {
-        success: true,
-        data: {
-          user: {
-            id: 'uuid',
-            email: 'user@example.com',
-            name: 'Nguyễn Văn A',
-            role: 'STUDENT',
-            grade: 10,
-            avatar: null,
-            isVerified: false,
-          },
-          accessToken: 'jwt-token',
-          tokenType: 'Bearer',
-          expiresIn: '7d',
-        },
-      },
-    },
-  })
+  @ApiResponse({ status: 201, description: 'Đăng ký thành công' })
   @ApiResponse({ status: 409, description: 'Email đã được sử dụng' })
-  async register(@Body() registerDto: RegisterDto) {
-    const result = await this.authService.register(registerDto);
-    return {
-      success: true,
-      message: 'Đăng ký thành công',
-      data: result,
-    };
+  register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập' })
-  @ApiResponse({
-    status: 200,
-    description: 'Đăng nhập thành công',
-    schema: {
-      example: {
-        success: true,
-        data: {
-          user: {
-            id: 'uuid',
-            email: 'user@example.com',
-            name: 'Nguyễn Văn A',
-            role: 'STUDENT',
-          },
-          accessToken: 'jwt-token',
-          tokenType: 'Bearer',
-          expiresIn: '7d',
-        },
-      },
-    },
-  })
+  @ApiResponse({ status: 200, description: 'Đăng nhập thành công' })
   @ApiResponse({ status: 401, description: 'Email hoặc mật khẩu không đúng' })
-  async login(@Body() loginDto: LoginDto) {
-    const result = await this.authService.login(loginDto);
-    return {
-      success: true,
-      message: 'Đăng nhập thành công',
-      data: result,
-    };
+  login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('me')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Lấy thông tin user hiện tại' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lấy thông tin thành công',
-    schema: {
-      example: {
-        success: true,
-        data: {
-          id: 'uuid',
-          email: 'user@example.com',
-          name: 'Nguyễn Văn A',
-          role: 'STUDENT',
-          profile: {
-            firstName: 'Văn A',
-            lastName: 'Nguyễn',
-            phone: '0123456789',
-          },
-        },
-      },
-    },
-  })
-  async getProfile(@CurrentUser('id') userId: string) {
-    const user = await this.authService.getProfile(userId);
-    return {
-      success: true,
-      data: user,
-    };
+  @ApiOperation({ summary: 'Lấy thông tin người dùng hiện tại' })
+  @ApiResponse({ status: 200, description: 'Thông tin người dùng' })
+  getProfile(@CurrentUser('sub') userId: string) {
+    return this.authService.getProfile(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('profile')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cập nhật thông tin cá nhân' })
-  @ApiResponse({
-    status: 200,
-    description: 'Cập nhật thành công',
-  })
-  async updateProfile(
-    @CurrentUser('id') userId: string,
+  @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
+  updateProfile(
+    @CurrentUser('sub') userId: string,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    const result = await this.authService.updateProfile(
-      userId,
-      updateProfileDto,
-    );
-    return {
-      success: true,
-      ...result,
-    };
+    return this.authService.updateProfile(userId, updateProfileDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('change-password')
-  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đổi mật khẩu' })
-  @ApiResponse({
-    status: 200,
-    description: 'Đổi mật khẩu thành công',
-  })
+  @ApiResponse({ status: 200, description: 'Đổi mật khẩu thành công' })
   @ApiResponse({ status: 400, description: 'Mật khẩu hiện tại không đúng' })
-  async changePassword(
-    @CurrentUser('id') userId: string,
+  changePassword(
+    @CurrentUser('sub') userId: string,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    const result = await this.authService.changePassword(
-      userId,
-      changePasswordDto,
-    );
-    return {
-      success: true,
-      ...result,
-    };
+    return this.authService.changePassword(userId, changePasswordDto);
   }
 
+  @Public()
   @Post('forgot-password')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Quên mật khẩu' })
-  @ApiResponse({
-    status: 200,
-    description: 'Link reset mật khẩu đã được gửi',
-  })
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    const result = await this.authService.forgotPassword(forgotPasswordDto);
-    return {
-      success: true,
-      ...result,
-    };
+  @ApiResponse({ status: 200, description: 'Email reset đã được gửi' })
+  forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
   }
 
+  @Public()
   @Post('reset-password')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset mật khẩu' })
-  @ApiResponse({
-    status: 200,
-    description: 'Reset mật khẩu thành công',
-  })
-  @ApiResponse({ status: 400, description: 'Token không hợp lệ' })
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    const result = await this.authService.resetPassword(resetPasswordDto);
-    return {
-      success: true,
-      ...result,
-    };
-  }
-
-  @Post('logout')
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Đăng xuất' })
-  @ApiResponse({
-    status: 200,
-    description: 'Đăng xuất thành công',
-  })
-  async logout() {
-    // In a real application, you might want to blacklist the token
-    // or store logout tokens in Redis
-    return {
-      success: true,
-      message: 'Đăng xuất thành công',
-    };
+  @ApiResponse({ status: 200, description: 'Reset mật khẩu thành công' })
+  @ApiResponse({ status: 400, description: 'Token không hợp lệ hoặc đã hết hạn' })
+  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }

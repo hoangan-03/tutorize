@@ -30,32 +30,6 @@ async function main() {
     prisma.user.deleteMany(),
   ]);
 
-  // Create admin user
-  console.log('👤 Creating admin user...');
-  const adminPassword = await bcrypt.hash('Admin123!', 12);
-  const admin = await prisma.user.create({
-    data: {
-      email: 'admin@tutorplatform.com',
-      password: adminPassword,
-      name: 'Administrator',
-      role: 'ADMIN',
-      isActive: true,
-      isVerified: true,
-      profile: {
-        create: {
-          firstName: 'System',
-          lastName: 'Administrator',
-          preferences: {
-            language: 'vi',
-            theme: 'light',
-            notifications: true,
-            emailNotifications: true,
-          },
-        },
-      },
-    },
-  });
-
   // Create sample teacher
   console.log('👨‍🏫 Creating sample teacher...');
   const teacherPassword = await bcrypt.hash('Teacher123!', 12);
@@ -242,7 +216,7 @@ async function main() {
       uploadedBy: teacher.id,
       isPublic: true,
       isApproved: true,
-      approvedBy: admin.id,
+      approvedBy: teacher.id,
       approvedAt: new Date(),
       tags: ['công thức', 'toán học', 'THPT'],
     },
@@ -318,7 +292,6 @@ async function main() {
   console.log('✅ Database initialization completed successfully!');
   console.log(`
     📊 Created:
-    - 1 Admin user (admin@tutorplatform.com / Admin123!)
     - 1 Teacher (teacher@tutorplatform.com / Teacher123!)
     - 2 Students (student1@tutorplatform.com, student2@tutorplatform.com / Student123!)
     - 1 Sample quiz with 3 questions

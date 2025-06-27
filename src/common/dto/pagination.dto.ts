@@ -1,34 +1,27 @@
-import { IsOptional, IsNumberString, IsString, IsEnum } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsOptional, IsNumber, IsString, Min, Max } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class PaginationDto {
-  @ApiPropertyOptional({ default: 1, description: 'Trang hiện tại' })
+  @ApiPropertyOptional({ default: 1, description: 'Số trang' })
   @IsOptional()
-  @IsNumberString()
   @Transform(({ value }) => parseInt(value))
+  @IsNumber()
+  @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ default: 10, description: 'Số lượng items mỗi trang' })
+  @ApiPropertyOptional({ default: 10, description: 'Số items mỗi trang' })
   @IsOptional()
-  @IsNumberString()
   @Transform(({ value }) => parseInt(value))
+  @IsNumber()
+  @Min(1)
+  @Max(100)
   limit?: number = 10;
 
-  @ApiPropertyOptional({ description: 'Từ khóa tìm kiếm' })
+  @ApiPropertyOptional({ description: 'Tìm kiếm' })
   @IsOptional()
   @IsString()
   search?: string;
-
-  @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'desc' })
-  @IsOptional()
-  @IsEnum(['asc', 'desc'])
-  order?: 'asc' | 'desc' = 'desc';
-
-  @ApiPropertyOptional({ description: 'Cột để sắp xếp' })
-  @IsOptional()
-  @IsString()
-  orderBy?: string = 'createdAt';
 }
 
 export class SubjectGradeFilterDto extends PaginationDto {
@@ -39,7 +32,21 @@ export class SubjectGradeFilterDto extends PaginationDto {
 
   @ApiPropertyOptional({ description: 'Khối lớp' })
   @IsOptional()
-  @IsNumberString()
   @Transform(({ value }) => parseInt(value))
+  @IsNumber()
+  @Min(1)
+  @Max(12)
   grade?: number;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedResultDto {
+  data: any[];
+  meta: PaginationMeta;
 }
