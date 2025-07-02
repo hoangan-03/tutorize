@@ -134,14 +134,21 @@ async function main() {
           {
             question: 'Phương trình x² - 5x + 6 = 0 có nghiệm là:',
             type: 'MULTIPLE_CHOICE',
-            options: ['x = 2, x = 3', 'x = 1, x = 6', 'x = -2, x = -3', 'Vô nghiệm'],
+            options: [
+              'x = 2, x = 3',
+              'x = 1, x = 6',
+              'x = -2, x = -3',
+              'Vô nghiệm',
+            ],
             correctAnswers: ['x = 2, x = 3'],
             points: 2,
-            explanation: 'Sử dụng công thức nghiệm hoặc phân tích: (x-2)(x-3) = 0',
+            explanation:
+              'Sử dụng công thức nghiệm hoặc phân tích: (x-2)(x-3) = 0',
             order: 1,
           },
           {
-            question: 'Discriminant của phương trình ax² + bx + c = 0 được tính bằng công thức:',
+            question:
+              'Discriminant của phương trình ax² + bx + c = 0 được tính bằng công thức:',
             type: 'MULTIPLE_CHOICE',
             options: ['b² - 4ac', 'b² + 4ac', '4ac - b²', 'a² - 4bc'],
             correctAnswers: ['b² - 4ac'],
@@ -150,7 +157,8 @@ async function main() {
             order: 2,
           },
           {
-            question: 'Nếu discriminant < 0 thì phương trình bậc hai có bao nhiêu nghiệm thực?',
+            question:
+              'Nếu discriminant < 0 thì phương trình bậc hai có bao nhiêu nghiệm thực?',
             type: 'FILL_BLANK',
             correctAnswers: ['0'],
             points: 1,
@@ -207,7 +215,8 @@ async function main() {
   await prisma.document.create({
     data: {
       title: 'Công thức Toán học cơ bản',
-      description: 'Tổng hợp các công thức toán học quan trọng cho chương trình THPT',
+      description:
+        'Tổng hợp các công thức toán học quan trọng cho chương trình THPT',
       subject: 'Toán học',
       grade: 10,
       type: 'PDF',
@@ -309,4 +318,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  }); 
+  });
