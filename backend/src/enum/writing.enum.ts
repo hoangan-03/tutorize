@@ -1,0 +1,7 @@
+export enum WritingType {
+  ESSAY = 'ESSAY',
+  IELTS_TASK1 = 'IELTS_TASK1',
+  IELTS_TASK2 = 'IELTS_TASK2',
+  CREATIVE = 'CREATIVE',
+  ACADEMIC = 'ACADEMIC',
+}

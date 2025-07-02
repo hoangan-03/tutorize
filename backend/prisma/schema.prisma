@@ -1,0 +1,557 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MANAGEMENT
+// ============================================================================
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        Role      @default(STUDENT)
+  avatar      String?
+  grade       Int? // for students
+  subject     String? // for teachers
+  isActive    Boolean   @default(true)
+  isVerified  Boolean   @default(false)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  profile             UserProfile?
+  quizzesCreated      Quiz[]               @relation("QuizCreator")
+  quizSubmissions     QuizSubmission[]
+  exercisesCreated    Exercise[]           @relation("ExerciseCreator")
+  exerciseSubmissions ExerciseSubmission[]
+  documentsUploaded   Document[]           @relation("DocumentUploader")
+  documentAccesses    DocumentAccess[]
+  ieltsSubmissions    IeltsSubmission[]
+  writingAssessments  WritingAssessment[]
+  notifications       Notification[]
+  systemLogs          SystemLog[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  firstName   String?
+  lastName    String?
+  phone       String?
+  dateOfBirth DateTime?
+  address     String?
+  school      String?
+  preferences Json      @default("{}")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+// ============================================================================
+// QUIZ SYSTEM
+// ============================================================================
+
+model Quiz {
+  id               Int        @id @default(autoincrement())
+  title            String
+  description      String     @db.Text
+  subject          String
+  grade            Int
+  timeLimit        Int // minutes
+  deadline         DateTime
+  status           QuizStatus @default(DRAFT)
+  createdBy        String
+  totalQuestions   Int        @default(0)
+  totalSubmissions Int        @default(0)
+  averageScore     Float      @default(0)
+  isPublic         Boolean    @default(false)
+  tags             String[]
+  instructions     String?    @db.Text
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  // Relations
+  creator     User             @relation("QuizCreator", fields: [createdBy], references: [id])
+  questions   Question[]
+  submissions QuizSubmission[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id             Int          @id @default(autoincrement())
+  quizId         Int
+  question       String       @db.Text
+  type           QuestionType
+  options        String[]     @default([])
+  correctAnswers String[]     @default([])
+  points         Int          @default(1)
+  explanation    String?      @db.Text
+  order          Int
+  imageUrl       String?
+  audioUrl       String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@map("questions")
+}
+
+model QuizSubmission {
+  id          String           @id @default(uuid())
+  quizId      Int
+  userId      String
+  score       Float            @default(0)
+  totalPoints Float            @default(0)
+  timeSpent   Int              @default(0) // seconds
+  submittedAt DateTime         @default(now())
+  gradedAt    DateTime?
+  feedback    String?          @db.Text
+  status      SubmissionStatus @default(SUBMITTED)
+
+  // Relations
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@unique([quizId, userId])
+  @@map("quiz_submissions")
+}
+
+model QuizAnswer {
+  id           String   @id @default(uuid())
+  submissionId String
+  questionId   Int
+  userAnswer   String   @default("")
+  isCorrect    Boolean  @default(false)
+  pointsEarned Float    @default(0)
+  timeTaken    Int      @default(0) // seconds
+  createdAt    DateTime @default(now())
+
+  // Relations
+  submission QuizSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question   Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_answers")
+}
+
+enum QuizStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_BLANK
+  ESSAY
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADED
+  IN_PROGRESS
+  LATE
+}
+
+// ============================================================================
+// EXERCISE SYSTEM
+// ============================================================================
+
+model Exercise {
+  id                  Int            @id @default(autoincrement())
+  name                String
+  description         String?        @db.Text
+  subject             String
+  grade               Int
+  deadline            DateTime
+  note                String?        @db.Text
+  content             String         @db.Text
+  latexContent        String?        @db.Text
+  createdBy           String
+  submissions         Int            @default(0)
+  status              ExerciseStatus @default(DRAFT)
+  maxScore            Float          @default(100)
+  allowLateSubmission Boolean        @default(false)
+  isPublic            Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relations
+  creator             User                 @relation("ExerciseCreator", fields: [createdBy], references: [id])
+  attachments         ExerciseAttachment[]
+  exerciseSubmissions ExerciseSubmission[]
+  rubric              GradingRubric?
+
+  @@map("exercises")
+}
+
+model ExerciseAttachment {
+  id           String   @id @default(uuid())
+  exerciseId   Int
+  fileName     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@map("exercise_attachments")
+}
+
+model ExerciseSubmission {
+  id          String           @id @default(uuid())
+  exerciseId  Int
+  userId      String
+  content     String           @db.Text
+  score       Float?
+  feedback    String?          @db.Text
+  submittedAt DateTime         @default(now())
+  gradedAt    DateTime?
+  gradedBy    String?
+  status      SubmissionStatus @default(SUBMITTED)
+  version     Int              @default(1)
+
+  // Relations
+  exercise    Exercise               @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments SubmissionAttachment[]
+
+  @@map("exercise_submissions")
+}
+
+model SubmissionAttachment {
+  id           String   @id @default(uuid())
+  submissionId String
+  fileName     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  submission ExerciseSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("submission_attachments")
+}
+
+model GradingRubric {
+  id          Int      @id @default(autoincrement())
+  exerciseId  Int      @unique
+  criteria    Json     @default("[]")
+  totalPoints Float    @default(100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@map("grading_rubrics")
+}
+
+enum ExerciseStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+// ============================================================================
+// DOCUMENT LIBRARY
+// ============================================================================
+
+model Document {
+  id            Int          @id @default(autoincrement())
+  title         String
+  description   String       @db.Text
+  subject       String
+  grade         Int
+  type          DocumentType
+  fileUrl       String
+  thumbnailUrl  String?
+  fileSize      Int
+  duration      Int? // for video/audio
+  downloadCount Int          @default(0)
+  viewCount     Int          @default(0)
+  tags          String[]     @default([])
+  uploadedBy    String
+  isPublic      Boolean      @default(false)
+  isApproved    Boolean      @default(false)
+  approvedBy    String?
+  approvedAt    DateTime?
+  uploadedAt    DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  uploader User             @relation("DocumentUploader", fields: [uploadedBy], references: [id])
+  accesses DocumentAccess[]
+
+  @@map("documents")
+}
+
+model DocumentAccess {
+  id         String       @id @default(uuid())
+  documentId Int
+  userId     String
+  action     AccessAction
+  accessedAt DateTime     @default(now())
+  ipAddress  String?
+  userAgent  String?
+
+  // Relations
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("document_accesses")
+}
+
+enum DocumentType {
+  PDF
+  VIDE
+  IMAGE
+  PRESENTATION
+  WORD
+}
+
+enum AccessAction {
+  VIEW
+  DOWNLOAD
+  SHARE
+}
+
+// ============================================================================
+// IELTS SYSTEM
+// ============================================================================
+
+model IeltsTest {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String     @db.Text
+  skill       IeltsSkill
+  level       IeltsLevel
+  timeLimit   Int // minutes
+  createdBy   String
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  sections    IeltsSection[]
+  submissions IeltsSubmission[]
+
+  @@map("ielts_tests")
+}
+
+model IeltsSection {
+  id           Int      @id @default(autoincrement())
+  testId       Int
+  title        String
+  instructions String   @db.Text
+  timeLimit    Int // minutes
+  order        Int
+  passageText  String?  @db.Text // for reading
+  audioUrl     String? // for listening
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  test      IeltsTest       @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questions IeltsQuestion[]
+
+  @@map("ielts_sections")
+}
+
+model IeltsQuestion {
+  id            Int               @id @default(autoincrement())
+  sectionId     Int
+  question      String            @db.Text
+  type          IeltsQuestionType
+  options       String[]          @default([])
+  correctAnswer String            @default("")
+  order         Int
+  imageUrl      String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Relations
+  section IeltsSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  answers IeltsAnswer[]
+
+  @@map("ielts_questions")
+}
+
+model IeltsSubmission {
+  id             String     @id @default(uuid())
+  testId         Int
+  userId         String
+  skill          IeltsSkill
+  score          Float      @default(0) // band score (0-9)
+  detailedScores Json       @default("{}")
+  feedback       String     @db.Text
+  submittedAt    DateTime   @default(now())
+  gradedAt       DateTime?
+  audioRecording String? // for speaking
+
+  // Relations
+  test    IeltsTest     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers IeltsAnswer[]
+
+  @@map("ielts_submissions")
+}
+
+model IeltsAnswer {
+  id           String   @id @default(uuid())
+  submissionId String
+  questionId   Int
+  userAnswer   String   @default("")
+  isCorrect    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  submission IeltsSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question   IeltsQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("ielts_answers")
+}
+
+enum IeltsSkill {
+  READING
+  WRITING
+  LISTENING
+  SPEAKING
+}
+
+enum IeltsLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum IeltsQuestionType {
+  MULTIPLE_CHOICE
+  FILL_BLANK
+  MATCHING
+  TRUE_FALSE_NOT_GIVEN
+  ESSAY
+}
+
+// ============================================================================
+// WRITING GRADER (AI)
+// ============================================================================
+
+model WritingAssessment {
+  id          String      @id @default(uuid())
+  userId      String
+  title       String
+  content     String      @db.Text
+  type        WritingType
+  prompt      String?     @db.Text
+  wordCount   Int         @default(0)
+  aiScore     Json        @default("{}")
+  humanScore  Json?
+  feedback    Json        @default("{}")
+  submittedAt DateTime    @default(now())
+  gradedAt    DateTime    @default(now())
+  isPublic    Boolean     @default(false)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("writing_assessments")
+}
+
+enum WritingType {
+  ESSAY
+  IELTS_TASK1
+  IELTS_TASK2
+  CREATIVE
+  ACADEMIC
+}
+
+// ============================================================================
+// SYSTEM FEATURES
+// ============================================================================
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String           @db.Text
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  data      Json?            @default("{}")
+  createdAt DateTime         @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model SystemLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  resource  String
+  details   Json     @default("{}")
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("system_logs")
+}
+
+model SystemConfig {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String   @db.Text
+  description String?  @db.Text
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  ERROR
+  SUCCESS
+  QUIZ_ASSIGNED
+  EXERCISE_ASSIGNED
+  GRADE_RELEASED
+  DEADLINE_REMINDER
+}
