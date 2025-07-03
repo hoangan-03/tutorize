@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo } from "react";
-import { exercisesData } from "../../data/sampleData";
 
 // Import KaTeX for LaTeX rendering
 import "katex/dist/katex.min.css";
@@ -19,7 +18,7 @@ export const ExerciseEditor: React.FC = () => {
     note: string;
     content: string;
     latexContent: string;
-    createdBy: string;
+    createdBy: number;
     createdAt: string;
     submissions: number;
     status: string;
@@ -29,7 +28,7 @@ export const ExerciseEditor: React.FC = () => {
   const [currentView, setCurrentView] = useState<
     "list" | "create" | "edit" | "preview"
   >("list");
-  const [allExercises, setAllExercises] = useState(exercisesData);
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null
   );
@@ -43,9 +42,6 @@ export const ExerciseEditor: React.FC = () => {
     return allExercises.filter((exercise) => exercise.createdBy === user.email);
   }, [isTeacher, user, allExercises]);
   const [editMode, setEditMode] = useState<"rich" | "latex">("rich");
-  const [previewMode, setPreviewMode] = useState<"content" | "latex">(
-    "content"
-  );
 
   // Form state
   const [formData, setFormData] = useState<Exercise>({
@@ -128,7 +124,7 @@ export const ExerciseEditor: React.FC = () => {
   // List View
   if (currentView === "list") {
     return (
-      <div className="p-4">
+      <div className="p-8">
         <ExerciseList
           exercises={exercises}
           onEdit={handleEdit}
@@ -143,7 +139,7 @@ export const ExerciseEditor: React.FC = () => {
   // Create/Edit View
   if (currentView === "create" || currentView === "edit") {
     return (
-      <div className="p-4">
+      <div className="p-8">
         <ExerciseForm
           formData={formData}
           onInputChange={handleInputChange}
@@ -160,7 +156,7 @@ export const ExerciseEditor: React.FC = () => {
   // Preview View
   if (currentView === "preview") {
     return (
-      <div className="p-4">
+      <div className="p-8">
         <ExercisePreview
           exercise={formData}
           onBack={() => setCurrentView("list")}

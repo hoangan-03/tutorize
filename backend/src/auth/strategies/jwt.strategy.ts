@@ -3,11 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Roles } from 'src/enum';
 
 export interface JwtPayload {
-  sub: string;
+  sub: number;
   email: string;
-  role: string;
+  role: Roles;
   iat?: number;
   exp?: number;
 }
@@ -26,6 +27,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
+    if (typeof payload.sub !== 'number' || !Number.isInteger(payload.sub)) {
+      throw new UnauthorizedException(
+        'Token không hợp lệ - vui lòng đăng nhập lại',
+      );
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       include: {
@@ -46,7 +53,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     return {
-      sub: user.id, // Use 'sub' to match JWT standard and @CurrentUser('sub')
+      sub: user.id,
       id: user.id,
       email: user.email,
       name: user.name,

@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../lib/api";
 import {
   Quiz,
-  QuizQuestion,
+  Question,
   QuizSubmission,
   QuizAnswer,
   PaginationParams,
@@ -17,12 +18,12 @@ export const quizService = {
     return response.data;
   },
 
-  async getQuiz(id: string): Promise<Quiz> {
+  async getQuiz(id: number): Promise<Quiz> {
     const response = await api.get<Quiz>(`/quizzes/${id}`);
     return response.data;
   },
 
-  async getQuizWithAnswers(id: string): Promise<Quiz> {
+  async getQuizWithAnswers(id: number): Promise<Quiz> {
     const response = await api.get<Quiz>(`/quizzes/${id}/with-answers`);
     return response.data;
   },
@@ -32,38 +33,36 @@ export const quizService = {
     return response.data;
   },
 
-  async updateQuiz(id: string, quizData: Partial<Quiz>): Promise<Quiz> {
+  async updateQuiz(id: number, quizData: Partial<Quiz>): Promise<Quiz> {
     const response = await api.put<Quiz>(`/quizzes/${id}`, quizData);
     return response.data;
   },
 
-  async deleteQuiz(id: string): Promise<void> {
+  async deleteQuiz(id: number): Promise<void> {
     await api.delete(`/quizzes/${id}`);
   },
 
-  async publishQuiz(id: string): Promise<Quiz> {
+  async publishQuiz(id: number): Promise<Quiz> {
     const response = await api.post<Quiz>(`/quizzes/${id}/publish`);
     return response.data;
   },
 
-  async closeQuiz(id: string): Promise<Quiz> {
+  async closeQuiz(id: number): Promise<Quiz> {
     const response = await api.post<Quiz>(`/quizzes/${id}/close`);
     return response.data;
   },
 
   // Question Management
-  async getQuizQuestions(quizId: string): Promise<QuizQuestion[]> {
-    const response = await api.get<QuizQuestion[]>(
-      `/quizzes/${quizId}/questions`
-    );
+  async getQuizQuestions(quizId: number): Promise<Question[]> {
+    const response = await api.get<Question[]>(`/quizzes/${quizId}/questions`);
     return response.data;
   },
 
   async createQuestion(
-    quizId: string,
-    questionData: Partial<QuizQuestion>
-  ): Promise<QuizQuestion> {
-    const response = await api.post<QuizQuestion>(
+    quizId: number,
+    questionData: Partial<Question>
+  ): Promise<Question> {
+    const response = await api.post<Question>(
       `/quizzes/${quizId}/questions`,
       questionData
     );
@@ -71,28 +70,28 @@ export const quizService = {
   },
 
   async updateQuestion(
-    quizId: string,
-    questionId: string,
-    questionData: Partial<QuizQuestion>
-  ): Promise<QuizQuestion> {
-    const response = await api.put<QuizQuestion>(
+    quizId: number,
+    questionId: number,
+    questionData: Partial<Question>
+  ): Promise<Question> {
+    const response = await api.put<Question>(
       `/quizzes/${quizId}/questions/${questionId}`,
       questionData
     );
     return response.data;
   },
 
-  async deleteQuestion(quizId: string, questionId: string): Promise<void> {
+  async deleteQuestion(quizId: number, questionId: number): Promise<void> {
     await api.delete(`/quizzes/${quizId}/questions/${questionId}`);
   },
 
   // Quiz Taking
-  async startQuiz(quizId: string): Promise<QuizSubmission> {
+  async startQuiz(quizId: number): Promise<QuizSubmission> {
     const response = await api.post<QuizSubmission>(`/quizzes/${quizId}/start`);
     return response.data;
   },
 
-  async getSubmission(submissionId: string): Promise<QuizSubmission> {
+  async getSubmission(submissionId: number): Promise<QuizSubmission> {
     const response = await api.get<QuizSubmission>(
       `/quiz-submissions/${submissionId}`
     );
@@ -100,8 +99,8 @@ export const quizService = {
   },
 
   async saveAnswer(
-    submissionId: string,
-    questionId: string,
+    submissionId: number,
+    questionId: number,
     answer: string
   ): Promise<QuizAnswer> {
     const response = await api.post<QuizAnswer>(
@@ -114,7 +113,7 @@ export const quizService = {
     return response.data;
   },
 
-  async submitQuiz(submissionId: string): Promise<QuizSubmission> {
+  async submitQuiz(submissionId: number): Promise<QuizSubmission> {
     const response = await api.post<QuizSubmission>(
       `/quiz-submissions/${submissionId}/submit`
     );
@@ -133,7 +132,7 @@ export const quizService = {
   },
 
   async getQuizSubmissions(
-    quizId: string,
+    quizId: number,
     params?: PaginationParams
   ): Promise<PaginatedResult<QuizSubmission>> {
     const response = await api.get<PaginatedResult<QuizSubmission>>(
@@ -144,7 +143,7 @@ export const quizService = {
   },
 
   async gradeSubmission(
-    submissionId: string,
+    submissionId: number,
     score: number,
     feedback?: string
   ): Promise<QuizSubmission> {
@@ -159,7 +158,7 @@ export const quizService = {
   },
 
   // Statistics
-  async getQuizStats(quizId: string): Promise<any> {
+  async getQuizStats(quizId: number): Promise<any> {
     const response = await api.get(`/quizzes/${quizId}/stats`);
     return response.data;
   },

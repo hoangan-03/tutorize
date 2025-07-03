@@ -140,7 +140,7 @@ async function main() {
               'x = -2, x = -3',
               'Vô nghiệm',
             ],
-            correctAnswers: ['x = 2, x = 3'],
+            correctAnswer: 'x = 2, x = 3',
             points: 2,
             explanation:
               'Sử dụng công thức nghiệm hoặc phân tích: (x-2)(x-3) = 0',
@@ -151,7 +151,7 @@ async function main() {
               'Discriminant của phương trình ax² + bx + c = 0 được tính bằng công thức:',
             type: 'MULTIPLE_CHOICE',
             options: ['b² - 4ac', 'b² + 4ac', '4ac - b²', 'a² - 4bc'],
-            correctAnswers: ['b² - 4ac'],
+            correctAnswer: 'b² - 4ac',
             points: 1,
             explanation: 'Discriminant Δ = b² - 4ac',
             order: 2,
@@ -160,7 +160,7 @@ async function main() {
             question:
               'Nếu discriminant < 0 thì phương trình bậc hai có bao nhiêu nghiệm thực?',
             type: 'FILL_BLANK',
-            correctAnswers: ['0'],
+            correctAnswer: '0',
             points: 1,
             explanation: 'Khi Δ < 0, phương trình không có nghiệm thực',
             order: 3,

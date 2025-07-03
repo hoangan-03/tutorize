@@ -27,7 +27,7 @@ export const useQuizzes = (params?: PaginationParams) => {
 };
 
 // Get single quiz
-export const useQuiz = (id: string | null) => {
+export const useQuiz = (id: number | null) => {
   const {
     data: quiz,
     error,
@@ -60,7 +60,7 @@ export const useQuizManagement = () => {
     }
   };
 
-  const updateQuiz = async (id: string, quizData: Partial<Quiz>) => {
+  const updateQuiz = async (id: number, quizData: Partial<Quiz>) => {
     try {
       const quiz = await quizService.updateQuiz(id, quizData);
       mutate(`/quizzes/${id}`, quiz, false);
@@ -75,7 +75,7 @@ export const useQuizManagement = () => {
     }
   };
 
-  const deleteQuiz = async (id: string) => {
+  const deleteQuiz = async (id: number) => {
     try {
       await quizService.deleteQuiz(id);
       mutate("/quizzes");
@@ -88,7 +88,7 @@ export const useQuizManagement = () => {
     }
   };
 
-  const publishQuiz = async (id: string) => {
+  const publishQuiz = async (id: number) => {
     try {
       const quiz = await quizService.publishQuiz(id);
       mutate(`/quizzes/${id}`, quiz, false);
@@ -103,7 +103,7 @@ export const useQuizManagement = () => {
     }
   };
 
-  const closeQuiz = async (id: string) => {
+  const closeQuiz = async (id: number) => {
     try {
       const quiz = await quizService.closeQuiz(id);
       mutate(`/quizzes/${id}`, quiz, false);
@@ -129,7 +129,7 @@ export const useQuizManagement = () => {
 
 // Quiz taking hooks
 export const useQuizTaking = () => {
-  const startQuiz = async (quizId: string) => {
+  const startQuiz = async (quizid: number) => {
     try {
       const submission = await quizService.startQuiz(quizId);
       toast.success("Bắt đầu làm quiz!");
@@ -143,8 +143,8 @@ export const useQuizTaking = () => {
   };
 
   const saveAnswer = async (
-    submissionId: string,
-    questionId: string,
+    submissionId: number,
+    questionid: number,
     answer: string
   ) => {
     try {
@@ -161,7 +161,7 @@ export const useQuizTaking = () => {
     }
   };
 
-  const submitQuiz = async (submissionId: string) => {
+  const submitQuiz = async (submissionId: number) => {
     try {
       const submission = await quizService.submitQuiz(submissionId);
       toast.success("Nộp bài thành công!");
@@ -182,7 +182,7 @@ export const useQuizTaking = () => {
 };
 
 // Get quiz submission
-export const useQuizSubmission = (submissionId: string | null) => {
+export const useQuizSubmission = (submissionId: number | null) => {
   const {
     data: submission,
     error,
@@ -226,7 +226,7 @@ export const useMyQuizSubmissions = (params?: PaginationParams) => {
 };
 
 // Get quiz statistics
-export const useQuizStats = (quizId: string | null) => {
+export const useQuizStats = (quizid: number | null) => {
   const {
     data: stats,
     error,

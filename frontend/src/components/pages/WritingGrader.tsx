@@ -59,7 +59,7 @@ export const WritingGrader: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-8">
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -94,7 +94,7 @@ export const WritingGrader: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Đề bài mẫu:
               </label>
-              <div className="p-4 bg-blue-50 rounded-lg text-sm text-gray-700">
+              <div className="p-8 bg-blue-50 rounded-lg text-sm text-gray-700">
                 <strong>IELTS Writing Task 2:</strong> Some people think that
                 universities should provide graduates with the knowledge and
                 skills needed in the workplace. Others think that the true
@@ -110,7 +110,7 @@ export const WritingGrader: React.FC = () => {
               onChange={(e) => setEssay(e.target.value)}
               placeholder="Nhập bài viết của bạn ở đây..."
               rows={15}
-              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none"
+              className="w-full p-8 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none"
             />
 
             <div className="flex justify-between mt-4">
@@ -190,7 +190,7 @@ export const WritingGrader: React.FC = () => {
                   </h3>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="p-8 border border-gray-200 rounded-lg">
                       <div className="font-medium text-gray-900">
                         Task Response
                       </div>
@@ -199,7 +199,7 @@ export const WritingGrader: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="p-8 border border-gray-200 rounded-lg">
                       <div className="font-medium text-gray-900">
                         Coherence & Cohesion
                       </div>
@@ -208,7 +208,7 @@ export const WritingGrader: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="p-8 border border-gray-200 rounded-lg">
                       <div className="font-medium text-gray-900">
                         Lexical Resource
                       </div>
@@ -217,7 +217,7 @@ export const WritingGrader: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="p-8 border border-gray-200 rounded-lg">
                       <div className="font-medium text-gray-900">Grammar</div>
                       <div className="text-2xl font-bold text-blue-600">
                         {analysisResult.criteria.grammaticalRange}
@@ -263,7 +263,7 @@ export const WritingGrader: React.FC = () => {
                 </div>
 
                 {/* Overall Feedback */}
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="p-8 bg-gray-50 rounded-lg">
                   <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
                     <Book className="h-5 w-5 text-blue-600 mr-2" />
                     Nhận xét tổng quan

@@ -10,6 +10,7 @@ import { QuizModule } from './quiz/quiz.module';
 import { ExerciseModule } from './exercise/exercise.module';
 import { DocumentModule } from './document/document.module';
 import { WritingModule } from './writing/writing.module';
+import { IeltsModule } from './ielts/ielts.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { WritingModule } from './writing/writing.module';
     ExerciseModule,
     DocumentModule,
     WritingModule,
+    IeltsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

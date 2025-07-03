@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Edit,
@@ -10,55 +10,39 @@ import {
   CheckCircle,
   Calendar,
   BookOpen,
-  GraduationCap,
 } from "lucide-react";
-import { quizzesData } from "../../data/sampleData";
 import { QuizForm } from "./QuizForm";
 import { QuizDashboard } from "./QuizDashboard";
 import { QuizPreview } from "./QuizPreview";
-import { useAuth } from "../../contexts/AuthContext";
-
-interface Quiz {
-  id: number;
-  title: string;
-  subject: string;
-  grade: number;
-  description: string;
-  timeLimit: number;
-  deadline: string;
-  status: string;
-  createdBy: string;
-  createdAt: string;
-  totalQuestions: number;
-  totalSubmissions: number;
-  averageScore: number;
-  questions: Question[];
-}
-
-interface Question {
-  id: number;
-  question: string;
-  type: string;
-  options: string[];
-  correctAnswer: number;
-  points: number;
-}
+import { quizService } from "../../services/quizService";
+import { Quiz } from "../../types/api";
 
 export const QuizManagement: React.FC = () => {
-  const { user, isTeacher } = useAuth();
   const [currentView, setCurrentView] = useState<
     "list" | "create" | "edit" | "dashboard" | "preview"
   >("list");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter quizzes to show only those created by current teacher
-  const quizzes = useMemo(() => {
-    if (!isTeacher || !user) return quizzesData;
+  useEffect(() => {
+    loadQuizzes();
+  }, []);
 
-    // For now, using mock data but in real app this would be an API call
-    // with createdBy filter
-    return quizzesData.filter((quiz) => quiz.createdBy === user.email);
-  }, [isTeacher, user]);
+  const loadQuizzes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await quizService.getQuizzes({ limit: 100 });
+      setQuizzes(result.data);
+    } catch (err) {
+      console.error("Error loading quizzes:", err);
+      setError("Không thể tải danh sách quiz. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateQuiz = () => {
     setCurrentView("create");
@@ -83,15 +67,28 @@ export const QuizManagement: React.FC = () => {
   const handleBack = () => {
     setCurrentView("list");
     setSelectedQuiz(null);
+    loadQuizzes(); // Refresh data when returning to list
+  };
+
+  const handleDeleteQuiz = async (quizId: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa quiz này?")) return;
+
+    try {
+      await quizService.deleteQuiz(quizId);
+      setQuizzes(quizzes.filter((q) => String(q.id) !== String(quizId)));
+    } catch (err) {
+      console.error("Error deleting quiz:", err);
+      alert("Không thể xóa quiz. Vui lòng thử lại.");
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return "bg-green-100 text-green-800";
-      case "draft":
+      case "DRAFT":
         return "bg-yellow-100 text-yellow-800";
-      case "closed":
+      case "CLOSED":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -100,15 +97,42 @@ export const QuizManagement: React.FC = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return "Đang hoạt động";
-      case "draft":
+      case "DRAFT":
         return "Bản nháp";
-      case "closed":
+      case "CLOSED":
         return "Đã đóng";
       default:
         return status;
     }
+  };
+
+  // Transform QuizForm data to API format
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const transformQuizData = (formData: any): Partial<Quiz> => {
+    return {
+      ...formData,
+      status:
+        formData.status === "active"
+          ? "ACTIVE"
+          : formData.status === "draft"
+          ? "DRAFT"
+          : formData.status === "closed"
+          ? "CLOSED"
+          : formData.status,
+    };
+  };
+
+  // Calculate stats
+  const stats = {
+    total: quizzes.length,
+    active: quizzes.filter((q) => q.status === "ACTIVE").length,
+    totalSubmissions: quizzes.reduce(
+      (sum, q) => sum + (q.submissions?.length || 0),
+      0
+    ),
+    averageScore: 0, // Would need to calculate from submissions
   };
 
   // Quiz List View
@@ -142,14 +166,11 @@ export const QuizManagement: React.FC = () => {
               <div className="flex items-center space-x-6 mt-4 text-sm text-gray-500">
                 <div className="flex items-center space-x-1">
                   <BookOpen className="h-4 w-4" />
-                  <span>{quizzes.length} quiz</span>
+                  <span>{stats.total} quiz</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Users className="h-4 w-4" />
-                  <span>
-                    {quizzes.reduce((sum, q) => sum + q.totalSubmissions, 0)}{" "}
-                    lượt làm bài
-                  </span>
+                  <span>{stats.totalSubmissions} lượt làm bài</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Calendar className="h-4 w-4" />
@@ -187,7 +208,7 @@ export const QuizManagement: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Tổng Quiz</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.length}
+                  {stats.total}
                 </p>
               </div>
             </div>
@@ -203,7 +224,7 @@ export const QuizManagement: React.FC = () => {
                   Đang hoạt động
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.filter((q) => q.status === "active").length}
+                  {stats.active}
                 </p>
               </div>
             </div>
@@ -219,7 +240,7 @@ export const QuizManagement: React.FC = () => {
                   Lượt làm bài
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.reduce((sum, q) => sum + q.totalSubmissions, 0)}
+                  {stats.totalSubmissions}
                 </p>
               </div>
             </div>
@@ -233,15 +254,25 @@ export const QuizManagement: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Điểm TB</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {(
-                    quizzes.reduce((sum, q) => sum + q.averageScore, 0) /
-                    quizzes.length
-                  ).toFixed(1)}
+                  {stats.averageScore.toFixed(1)}
                 </p>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-8 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={loadQuizzes}
+              className="mt-2 text-red-600 hover:text-red-700 underline"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
 
         {/* Quiz List */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -251,83 +282,108 @@ export const QuizManagement: React.FC = () => {
             </h2>
           </div>
 
-          <div className="divide-y divide-gray-200">
-            {quizzes.map((quiz) => (
-              <div key={quiz.id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {quiz.title}
-                      </h3>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          quiz.status
-                        )}`}
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            </div>
+          ) : quizzes.length === 0 ? (
+            <div className="text-center py-12">
+              <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Chưa có quiz nào
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Tạo quiz đầu tiên để bắt đầu.
+              </p>
+              <button
+                onClick={handleCreateQuiz}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Tạo Quiz mới
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {quizzes.map((quiz) => (
+                <div key={quiz.id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {quiz.title}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            quiz.status
+                          )}`}
+                        >
+                          {getStatusText(quiz.status)}
+                        </span>
+                      </div>
+
+                      <p className="text-gray-600 mb-3">{quiz.description}</p>
+
+                      <div className="flex items-center space-x-6 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {quiz.timeLimit
+                            ? `${quiz.timeLimit} phút`
+                            : "Không giới hạn"}
+                        </div>
+                        {quiz.deadline && (
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {new Date(quiz.deadline).toLocaleDateString(
+                              "vi-VN"
+                            )}
+                          </div>
+                        )}
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          {quiz.submissions?.length || 0} lượt làm
+                        </div>
+                        <div className="flex items-center">
+                          <BookOpen className="h-4 w-4 mr-1" />
+                          {quiz.questions?.length || 0} câu hỏi
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleViewDashboard(quiz)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="Xem kết quả"
                       >
-                        {getStatusText(quiz.status)}
-                      </span>
+                        <BarChart3 className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleViewQuiz(quiz)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Xem trước"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleEditQuiz(quiz)}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteQuiz(String(quiz.id))}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Xóa"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     </div>
-
-                    <p className="text-gray-600 mb-3">{quiz.description}</p>
-
-                    <div className="flex items-center space-x-6 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <BookOpen className="h-4 w-4 mr-1" />
-                        {quiz.subject}
-                      </div>
-                      <div className="flex items-center">
-                        <GraduationCap className="h-4 w-4 mr-1" />
-                        Lớp {quiz.grade}
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {quiz.timeLimit} phút
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(quiz.deadline).toLocaleDateString("vi-VN")}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {quiz.totalSubmissions} lượt làm
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleViewDashboard(quiz)}
-                      className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                      title="Xem kết quả"
-                    >
-                      <BarChart3 className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleViewQuiz(quiz)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Xem trước"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleEditQuiz(quiz)}
-                      className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                      title="Chỉnh sửa"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </button>
-                    <button
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Xóa"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -348,10 +404,16 @@ export const QuizManagement: React.FC = () => {
       {currentView === "create" && (
         <QuizForm
           onBack={handleBack}
-          onSave={(quizData) => {
-            console.log("Tạo quiz mới:", quizData);
-            alert("Quiz đã được tạo thành công!");
-            handleBack();
+          onSave={async (quizData) => {
+            try {
+              const transformedData = transformQuizData(quizData);
+              await quizService.createQuiz(transformedData);
+              alert("Quiz đã được tạo thành công!");
+              handleBack();
+            } catch (err) {
+              console.error("Error creating quiz:", err);
+              alert("Không thể tạo quiz. Vui lòng thử lại.");
+            }
           }}
         />
       )}
@@ -359,10 +421,16 @@ export const QuizManagement: React.FC = () => {
         <QuizForm
           quiz={selectedQuiz}
           onBack={handleBack}
-          onSave={(quizData) => {
-            console.log("Cập nhật quiz:", quizData);
-            alert("Quiz đã được cập nhật thành công!");
-            handleBack();
+          onSave={async (quizData) => {
+            try {
+              const transformedData = transformQuizData(quizData);
+              await quizService.updateQuiz(selectedQuiz.id, transformedData);
+              alert("Quiz đã được cập nhật thành công!");
+              handleBack();
+            } catch (err) {
+              console.error("Error updating quiz:", err);
+              alert("Không thể cập nhật quiz. Vui lòng thử lại.");
+            }
           }}
         />
       )}

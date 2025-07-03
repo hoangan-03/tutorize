@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Eye,
   Calendar,
@@ -13,29 +13,18 @@ import {
 import { InlineMath } from "react-katex";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { exercisesData } from "../../data/sampleData";
+import { exerciseService } from "../../services/exerciseService";
+import { Exercise } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { Badge } from "../ui/Badge";
 
 // Import KaTeX CSS
 import "katex/dist/katex.min.css";
 
-interface Exercise {
-  id: number;
-  name: string;
-  subject: string;
-  grade: number;
-  deadline: string;
-  note: string;
-  content: string;
-  latexContent: string;
-  createdBy: string;
-  createdAt: string;
-  submissions: number;
-  status: string;
-}
-
 export const ExercisePublicView: React.FC = () => {
   const { isTeacher } = useAuth();
+  const { t } = useTranslation();
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null
   );
@@ -45,6 +34,25 @@ export const ExercisePublicView: React.FC = () => {
   >("reading");
   const [selectedFont, setSelectedFont] = useState<string>("Cambria Math");
   const contentRef = useRef<HTMLDivElement>(null);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadExercises();
+  }, []);
+
+  const loadExercises = async () => {
+    try {
+      setLoading(true);
+      const result = await exerciseService.getExercises();
+      setExercises(result.data);
+    } catch (error) {
+      console.error("Error loading exercises:", error);
+      setExercises([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const popularFonts = [
     { name: "Cambria Math", value: '"Cambria Math", Cambria, serif' },
@@ -61,186 +69,183 @@ export const ExercisePublicView: React.FC = () => {
 
   const downloadAsPDF = async (exercise: Exercise) => {
     try {
-      console.log("Starting PDF generation for:", exercise.name);
-
-      // Create a temporary PDF preview element with completely isolated styles
+      // Create a temporary PDF preview element
       const tempElement = document.createElement("div");
       tempElement.style.position = "absolute";
       tempElement.style.left = "-9999px";
       tempElement.style.top = "0";
       tempElement.style.width = "794px"; // A4 width in pixels at 96 DPI
-      tempElement.style.backgroundColor = "#ffffff";
+      tempElement.style.backgroundColor = "white";
       tempElement.style.padding = "40px";
-      tempElement.style.minHeight = "1000px";
+      tempElement.style.minHeight = "1000px"; // Ensure minimum height
       tempElement.style.overflow = "visible";
       tempElement.style.fontFamily =
         popularFonts.find((font) => font.name === selectedFont)?.value ||
         '"Cambria Math", Cambria, serif';
 
-      // Clean content - remove all classes and problematic attributes
-      const cleanContent = exercise.content
+      // Safely get exercise content
+      const exerciseContent = exercise.content || "";
+
+      // Create PDF content with safe hex colors (no oklch)
+      const cleanContent = exerciseContent
         .replace(/class="[^"]*"/g, "") // Remove all CSS classes
         .replace(/style="[^"]*"/g, "") // Remove existing styles
-        .replace(/oklch\([^)]*\)/g, "#374151") // Replace any oklch colors
-        .replace(/rgb\([^)]*\)/g, "#374151") // Normalize colors
-        .replace(/<([^>]+)>/g, (match, content) => {
-          // Clean up any problematic attributes and add safe styles
-          const tagName = content.split(" ")[0];
-          if (tagName === "h1")
-            return '<h1 style="font-size: 24px; font-weight: bold; margin: 20px 0 10px 0; color: #1f2937; background: #ffffff;">';
-          if (tagName === "h2")
-            return '<h2 style="font-size: 20px; font-weight: 600; margin: 16px 0 8px 0; color: #1f2937; background: #ffffff;">';
-          if (tagName === "h3")
-            return '<h3 style="font-size: 18px; font-weight: 500; margin: 12px 0 6px 0; color: #1f2937; background: #ffffff;">';
-          if (tagName === "p")
-            return '<p style="margin: 8px 0; color: #374151; background: #ffffff; line-height: 1.6;">';
-          if (tagName === "strong")
-            return '<strong style="font-weight: bold; color: #1f2937; background: #ffffff;">';
-          if (tagName === "em")
-            return '<em style="font-style: italic; color: #374151; background: #ffffff;">';
-          if (tagName === "ul")
-            return '<ul style="margin: 8px 0; padding-left: 20px; color: #374151; background: #ffffff;">';
-          if (tagName === "ol")
-            return '<ol style="margin: 8px 0; padding-left: 20px; color: #374151; background: #ffffff;">';
-          if (tagName === "li")
-            return '<li style="margin: 4px 0; color: #374151; background: #ffffff;">';
-          return `<${tagName} style="color: #374151; background: #ffffff;">`;
+        .replace(/<([^>]+)>/g, (_match, content) => {
+          // Clean up any problematic attributes
+          return `<${content
+            .replace(/class="[^"]*"/g, "")
+            .replace(/style="[^"]*"/g, "")}>`;
         });
 
+      const exerciseTitle = (exercise.name || "Bài tập").toString();
+      const exerciseSubject = (exercise.subject || "Không xác định").toString();
+      const exerciseGrade = (exercise.grade || "Không xác định").toString();
+      const exerciseDeadline =
+        exercise.deadline || exercise.createdAt || new Date().toISOString();
+      const exerciseTeacher = (
+        exercise.creator?.name || "Không xác định"
+      ).toString();
+      const exerciseNote = (exercise.note || "").toString();
+
       tempElement.innerHTML = `
-        <div style="font-family: ${
-          popularFonts.find((font) => font.name === selectedFont)?.value ||
-          '"Cambria Math", Cambria, serif'
-        }; line-height: 1.8; color: #374151; background: #ffffff; padding: 0; margin: 0;">
-          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; background: #ffffff;">
-            <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">${
-              exercise.name
-            }</h1>
-            <div style="font-size: 14px; color: #6b7280; background: #ffffff;">
-              <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937; background: #ffffff;">Môn học:</strong> ${
-                exercise.subject
-              }</p>
-              <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937; background: #ffffff;">Lớp:</strong> ${
-                exercise.grade
-              }</p>
-              <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937; background: #ffffff;">Hạn nộp:</strong> ${new Date(
-                exercise.deadline
-              ).toLocaleDateString("vi-VN")}</p>
-              <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937; background: #ffffff;">Giáo viên:</strong> ${
-                exercise.createdBy
-              }</p>
-              ${
-                exercise.note
-                  ? `<p style="margin: 15px 0 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937; background: #ffffff;">Ghi chú:</strong> ${exercise.note}</p>`
-                  : ""
-              }
-            </div>
-          </div>
-          <div style="font-size: 18px; line-height: 1.8; background: #ffffff;">
-            <div style="margin-bottom: 20px; background: #ffffff;">
-              <h2 style="font-size: 22px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">Nội dung bài tập:</h2>
-            </div>
-            <div style="color: #374151; background: #ffffff; font-size: 18px; line-height: 1.8;">
-              ${cleanContent}
-            </div>
-          </div>
-        </div>
-      `;
+         <div style="font-family: ${
+           popularFonts.find((font) => font.name === selectedFont)?.value ||
+           '"Cambria Math", Cambria, serif'
+         }; line-height: 1.8; color: #374151; background: #ffffff;">
+           <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; background: #ffffff;">
+             <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">${exerciseTitle}</h1>
+             <div style="font-size: 14px; color: #6b7280; background: #ffffff;">
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Môn học:</strong> ${exerciseSubject}</p>
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Lớp:</strong> ${exerciseGrade}</p>
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Hạn nộp:</strong> ${new Date(
+                 exerciseDeadline
+               ).toLocaleDateString("vi-VN")}</p>
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Giáo viên:</strong> ${exerciseTeacher}</p>
+               ${
+                 exerciseNote && exerciseNote.trim()
+                   ? `<p style="margin: 15px 0 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Ghi chú:</strong> ${exerciseNote}</p>`
+                   : ""
+               }
+             </div>
+           </div>
+           <div style="font-size: 18px; line-height: 1.8; background: #ffffff;">
+             <div style="margin-bottom: 20px; background: #ffffff;">
+               <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">Nội dung bài tập:</h2>
+             </div>
+             <div style="color: #374151; background: #ffffff; font-size: 18px; line-height: 1.8;">
+               ${cleanContent || "<p>Không có nội dung bài tập</p>"}
+             </div>
+           </div>
+         </div>
+       `;
 
       document.body.appendChild(tempElement);
-      console.log("Temporary element added to DOM");
 
       // Wait for fonts to load and DOM to settle
       await document.fonts.ready;
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      console.log("Starting html2canvas capture");
+      // Force layout calculation and get accurate height
+      tempElement.style.height = "auto";
+      const actualHeight = Math.max(
+        tempElement.scrollHeight,
+        tempElement.offsetHeight,
+        1000
+      );
 
-      // Capture as canvas with better error handling
+      console.log("Element dimensions:", {
+        scrollHeight: tempElement.scrollHeight,
+        offsetHeight: tempElement.offsetHeight,
+        actualHeight: actualHeight,
+      });
+
+      // Capture the element as canvas with high quality
       const canvas = await html2canvas(tempElement, {
-        scale: 2,
+        scale: 2, // Higher resolution
         useCORS: true,
         allowTaint: false,
         backgroundColor: "#ffffff",
         width: 794,
-        height: Math.max(
-          tempElement.scrollHeight,
-          tempElement.offsetHeight,
-          1000
-        ),
+        height: actualHeight,
+        scrollX: 0,
+        scrollY: 0,
         ignoreElements: (element) => {
-          // Skip any elements that might have problematic styles
-          const style = window.getComputedStyle(element);
+          // Skip elements that might cause oklch issues
           return (
-            style.color.includes("oklch") ||
-            style.backgroundColor.includes("oklch") ||
-            element.classList?.contains("dark:") ||
+            element.tagName === "STYLE" ||
+            element.tagName === "LINK" ||
+            element.classList?.contains("tailwind") ||
             element.classList?.contains("prose")
           );
         },
         onclone: (clonedDoc) => {
-          console.log("Cleaning cloned document");
-          // Remove any problematic stylesheets and add our safe styles
+          // Remove any problematic stylesheets
           const styles = clonedDoc.querySelectorAll(
             'style, link[rel="stylesheet"]'
           );
           styles.forEach((style) => style.remove());
 
-          // Add completely safe inline styles
+          // Add safe inline styles
           const safeStyle = clonedDoc.createElement("style");
           safeStyle.textContent = `
-            * { 
-              background-color: #ffffff !important; 
-              border-color: #e5e7eb !important;
-              box-shadow: none !important;
-            }
-            p, div, span, h1, h2, h3, h4, h5, h6, li { 
-              color: #374151 !important; 
-              background-color: #ffffff !important;
-            }
-            strong, b { 
-              color: #1f2937 !important; 
-              background-color: #ffffff !important;
-            }
-            body {
-              background-color: #ffffff !important;
-            }
-          `;
+             * { 
+               background-color: #ffffff !important; 
+               border-color: #e5e7eb !important;
+             }
+             p, div, span, h1, h2, h3, h4, h5, h6 { 
+               color: #374151 !important; 
+               background-color: #ffffff !important;
+             }
+             strong, b { 
+               color: #1f2937 !important; 
+               background-color: #ffffff !important;
+             }
+           `;
           clonedDoc.head.appendChild(safeStyle);
         },
       });
 
+      // Remove temporary element
       document.body.removeChild(tempElement);
-      console.log(
-        "Canvas created, dimensions:",
-        canvas.width,
-        "x",
-        canvas.height
-      );
 
       // Create PDF
       const pdf = new jsPDF("p", "mm", "a4");
       const imgData = canvas.toDataURL("image/png");
+
+      // Calculate dimensions to fit A4
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 297; // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      console.log("PDF dimensions:", { imgWidth, imgHeight, pageHeight });
+      console.log("PDF dimensions:", {
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height,
+        imgWidth: imgWidth,
+        imgHeight: imgHeight,
+        pageHeight: pageHeight,
+        pagesNeeded: Math.ceil(imgHeight / pageHeight),
+      });
 
       if (imgHeight <= pageHeight) {
-        // Single page
+        // Single page - content fits
         pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
       } else {
-        // Multiple pages
+        // Multiple pages needed
         let remainingHeight = imgHeight;
         let sourceY = 0;
         let pageNumber = 0;
 
         while (remainingHeight > 0) {
           const heightToUse = Math.min(pageHeight, remainingHeight);
-          if (pageNumber > 0) pdf.addPage();
 
+          if (pageNumber > 0) {
+            pdf.addPage();
+          }
+
+          // Calculate source position and size for this page
           const sourceHeight = (heightToUse * canvas.height) / imgHeight;
+
+          // Create a temporary canvas for this page slice
           const pageCanvas = document.createElement("canvas");
           pageCanvas.width = canvas.width;
           pageCanvas.height = sourceHeight;
@@ -252,12 +257,13 @@ export const ExercisePublicView: React.FC = () => {
               0,
               sourceY,
               canvas.width,
-              sourceHeight,
+              sourceHeight, // source
               0,
               0,
               canvas.width,
-              sourceHeight
+              sourceHeight // destination
             );
+
             const pageImgData = pageCanvas.toDataURL("image/png");
             pdf.addImage(pageImgData, "PNG", 0, 0, imgWidth, heightToUse);
           }
@@ -268,77 +274,64 @@ export const ExercisePublicView: React.FC = () => {
         }
       }
 
-      const fileName = `${exercise.name.replace(/[<>:"/\\|?*]/g, "_")}.pdf`;
-      pdf.save(fileName);
-      console.log("PDF saved successfully:", fileName);
+      // Save PDF with safe filename
+      const safeFileName = exerciseTitle
+        .replace(/[<>:"/\\|?*]/g, "_")
+        .substring(0, 50); // Limit length
+      pdf.save(`${safeFileName}.pdf`);
     } catch (error) {
-      console.error("Detailed PDF Error:", error);
+      console.error("PDF Error:", error);
 
-      // Fallback: Simple text-based PDF
+      // Fallback: Try simple text-based PDF
       try {
-        console.log("Attempting fallback PDF generation");
         const pdf = new jsPDF();
 
-        // Set font
+        // Safely get title for fallback
+        const fallbackTitle = (exercise.name || "Bài tập").toString();
+        const fallbackSubject = (exercise.subject || "N/A").toString();
+        const fallbackGrade = (exercise.grade || "N/A").toString();
+        const fallbackTeacher = (exercise.creator?.name || "N/A").toString();
+        const fallbackDeadline =
+          exercise.deadline || exercise.createdAt || new Date().toISOString();
+        const fallbackContent = exercise.content || "Không có nội dung";
+
         pdf.setFontSize(16);
-        pdf.text(exercise.name || "Bài tập", 20, 30);
+        pdf.text(fallbackTitle, 20, 30);
 
         pdf.setFontSize(12);
-        let yPos = 50;
+        pdf.text(`Mon hoc: ${fallbackSubject}`, 20, 50);
+        pdf.text(`Lop: ${fallbackGrade}`, 20, 65);
+        pdf.text(
+          `Han nop: ${new Date(fallbackDeadline).toLocaleDateString()}`,
+          20,
+          80
+        );
+        pdf.text(`Giao vien: ${fallbackTeacher}`, 20, 95);
 
-        // Basic info
-        const info = [
-          `Môn học: ${exercise.subject}`,
-          `Lớp: ${exercise.grade}`,
-          `Hạn nộp: ${new Date(exercise.deadline).toLocaleDateString("vi-VN")}`,
-          `Giáo viên: ${exercise.createdBy}`,
-        ];
+        // Simple content without Vietnamese chars
+        const simpleContent = fallbackContent
+          .replace(/<[^>]+>/g, " ")
+          .replace(/[^\u0020-\u007E]/g, "?") // Replace non-printable ASCII with ?
+          .substring(0, 1000);
 
-        info.forEach((line) => {
-          pdf.text(line, 20, yPos);
-          yPos += 10;
-        });
-
-        if (exercise.note) {
-          yPos += 10;
-          pdf.text("Ghi chú:", 20, yPos);
-          yPos += 10;
-          const noteLines = pdf.splitTextToSize(exercise.note, 170);
-          noteLines.forEach((line: string) => {
-            pdf.text(line, 20, yPos);
-            yPos += 7;
-          });
-        }
-
-        // Content (simplified)
-        yPos += 15;
-        pdf.text("Nội dung bài tập:", 20, yPos);
-        yPos += 15;
-
-        const simpleContent = exercise.content
-          .replace(/<[^>]+>/g, " ") // Remove HTML tags
-          .replace(/\s+/g, " ") // Normalize whitespace
-          .trim()
-          .substring(0, 2000); // Limit content length
-
-        const contentLines = pdf.splitTextToSize(simpleContent, 170);
-        contentLines.forEach((line: string) => {
-          if (yPos > 270) {
+        const lines = pdf.splitTextToSize(simpleContent, 170);
+        let y = 120;
+        lines.forEach((line: string) => {
+          if (y > 270) {
             pdf.addPage();
-            yPos = 20;
+            y = 20;
           }
-          pdf.text(line, 20, yPos);
-          yPos += 7;
+          pdf.text(line, 20, y);
+          y += 7;
         });
 
-        const fileName = `${exercise.name.replace(
-          /[<>:"/\\|?*]/g,
-          "_"
-        )}_fallback.pdf`;
-        pdf.save(fileName);
-        console.log("Fallback PDF saved successfully");
+        const safeFileName = fallbackTitle
+          .replace(/[^\w\s-]/g, "_")
+          .substring(0, 50);
+        pdf.save(`${safeFileName}.pdf`);
       } catch (fallbackError) {
         console.error("Fallback PDF Error:", fallbackError);
+        // Final fallback to browser print
         alert(
           "Không thể tạo PDF. Bạn có thể sử dụng Print của trình duyệt (Ctrl+P) để in/lưu PDF."
         );
@@ -359,11 +352,12 @@ export const ExercisePublicView: React.FC = () => {
   // Exercise Detail View
   if (currentView === "detail" && selectedExercise) {
     const isNearDeadline =
-      new Date(selectedExercise.deadline) <=
+      new Date(selectedExercise.deadline || selectedExercise.createdAt) <=
       new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    const exerciseTitle = selectedExercise.name;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header Section with Gradient */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl text-white p-8 mb-8">
@@ -374,24 +368,30 @@ export const ExercisePublicView: React.FC = () => {
                     <FileText className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold">
-                      {selectedExercise.name}
-                    </h1>
+                    <h1 className="text-3xl font-bold">{exerciseTitle}</h1>
                     <p className="text-blue-100 mt-1">
-                      {isTeacher ? "Xem chi tiết bài tập" : "Chi tiết bài tập"}
+                      {isTeacher
+                        ? t("exercises.viewDetails")
+                        : t("exercises.exerciseDetails")}
                     </p>
                   </div>
                 </div>
 
                 {/* Status Badges */}
                 <div className="flex items-center space-x-3 mb-6">
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                  <Badge
+                    variant="subject"
+                    className="bg-white/20 text-white rounded-full backdrop-blur-sm border-0"
+                  >
                     {selectedExercise.subject}
-                  </span>
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                  </Badge>
+                  <Badge
+                    variant="grade"
+                    className="bg-white/20 text-white rounded-full backdrop-blur-sm border-0"
+                  >
                     Lớp {selectedExercise.grade}
-                  </span>
-                  {selectedExercise.status === "active" && (
+                  </Badge>
+                  {selectedExercise.status === "ACTIVE" && (
                     <span className="px-3 py-1 bg-green-500/30 rounded-full text-sm font-medium backdrop-blur-sm">
                       Đang mở
                     </span>
@@ -411,46 +411,46 @@ export const ExercisePublicView: React.FC = () => {
                   className="flex items-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all duration-200 backdrop-blur-sm border border-white/20"
                 >
                   <Download className="h-5 w-5 mr-2" />
-                  Tải PDF
+                  {t("exercises.downloadPDF")}
                 </button>
                 <button
                   onClick={handleBackToList}
                   className="flex items-center px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-white/20"
                 >
-                  ← Quay lại
+                  ← {t("common.back")}
                 </button>
               </div>
             </div>
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-              <div className="bg-white/15 rounded-xl p-4 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <Calendar className="h-6 w-6 text-white mr-3" />
                   <div>
                     <p className="text-blue-100 text-sm">Hạn nộp</p>
                     <p className="text-white font-semibold">
-                      {new Date(selectedExercise.deadline).toLocaleDateString(
-                        "vi-VN"
-                      )}
+                      {new Date(
+                        selectedExercise.deadline || selectedExercise.createdAt
+                      ).toLocaleDateString("vi-VN")}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white/15 rounded-xl p-4 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <Users className="h-6 w-6 text-white mr-3" />
                   <div>
                     <p className="text-blue-100 text-sm">Bài nộp</p>
                     <p className="text-white font-semibold">
-                      {selectedExercise.submissions}
+                      {selectedExercise.submissions || 0}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white/15 rounded-xl p-4 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <Clock className="h-6 w-6 text-white mr-3" />
                   <div>
@@ -464,13 +464,13 @@ export const ExercisePublicView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white/15 rounded-xl p-4 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <GraduationCap className="h-6 w-6 text-white mr-3" />
                   <div>
                     <p className="text-blue-100 text-sm">Giáo viên</p>
                     <p className="text-white font-semibold">
-                      {selectedExercise.createdBy}
+                      {selectedExercise.createdBy || "Không xác định"}
                     </p>
                   </div>
                 </div>
@@ -536,19 +536,18 @@ export const ExercisePublicView: React.FC = () => {
                     >
                       Rich Text
                     </button>
-                    {selectedExercise.subject === "Mathematics" &&
-                      selectedExercise.latexContent && (
-                        <button
-                          onClick={() => setPreviewMode("latex")}
-                          className={`px-3 py-2 text-sm rounded-lg font-medium transition-all ${
-                            previewMode === "latex"
-                              ? "bg-blue-600 text-white shadow-md"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                        >
-                          LaTeX
-                        </button>
-                      )}
+                    {selectedExercise.latexContent && (
+                      <button
+                        onClick={() => setPreviewMode("latex")}
+                        className={`px-3 py-2 text-sm rounded-lg font-medium transition-all ${
+                          previewMode === "latex"
+                            ? "bg-blue-600 text-white shadow-md"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        LaTeX
+                      </button>
+                    )}
                   </div>
 
                   {/* Font Selector - Only in reading mode */}
@@ -635,7 +634,7 @@ export const ExercisePublicView: React.FC = () => {
                               )
                               .replace(
                                 /<pre/g,
-                                '<pre class="bg-gray-100 p-4 rounded-lg mb-4 overflow-x-auto"'
+                                '<pre class="bg-gray-100 p-8 rounded-lg mb-4 overflow-x-auto"'
                               ),
                           }}
                         />
@@ -731,16 +730,14 @@ export const ExercisePublicView: React.FC = () => {
 
   // Exercise List View
   return (
-    <div className="p-4">
+    <div className="p-8">
       <div className="max-w-8xl mx-auto">
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            Bài tập từ giáo viên
+            {t("exercises.fromTeachers")}
           </h1>
-          <p className="text-gray-600 mt-2">
-            Xem và hoàn thành các bài tập được giao bởi giáo viên
-          </p>
-        </div>
+          <p className="text-gray-600 mt-2">{t("exercises.viewAndComplete")}</p>
+        </div> */}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -754,7 +751,7 @@ export const ExercisePublicView: React.FC = () => {
                   Tổng bài tập
                 </p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {exercisesData.length}
+                  {exercises.length}
                 </p>
               </div>
             </div>
@@ -768,7 +765,10 @@ export const ExercisePublicView: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Đang mở</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {exercisesData.filter((ex) => ex.status === "active").length}
+                  {
+                    exercises.filter((ex: Exercise) => ex.status === "ACTIVE")
+                      .length
+                  }
                 </p>
               </div>
             </div>
@@ -802,66 +802,100 @@ export const ExercisePublicView: React.FC = () => {
         </div>
 
         {/* Exercises Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {exercisesData.map((exercise) => (
-            <div
-              key={exercise.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {exercise.name}
-                  </h3>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
-                    <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                      Lớp {exercise.grade}
-                    </span>
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                      {exercise.subject}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>
-                      Hạn:{" "}
-                      {new Date(exercise.deadline).toLocaleDateString("vi-VN")}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <Users className="h-4 w-4 mr-1" />
-                    <span>{exercise.submissions} bài nộp</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <span className="font-medium">GV:</span>{" "}
-                    {exercise.createdBy}
-                  </div>
-                </div>
-                <div
-                  className={`px-2 py-1 rounded text-xs font-medium ${
-                    exercise.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {exercise.status === "active" ? "Đang mở" : "Đã đóng"}
-                </div>
-              </div>
-
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                {exercise.note}
-              </p>
-
-              <button
-                onClick={() => handleViewExercise(exercise)}
-                className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {exercises.map((exercise: Exercise) => (
+              <div
+                key={exercise.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
               >
-                <Eye className="h-4 w-4 mr-2" />
-                {isTeacher ? "Xem chi tiết" : "Xem và làm bài"}
-              </button>
-            </div>
-          ))}
-        </div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 text-start">
+                      {exercise.name}
+                    </h3>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                      <Badge variant="subject">{exercise.subject}</Badge>
+                      <Badge variant="grade">
+                        {t("exercises.class")} {exercise.grade}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>
+                        {t("exercises.createdAt")}:{" "}
+                        {new Date(exercise.createdAt).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>
+                        {t("exercises.deadline")}:{" "}
+                        {new Date(exercise.deadline).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span>{exercise.submissions || 0} bài nộp</span>
+                    </div>
+                    <div className="text-sm text-gray-500 text-start  ">
+                      <span className="font-medium">GV:</span>{" "}
+                      {exercise.createdBy || "Không xác định"}
+                    </div>
+                  </div>
+                  <Badge
+                    variant="status"
+                    className={`px-2 py-1 text-xs ${
+                      exercise.status === "ACTIVE"
+                        ? "bg-green-100 text-green-800"
+                        : exercise.status === "DRAFT"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {exercise.status === "ACTIVE"
+                      ? "Đang mở"
+                      : exercise.status === "DRAFT"
+                      ? "Nháp"
+                      : "Đã đóng"}
+                  </Badge>
+                </div>
+
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 text-start">
+                  {exercise.description}
+                </p>
+
+                <button
+                  onClick={() => handleViewExercise(exercise)}
+                  className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  {isTeacher ? "Xem chi tiết" : "Xem và làm bài"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {exercises.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Chưa có bài tập nào
+            </h3>
+            <p className="text-gray-600">
+              Các bài tập sẽ hiển thị ở đây khi giáo viên tạo.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

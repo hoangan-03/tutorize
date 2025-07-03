@@ -21,7 +21,7 @@ export class WritingService {
     private configService: ConfigService,
   ) {}
 
-  async assess(submitWritingDto: SubmitWritingDto, userId: string) {
+  async assess(submitWritingDto: SubmitWritingDto, userId: number) {
     const { content, type, prompt } = submitWritingDto;
 
     // Validate content length
@@ -69,7 +69,7 @@ export class WritingService {
     return writingAssessment;
   }
 
-  async findAll(query: PaginationDto, userId?: string) {
+  async findAll(query: PaginationDto, userId?: number) {
     const { page = 1, limit = 10, search } = query;
     const skip = (page - 1) * limit;
 
@@ -119,7 +119,7 @@ export class WritingService {
     };
   }
 
-  async findOne(id: string, userId?: string) {
+  async findOne(id: number, userId?: number) {
     const assessment = await this.prisma.writingAssessment.findUnique({
       where: { id },
       include: {
@@ -146,9 +146,9 @@ export class WritingService {
   }
 
   async update(
-    id: string,
+    id: number,
     updateDto: UpdateWritingAssessmentDto,
-    userId: string,
+    userId: number,
   ) {
     const assessment = await this.prisma.writingAssessment.findUnique({
       where: { id },
@@ -173,7 +173,7 @@ export class WritingService {
     });
   }
 
-  async remove(id: string, userId: string) {
+  async remove(id: number, userId: number) {
     const assessment = await this.prisma.writingAssessment.findUnique({
       where: { id },
     });
@@ -191,7 +191,7 @@ export class WritingService {
     });
   }
 
-  async getMyAssessments(userId: string, query: PaginationDto) {
+  async getMyAssessments(userId: number, query: PaginationDto) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
@@ -270,7 +270,7 @@ export class WritingService {
     return text.trim().split(/\s+/).length;
   }
 
-  async gradeAssessment(id: string, aiScore: any, feedback: any) {
+  async gradeAssessment(id: number, aiScore: any, feedback: any) {
     return this.prisma.writingAssessment.update({
       where: { id },
       data: {
@@ -460,7 +460,7 @@ export class WritingService {
     return suggestions;
   }
 
-  async create(createDto: CreateWritingAssessmentDto, userId: string) {
+  async create(createDto: CreateWritingAssessmentDto, userId: number) {
     const assessment = await this.prisma.writingAssessment.create({
       data: {
         userId,

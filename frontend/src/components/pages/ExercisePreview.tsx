@@ -23,7 +23,7 @@ interface Exercise {
   note: string;
   content: string;
   latexContent: string;
-  createdBy: string;
+  createdBy: number;
   createdAt: string;
   submissions: number;
   status: string;
@@ -550,7 +550,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                               )
                               .replace(
                                 /<pre/g,
-                                '<pre class="bg-gray-100 p-4 rounded-lg mb-4 overflow-x-auto"'
+                                '<pre class="bg-gray-100 p-8 rounded-lg mb-4 overflow-x-auto"'
                               ),
                           }}
                         />

@@ -56,7 +56,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Lấy thông tin người dùng hiện tại' })
   @ApiResponse({ status: 200, description: 'Thông tin người dùng' })
-  getProfile(@CurrentUser('sub') userId: string) {
+  getProfile(@CurrentUser('sub') userId: number) {
     return this.authService.getProfile(userId);
   }
 
@@ -67,7 +67,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
   updateProfile(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     return this.authService.updateProfile(userId, updateProfileDto);
@@ -80,7 +80,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Đổi mật khẩu thành công' })
   @ApiResponse({ status: 400, description: 'Mật khẩu hiện tại không đúng' })
   changePassword(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(userId, changePasswordDto);

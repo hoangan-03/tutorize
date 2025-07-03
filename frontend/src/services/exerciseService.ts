@@ -17,12 +17,12 @@ export const exerciseService = {
     return response.data;
   },
 
-  async getExercise(id: string): Promise<Exercise> {
+  async getExercise(id: number): Promise<Exercise> {
     const response = await api.get<Exercise>(`/exercises/${id}`);
     return response.data;
   },
 
-  async getExerciseWithAnswers(id: string): Promise<Exercise> {
+  async getExerciseWithAnswers(id: number): Promise<Exercise> {
     const response = await api.get<Exercise>(`/exercises/${id}/with-answers`);
     return response.data;
   },
@@ -33,30 +33,30 @@ export const exerciseService = {
   },
 
   async updateExercise(
-    id: string,
+    id: number,
     exerciseData: Partial<Exercise>
   ): Promise<Exercise> {
     const response = await api.put<Exercise>(`/exercises/${id}`, exerciseData);
     return response.data;
   },
 
-  async deleteExercise(id: string): Promise<void> {
+  async deleteExercise(id: number): Promise<void> {
     await api.delete(`/exercises/${id}`);
   },
 
-  async publishExercise(id: string): Promise<Exercise> {
+  async publishExercise(id: number): Promise<Exercise> {
     const response = await api.post<Exercise>(`/exercises/${id}/publish`);
     return response.data;
   },
 
-  async archiveExercise(id: string): Promise<Exercise> {
+  async archiveExercise(id: number): Promise<Exercise> {
     const response = await api.post<Exercise>(`/exercises/${id}/archive`);
     return response.data;
   },
 
   // Exercise Submissions
   async submitExercise(
-    exerciseId: string,
+    exerciseid: number,
     content: string
   ): Promise<ExerciseSubmission> {
     const response = await api.post<ExerciseSubmission>(
@@ -68,7 +68,7 @@ export const exerciseService = {
     return response.data;
   },
 
-  async getSubmission(submissionId: string): Promise<ExerciseSubmission> {
+  async getSubmission(submissionId: number): Promise<ExerciseSubmission> {
     const response = await api.get<ExerciseSubmission>(
       `/exercise-submissions/${submissionId}`
     );
@@ -76,7 +76,7 @@ export const exerciseService = {
   },
 
   async updateSubmission(
-    submissionId: string,
+    submissionId: number,
     content: string
   ): Promise<ExerciseSubmission> {
     const response = await api.put<ExerciseSubmission>(
@@ -99,7 +99,7 @@ export const exerciseService = {
   },
 
   async getExerciseSubmissions(
-    exerciseId: string,
+    exerciseid: number,
     params?: PaginationParams
   ): Promise<PaginatedResult<ExerciseSubmission>> {
     const response = await api.get<PaginatedResult<ExerciseSubmission>>(
@@ -111,7 +111,7 @@ export const exerciseService = {
 
   // Grading
   async gradeSubmission(
-    submissionId: string,
+    submissionId: number,
     score: number,
     feedback?: string
   ): Promise<ExerciseSubmission> {
@@ -126,7 +126,7 @@ export const exerciseService = {
   },
 
   // Statistics
-  async getExerciseStats(exerciseId: string): Promise<any> {
+  async getExerciseStats(exerciseid: number): Promise<any> {
     const response = await api.get(`/exercises/${exerciseId}/stats`);
     return response.data;
   },

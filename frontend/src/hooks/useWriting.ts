@@ -27,7 +27,7 @@ export const useWritingAssessments = (params?: PaginationParams) => {
 };
 
 // Get single writing assessment
-export const useWritingAssessment = (id: string | null) => {
+export const useWritingAssessment = (id: number | null) => {
   const {
     data: assessment,
     error,
@@ -70,7 +70,7 @@ export const useWritingManagement = () => {
   };
 
   const updateAssessment = async (
-    id: string,
+    id: number,
     data: Partial<WritingAssessment>
   ) => {
     try {
@@ -88,7 +88,7 @@ export const useWritingManagement = () => {
     }
   };
 
-  const deleteAssessment = async (id: string) => {
+  const deleteAssessment = async (id: number) => {
     try {
       await writingService.deleteAssessment(id);
       mutate("/writing");
@@ -102,7 +102,7 @@ export const useWritingManagement = () => {
   };
 
   const addHumanFeedback = async (
-    id: string,
+    id: number,
     data: {
       humanScore: number;
       humanFeedback: string;

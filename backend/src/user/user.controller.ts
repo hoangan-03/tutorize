@@ -7,6 +7,7 @@ import {
   Param,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -68,7 +69,7 @@ export class UserController {
   @ApiOperation({ summary: 'Lấy thông tin chi tiết người dùng' })
   @ApiResponse({ status: 200, description: 'Thông tin người dùng' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.userService.findOne(id);
   }
 
@@ -78,11 +79,11 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
   @ApiResponse({ status: 403, description: 'Không có quyền cập nhật' })
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-    @CurrentUser('sub') currentUserId: string,
+    @CurrentUser() currentUser: { id: number },
   ) {
-    return this.userService.update(id, updateUserDto, currentUserId);
+    return this.userService.update(id, updateUserDto, currentUser.id);
   }
 
   @Patch(':id/toggle-activation')
@@ -90,7 +91,7 @@ export class UserController {
   @ApiOperation({ summary: 'Bật/tắt tài khoản người dùng (Admin only)' })
   @ApiResponse({ status: 200, description: 'Cập nhật trạng thái thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
-  toggleActivation(@Param('id') id: string) {
+  toggleActivation(@Param('id') id: number) {
     return this.userService.toggleActivation(id);
   }
 }

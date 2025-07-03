@@ -12,7 +12,7 @@ export const documentService = {
     return response.data;
   },
 
-  async getDocument(id: string): Promise<Document> {
+  async getDocument(id: number): Promise<Document> {
     const response = await api.get<Document>(`/documents/${id}`);
     return response.data;
   },
@@ -40,37 +40,37 @@ export const documentService = {
   },
 
   async updateDocument(
-    id: string,
+    id: number,
     documentData: Partial<Document>
   ): Promise<Document> {
     const response = await api.put<Document>(`/documents/${id}`, documentData);
     return response.data;
   },
 
-  async deleteDocument(id: string): Promise<void> {
+  async deleteDocument(id: number): Promise<void> {
     await api.delete(`/documents/${id}`);
   },
 
-  async downloadDocument(id: string): Promise<Blob> {
+  async downloadDocument(id: number): Promise<Blob> {
     const response = await api.get(`/documents/${id}/download`, {
       responseType: "blob",
     });
     return response.data;
   },
 
-  async getDocumentUrl(id: string): Promise<string> {
+  async getDocumentUrl(id: number): Promise<string> {
     // Return the download URL for the document
     return `${api.defaults.baseURL}/documents/${id}/download`;
   },
 
-  async getAccessHistory(id: string, params?: PaginationParams): Promise<any> {
+  async getAccessHistory(id: number, params?: PaginationParams): Promise<any> {
     const response = await api.get(`/documents/${id}/access-history`, {
       params,
     });
     return response.data;
   },
 
-  async approveDocument(id: string): Promise<Document> {
+  async approveDocument(id: number): Promise<Document> {
     const response = await api.post<Document>(`/documents/${id}/approve`);
     return response.data;
   },

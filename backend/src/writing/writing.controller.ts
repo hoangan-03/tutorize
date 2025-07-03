@@ -35,7 +35,7 @@ export class WritingController {
   @ApiResponse({ status: 400, description: 'Bài viết không hợp lệ' })
   assess(
     @Body() submitWritingDto: SubmitWritingDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.writingService.assess(submitWritingDto, userId);
   }
@@ -60,7 +60,7 @@ export class WritingController {
   @ApiOperation({ summary: 'Lấy chi tiết bài chấm điểm' })
   @ApiResponse({ status: 200, description: 'Chi tiết bài chấm điểm' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài chấm điểm' })
-  findOne(@Param('id') id: string, @CurrentUser('sub') userId: string) {
+  findOne(@Param('id') id: number, @CurrentUser('sub') userId: number) {
     return this.writingService.findOne(id, userId);
   }
 }

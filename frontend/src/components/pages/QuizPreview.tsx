@@ -103,7 +103,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
               ))}
             </div>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mt-6 p-8 bg-blue-50 rounded-lg">
               <div className="text-sm text-blue-600 font-medium">Tổng quan</div>
               <div className="text-xs text-blue-500 mt-1">
                 {Object.keys(selectedAnswers).length}/{totalQuestions} câu đã
@@ -158,7 +158,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
                         (option: string, optionIndex: number) => (
                           <label
                             key={optionIndex}
-                            className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                            className={`flex items-center p-8 border rounded-lg cursor-pointer transition-colors ${
                               selectedAnswers[currentQuestion.id] ===
                               optionIndex
                                 ? "border-blue-500 bg-blue-50"
@@ -196,7 +196,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
                   {currentQuestion.type === "true-false" && (
                     <div className="space-y-3">
                       <label
-                        className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center p-8 border rounded-lg cursor-pointer transition-colors ${
                           selectedAnswers[currentQuestion.id] === "true"
                             ? "border-blue-500 bg-blue-50"
                             : "border-gray-200 hover:bg-gray-50"
@@ -218,7 +218,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
                         </span>
                       </label>
                       <label
-                        className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center p-8 border rounded-lg cursor-pointer transition-colors ${
                           selectedAnswers[currentQuestion.id] === "false"
                             ? "border-blue-500 bg-blue-50"
                             : "border-gray-200 hover:bg-gray-50"
@@ -294,7 +294,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
           </div>
 
           {/* Preview Notice */}
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="mt-6 p-8 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
               <div>

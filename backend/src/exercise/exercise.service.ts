@@ -18,7 +18,7 @@ import { Roles } from '../enum/role.enum';
 export class ExerciseService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createExerciseDto: CreateExerciseDto, userId: string) {
+  async create(createExerciseDto: CreateExerciseDto, userId: number) {
     const exercise = await this.prisma.exercise.create({
       data: {
         name: createExerciseDto.name,
@@ -118,7 +118,7 @@ export class ExerciseService {
     };
   }
 
-  async findOne(id: number, userId?: string) {
+  async findOne(id: number, userId?: number) {
     const exercise = await this.prisma.exercise.findUnique({
       where: { id },
       include: {
@@ -155,7 +155,7 @@ export class ExerciseService {
     return exercise;
   }
 
-  async findOneWithAnswers(id: number, userId: string) {
+  async findOneWithAnswers(id: number, userId: number) {
     // Get user info first
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -215,7 +215,7 @@ export class ExerciseService {
   async update(
     id: number,
     updateExerciseDto: UpdateExerciseDto,
-    userId: string,
+    userId: number,
   ) {
     const exercise = await this.prisma.exercise.findUnique({
       where: { id },
@@ -240,7 +240,7 @@ export class ExerciseService {
     });
   }
 
-  async remove(id: number, userId: string) {
+  async remove(id: number, userId: number) {
     const exercise = await this.prisma.exercise.findUnique({
       where: { id },
     });
@@ -260,7 +260,7 @@ export class ExerciseService {
 
   async submitExercise(
     exerciseId: number,
-    userId: string,
+    userId: number,
     submitDto: SubmitExerciseDto,
   ) {
     const exercise = await this.prisma.exercise.findUnique({
@@ -317,7 +317,7 @@ export class ExerciseService {
 
   async getSubmissions(
     id: number,
-    userId: string,
+    userId: number,
   ): Promise<PaginatedResultDto> {
     // Only creator or admin can view all submissions
     const user = await this.prisma.user.findUnique({
@@ -362,9 +362,9 @@ export class ExerciseService {
   }
 
   async gradeSubmission(
-    submissionId: string,
+    submissionId: number,
     gradeExerciseDto: GradeExerciseDto,
-    userId: string,
+    userId: number,
   ) {
     const { score, feedback } = gradeExerciseDto;
 

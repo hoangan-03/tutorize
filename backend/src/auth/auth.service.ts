@@ -125,7 +125,7 @@ export class AuthService {
     };
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+  async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
     const { currentPassword, newPassword } = changePasswordDto;
 
     const user = await this.prisma.user.findUnique({
@@ -209,7 +209,7 @@ export class AuthService {
     }
   }
 
-  async getProfile(userId: string) {
+  async getProfile(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -232,7 +232,7 @@ export class AuthService {
     return userWithoutPassword;
   }
 
-  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+  async updateProfile(userId: number, updateProfileDto: UpdateProfileDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { profile: true },

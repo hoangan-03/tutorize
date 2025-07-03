@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -10,7 +9,6 @@ import {
   UpdateDocumentDto,
   DocumentFilterDto,
 } from './dto/document.dto';
-import { PaginatedResultDto } from '../common/dto/pagination.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -21,7 +19,7 @@ export class DocumentService {
   async create(
     createDocumentDto: CreateDocumentDto,
     file: Express.Multer.File,
-    userId: string,
+    userId: number,
   ) {
     const document = await this.prisma.document.create({
       data: {
@@ -43,7 +41,7 @@ export class DocumentService {
     return document;
   }
 
-  async findAll(filters: DocumentFilterDto, userId?: string) {
+  async findAll(filters: DocumentFilterDto, userId?: number) {
     const { page = 1, limit = 10, search, subject, grade } = filters;
     const skip = (page - 1) * limit;
 
@@ -100,7 +98,7 @@ export class DocumentService {
     };
   }
 
-  async findOne(id: number, userId?: string) {
+  async findOne(id: number, userId?: number) {
     const document = await this.prisma.document.findUnique({
       where: { id },
       include: {
@@ -150,7 +148,7 @@ export class DocumentService {
   async update(
     id: number,
     updateDocumentDto: UpdateDocumentDto,
-    userId: string,
+    userId: number,
   ) {
     const document = await this.prisma.document.findUnique({
       where: { id },
@@ -170,7 +168,7 @@ export class DocumentService {
     });
   }
 
-  async remove(id: number, userId: string) {
+  async remove(id: number, userId: number) {
     const document = await this.prisma.document.findUnique({
       where: { id },
     });
@@ -198,7 +196,7 @@ export class DocumentService {
     });
   }
 
-  async download(id: number, userId: string, res: any) {
+  async download(id: number, userId: number, res: any) {
     const document = await this.findOne(id, userId);
 
     // Record download access
@@ -225,7 +223,7 @@ export class DocumentService {
     return res.download(filePath, document.title);
   }
 
-  async approve(id: number, userId: string) {
+  async approve(id: number, userId: number) {
     return this.prisma.document.update({
       where: { id },
       data: {

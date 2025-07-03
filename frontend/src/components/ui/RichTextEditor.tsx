@@ -10,7 +10,6 @@ import {
   AlignRight,
   Link,
   Image,
-  Type,
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -147,7 +146,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="p-4 min-h-[300px] focus:outline-none"
+        className="p-8 min-h-[300px] focus:outline-none"
         style={{
           whiteSpace: "pre-wrap",
           wordWrap: "break-word",

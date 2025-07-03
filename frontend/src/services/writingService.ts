@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../lib/api";
 import {
   WritingAssessment,
@@ -26,26 +27,26 @@ export const writingService = {
     return response.data;
   },
 
-  async getAssessment(id: string): Promise<WritingAssessment> {
+  async getAssessment(id: number): Promise<WritingAssessment> {
     const response = await api.get<WritingAssessment>(`/writing/${id}`);
     return response.data;
   },
 
   async updateAssessment(
-    id: string,
+    id: number,
     data: Partial<WritingAssessment>
   ): Promise<WritingAssessment> {
     const response = await api.put<WritingAssessment>(`/writing/${id}`, data);
     return response.data;
   },
 
-  async deleteAssessment(id: string): Promise<void> {
+  async deleteAssessment(id: number): Promise<void> {
     await api.delete(`/writing/${id}`);
   },
 
   // Human Review
   async addHumanFeedback(
-    id: string,
+    id: number,
     data: {
       humanScore: number;
       humanFeedback: string;

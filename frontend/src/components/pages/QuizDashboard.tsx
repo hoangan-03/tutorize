@@ -304,25 +304,25 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
               Phân loại kết quả
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-center p-8 bg-green-50 rounded-lg">
                 <p className="text-2xl font-bold text-green-600">
                   {gradeDistribution.excellent}
                 </p>
                 <p className="text-sm text-gray-600">Xuất sắc (9-10)</p>
               </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-center p-8 bg-blue-50 rounded-lg">
                 <p className="text-2xl font-bold text-blue-600">
                   {gradeDistribution.good}
                 </p>
                 <p className="text-sm text-gray-600">Khá (7-8)</p>
               </div>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+              <div className="text-center p-8 bg-yellow-50 rounded-lg">
                 <p className="text-2xl font-bold text-yellow-600">
                   {gradeDistribution.average}
                 </p>
                 <p className="text-sm text-gray-600">Trung bình (5-6)</p>
               </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
+              <div className="text-center p-8 bg-red-50 rounded-lg">
                 <p className="text-2xl font-bold text-red-600">
                   {gradeDistribution.poor}
                 </p>
@@ -427,7 +427,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 return (
                   <div
                     key={question.id}
-                    className="border border-gray-200 rounded-lg p-4"
+                    className="border border-gray-200 rounded-lg p-8"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <h4 className="font-medium text-gray-900">

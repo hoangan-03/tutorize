@@ -71,7 +71,7 @@ export class QuizController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy quiz' })
   findOne(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.findOne(id, userId);
   }
@@ -85,7 +85,7 @@ export class QuizController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy quiz' })
   findOneWithAnswers(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.findOneWithAnswers(id, userId);
   }
@@ -99,7 +99,7 @@ export class QuizController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateQuizDto: UpdateQuizDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.update(id, updateQuizDto, userId);
   }
@@ -112,7 +112,7 @@ export class QuizController {
   @ApiResponse({ status: 403, description: 'Không có quyền xóa' })
   remove(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.remove(id, userId);
   }
@@ -129,7 +129,7 @@ export class QuizController {
   submit(
     @Param('id', ParseIntPipe) id: number,
     @Body() submitQuizDto: SubmitQuizDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.submit(id, submitQuizDto, userId);
   }
@@ -142,7 +142,7 @@ export class QuizController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy quiz' })
   getSubmissions(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.getSubmissions(id, userId);
   }
@@ -154,9 +154,9 @@ export class QuizController {
   @ApiResponse({ status: 403, description: 'Không có quyền chấm điểm' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
   gradeSubmission(
-    @Param('submissionId') submissionId: string,
+    @Param('submissionId') submissionId: number,
     @Body() gradeSubmissionDto: GradeSubmissionDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.gradeSubmission(
       submissionId,

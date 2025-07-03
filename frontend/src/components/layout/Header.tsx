@@ -13,6 +13,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { LanguageSwitcher } from "../ui/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   mobileMenuOpen: boolean;
@@ -24,7 +26,8 @@ export const Header: React.FC<HeaderProps> = ({
   setMobileMenuOpen,
 }) => {
   const [managementDropdownOpen, setManagementDropdownOpen] = useState(false);
-  const { user, logout, isTeacher: isAdmin, loginDemo } = useAuth();
+  const { user, logout, isTeacher: isAdmin } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,8 +47,8 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const handleDemoLogin = () => {
-    loginDemo();
-    navigate("/dashboard");
+    // Demo functionality would be implemented here
+    navigate("/login");
   };
 
   return (
@@ -82,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <Home className="h-4 w-4 mr-2" />
-                    Dashboard
+                    {t("navigation.dashboard")}
                   </button>
                   <button
                     onClick={() => handleNavigation("/quizzes")}
@@ -93,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    Exercises
+                    {t("navigation.exercises")}
                   </button>
                   {/* <button
                     onClick={() => handleNavigation("/exercises")}
@@ -115,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <Award className="h-4 w-4 mr-2" />
-                    IELTS
+                    {t("navigation.ielts")}
                   </button>
                   <button
                     onClick={() => handleNavigation("/library")}
@@ -126,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
                     }`}
                   >
                     <Library className="h-4 w-4 mr-2" />
-                    Library
+                    {t("navigation.documents")}
                   </button>
 
                   {/* Management Dropdown - Admin Only */}
@@ -144,7 +147,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <Settings className="h-4 w-4 mr-2" />
-                        Management
+                        {t("navigation.settings")}
                         <ChevronDown
                           className={`h-4 w-4 ml-1 transition-transform ${
                             managementDropdownOpen ? "rotate-180" : ""
@@ -208,10 +211,13 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Auth buttons */}
               <div className="hidden lg:flex items-center space-x-3">
+                {/* Language Switcher */}
+                <LanguageSwitcher />
+
                 {user ? (
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-gray-600">
-                      Xin chào, {user.name}{" "}
+                      {user.name}{" "}
                       {isAdmin && (
                         <span className="text-blue-600 font-medium">
                           (Admin)
@@ -222,7 +228,7 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={handleLogout}
                       className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                      Logout
+                      {t("navigation.logout")}
                     </button>
                   </div>
                 ) : (
@@ -231,13 +237,13 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={() => handleNavigation("/login")}
                       className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                     >
-                      Login
+                      {t("navigation.login")}
                     </button>
                     <button
                       onClick={() => handleNavigation("/signup")}
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     >
-                      Sign Up
+                      {t("navigation.register")}
                     </button>
                     <button
                       onClick={handleDemoLogin}
@@ -249,8 +255,9 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* Mobile menu button */}
-              <div className="lg:hidden">
+              {/* Mobile actions */}
+              <div className="lg:hidden flex items-center space-x-2">
+                <LanguageSwitcher />
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
@@ -275,14 +282,14 @@ export const Header: React.FC<HeaderProps> = ({
                         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
                         <Home className="h-5 w-5 mr-3" />
-                        Dashboard
+                        {t("navigation.dashboard")}
                       </button>
                       <button
                         onClick={() => handleNavigation("/quizzes")}
                         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
                         <FileText className="h-5 w-5 mr-3" />
-                        Exercises
+                        {t("navigation.exercises")}
                       </button>
                       {/* <button
                         onClick={() => handleNavigation("/exercises")}
@@ -296,14 +303,14 @@ export const Header: React.FC<HeaderProps> = ({
                         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
                         <Award className="h-5 w-5 mr-3" />
-                        IELTS
+                        {t("navigation.ielts")}
                       </button>
                       <button
                         onClick={() => handleNavigation("/library")}
                         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
                         <Library className="h-5 w-5 mr-3" />
-                        Library
+                        {t("navigation.documents")}
                       </button>
 
                       {/* Mobile Management Menu - Admin Only */}
@@ -364,7 +371,7 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={handleLogout}
                       className="flex items-center w-full px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
                     >
-                      Logout
+                      {t("navigation.logout")}
                     </button>
                   ) : (
                     <div className="space-y-2">
@@ -372,13 +379,13 @@ export const Header: React.FC<HeaderProps> = ({
                         onClick={() => handleNavigation("/login")}
                         className="w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50"
                       >
-                        Login
+                        {t("navigation.login")}
                       </button>
                       <button
                         onClick={() => handleNavigation("/signup")}
                         className="w-full px-3 py-2 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
                       >
-                        Sign Up
+                        {t("navigation.register")}
                       </button>
                       <button
                         onClick={handleDemoLogin}

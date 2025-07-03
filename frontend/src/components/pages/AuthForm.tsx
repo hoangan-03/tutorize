@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   BookOpen,
   Eye,
@@ -31,6 +32,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const { login, loginDemo } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -50,18 +52,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     try {
       if (mode === "signup") {
         if (formData.password !== formData.confirmPassword) {
-          setError("Mật khẩu xác nhận không khớp");
+          setError(t("errors.passwordMismatch"));
           return;
         }
         // In a real app, you'd call a signup API here
-        alert("Đăng ký thành công! Vui lòng đăng nhập.");
+        alert(t("auth.registerSuccessful"));
         navigate("/login");
       } else {
         await login({ email: formData.email, password: formData.password });
         navigate(from, { replace: true });
       }
     } catch (err) {
-      setError("Đăng nhập thất bại. Vui lòng kiểm tra thông tin.");
+      setError(t("errors.loginFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -84,27 +86,29 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          {mode === "login" ? "Đăng nhập tài khoản" : "Tạo tài khoản mới"}
+          {mode === "login"
+            ? t("auth.loginToAccount")
+            : t("auth.createNewAccount")}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           {mode === "login" ? (
             <>
-              Chưa có tài khoản?{" "}
+              {t("auth.noAccount")}{" "}
               <Link
                 to="/signup"
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
-                Đăng ký ngay
+                {t("auth.signUpNow")}
               </Link>
             </>
           ) : (
             <>
-              Đã có tài khoản?{" "}
+              {t("auth.alreadyHaveAccount")}{" "}
               <Link
                 to="/login"
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
-                Đăng nhập
+                {t("auth.login")}
               </Link>
             </>
           )}
@@ -126,7 +130,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Họ và tên
+                  {t("auth.fullName")}
                 </label>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -140,7 +144,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nhập họ và tên"
+                    placeholder={t("auth.enterFullName")}
                   />
                 </div>
               </div>
@@ -166,7 +170,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Nhập địa chỉ email"
+                  placeholder={t("auth.enterEmail")}
                 />
               </div>
             </div>
@@ -176,7 +180,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700"
               >
-                Mật khẩu
+                {t("auth.password")}
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -193,7 +197,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                     handleInputChange("password", e.target.value)
                   }
                   className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Nhập mật khẩu"
+                  placeholder={t("auth.enterPassword")}
                 />
                 <button
                   type="button"
@@ -215,7 +219,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                   htmlFor="confirmPassword"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Xác nhận mật khẩu
+                  {t("auth.confirmPassword")}
                 </label>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -231,7 +235,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                       handleInputChange("confirmPassword", e.target.value)
                     }
                     className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nhập lại mật khẩu"
+                    placeholder={t("auth.enterPasswordAgain")}
                   />
                 </div>
               </div>
@@ -244,10 +248,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading
-                  ? "Đang xử lý..."
+                  ? t("auth.processing")
                   : mode === "login"
-                  ? "Đăng nhập"
-                  : "Đăng ký"}
+                  ? t("auth.login")
+                  : t("auth.register")}
               </button>
             </div>
 
@@ -258,7 +262,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                   onClick={handleDemoLogin}
                   className="group relative w-full flex justify-center py-2 px-4 border border-blue-600 text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  Demo Login (Admin)
+                  {t("auth.demoLogin")}
                 </button>
               </div>
             )}
@@ -270,7 +274,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Hoặc</span>
+                <span className="px-2 bg-white text-gray-500">
+                  {t("common.or")}
+                </span>
               </div>
             </div>
 
@@ -279,7 +285,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                 to="/"
                 className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
-                Về trang chủ
+                {t("auth.goToHomepage")}
               </Link>
             </div>
           </div>

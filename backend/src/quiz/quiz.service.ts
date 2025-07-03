@@ -19,7 +19,7 @@ import { Roles } from '../enum/role.enum';
 export class QuizService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createQuizDto: CreateQuizDto, createdBy: string) {
+  async create(createQuizDto: CreateQuizDto, createdBy: number) {
     const { questions, ...quizData } = createQuizDto;
 
     const quiz = await this.prisma.quiz.create({
@@ -135,7 +135,7 @@ export class QuizService {
     };
   }
 
-  async findOne(id: number, userId?: string) {
+  async findOne(id: number, userId?: number) {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
       include: {
@@ -185,7 +185,7 @@ export class QuizService {
     return quiz;
   }
 
-  async findOneWithAnswers(id: number, userId: string) {
+  async findOneWithAnswers(id: number, userId: number) {
     // Get user info first
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -215,7 +215,7 @@ export class QuizService {
             question: true,
             type: true,
             options: true,
-            correctAnswers: canSeeAnswers,
+            correctAnswer: canSeeAnswers,
             explanation: canSeeAnswers,
             points: true,
             order: true,
@@ -236,7 +236,7 @@ export class QuizService {
     return quizWithAnswers;
   }
 
-  async update(id: number, updateQuizDto: UpdateQuizDto, userId: string) {
+  async update(id: number, updateQuizDto: UpdateQuizDto, userId: number) {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
     });
@@ -274,7 +274,7 @@ export class QuizService {
     return updatedQuiz;
   }
 
-  async remove(id: number, userId: string) {
+  async remove(id: number, userId: number) {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
     });
@@ -299,7 +299,7 @@ export class QuizService {
     return { message: 'Xóa quiz thành công' };
   }
 
-  async submit(id: number, submitQuizDto: SubmitQuizDto, userId: string) {
+  async submit(id: number, submitQuizDto: SubmitQuizDto, userId: number) {
     const { answers, timeSpent } = submitQuizDto;
 
     // Check if quiz exists and is active
@@ -382,7 +382,7 @@ export class QuizService {
               select: {
                 id: true,
                 question: true,
-                correctAnswers: true,
+                correctAnswer: true,
                 explanation: true,
                 points: true,
               },
@@ -400,7 +400,7 @@ export class QuizService {
 
   async getSubmissions(
     id: number,
-    userId: string,
+    userId: number,
   ): Promise<PaginatedResultDto> {
     // Only creator or admin can view all submissions
     const user = await this.prisma.user.findUnique({
@@ -445,9 +445,9 @@ export class QuizService {
   }
 
   async gradeSubmission(
-    submissionId: string,
+    submissionId: number,
     gradeSubmissionDto: GradeSubmissionDto,
-    userId: string,
+    userId: number,
   ) {
     const { score, feedback } = gradeSubmissionDto;
 
@@ -494,16 +494,16 @@ export class QuizService {
   }
 
   private checkAnswer(question: any, userAnswer: string): boolean {
-    if (!question.correctAnswers || question.correctAnswers.length === 0) {
+    if (!question.correctAnswer || question.correctAnswer.length === 0) {
       return false;
     }
 
     switch (question.type) {
       case 'MULTIPLE_CHOICE':
       case 'TRUE_FALSE':
-        return question.correctAnswers.includes(userAnswer);
+        return question.correctAnswer.includes(userAnswer);
       case 'FILL_BLANK':
-        return question.correctAnswers.some(
+        return question.correctAnswer.some(
           (correct: string) =>
             correct.toLowerCase().trim() === userAnswer.toLowerCase().trim(),
         );

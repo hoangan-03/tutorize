@@ -61,7 +61,7 @@ export const QuizManagementReal: React.FC = () => {
     setSelectedQuiz(null);
   };
 
-  const handleDeleteQuiz = async (quizId: string) => {
+  const handleDeleteQuiz = async (quizid: number) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa quiz này không?")) {
       try {
         await deleteQuiz(quizId);
@@ -72,7 +72,7 @@ export const QuizManagementReal: React.FC = () => {
     }
   };
 
-  const handlePublishQuiz = async (quizId: string) => {
+  const handlePublishQuiz = async (quizid: number) => {
     try {
       await publishQuiz(quizId);
       mutate(); // Refresh the list
@@ -81,7 +81,7 @@ export const QuizManagementReal: React.FC = () => {
     }
   };
 
-  const handleCloseQuiz = async (quizId: string) => {
+  const handleCloseQuiz = async (quizid: number) => {
     if (window.confirm("Bạn có chắc chắn muốn đóng quiz này không?")) {
       try {
         await closeQuiz(quizId);

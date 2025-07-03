@@ -1,20 +1,69 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BookOpen,
   PenTool,
   Headphones,
   Mic,
   Clock,
-  Star,
   PlayCircle,
   Download,
 } from "lucide-react";
-import { ieltsResources } from "../../data/sampleData";
+import { ieltsService, IeltsTest } from "../../services/ieltsService";
 
 export const IeltsCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "Reading" | "Writing" | "Listening" | "Speaking"
   >("Reading");
+  const [ieltsResources, setIeltsResources] = useState<
+    Record<string, IeltsTest[]>
+  >({
+    Reading: [],
+    Writing: [],
+    Listening: [],
+    Speaking: [],
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadIeltsResources();
+  }, []);
+
+  const loadIeltsResources = async () => {
+    try {
+      setLoading(true);
+      const skillMap = {
+        Reading: "READING",
+        Writing: "WRITING",
+        Listening: "LISTENING",
+        Speaking: "SPEAKING",
+      };
+
+      const resourcePromises = Object.entries(skillMap).map(([key, skill]) =>
+        ieltsService
+          .getResourcesBySkill(skill)
+          .then((resources) => ({ key, resources }))
+      );
+
+      const results = await Promise.all(resourcePromises);
+      const resourceMap: Record<string, IeltsTest[]> = {
+        Reading: [],
+        Writing: [],
+        Listening: [],
+        Speaking: [],
+      };
+
+      results.forEach(({ key, resources }) => {
+        resourceMap[key] = resources;
+      });
+
+      setIeltsResources(resourceMap);
+    } catch (error) {
+      console.error("Error loading IELTS resources:", error);
+      // Keep default empty structure on error
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const tabConfig = {
     Reading: {
@@ -44,7 +93,7 @@ export const IeltsCenter: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-8">
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">IELTS Center</h1>
@@ -86,68 +135,74 @@ export const IeltsCenter: React.FC = () => {
 
           {/* Tab Content */}
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ieltsResources[activeTab].map((resource) => {
-                const config = tabConfig[activeTab];
-                const IconComponent = config.icon;
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {ieltsResources[activeTab]?.map((resource) => {
+                  const config = tabConfig[activeTab];
+                  const IconComponent = config.icon;
 
-                return (
-                  <div
-                    key={resource.id}
-                    className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`p-2 ${config.bgColor} rounded-lg`}>
-                        <IconComponent
-                          className={`h-6 w-6 ${config.textColor}`}
-                        />
+                  return (
+                    <div
+                      key={resource.id}
+                      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`p-2 ${config.bgColor} rounded-lg`}>
+                          <IconComponent
+                            className={`h-6 w-6 ${config.textColor}`}
+                          />
+                        </div>
+                        {/* <div className="flex space-x-1">
+                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <Star className="h-4 w-4 text-gray-300" />
+                        </div> */}
                       </div>
-                      <div className="flex space-x-1">
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <Star className="h-4 w-4 text-gray-300" />
+
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {resource.title}
+                      </h3>
+
+                      <p className="text-gray-600 text-sm mb-4">
+                        {resource.description}
+                      </p>
+
+                      <div className="flex items-center mb-4 text-sm text-gray-500">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>45-60 phút</span>
+                      </div>
+
+                      <div className="flex space-x-2">
+                        <button
+                          className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          onClick={() => {
+                            if (resource.skill === "WRITING") {
+                              setCurrentPage("writing");
+                            }
+                          }}
+                        >
+                          <PlayCircle className="h-4 w-4 mr-2" />
+                          Bắt đầu
+                        </button>
+                        <button
+                          className="flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                          aria-label="Tải xuống tài liệu"
+                          title="Tải xuống"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
-
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {resource.title}
-                    </h3>
-
-                    <p className="text-gray-600 text-sm mb-4">
-                      {resource.description}
-                    </p>
-
-                    <div className="flex items-center mb-4 text-sm text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      <span>45-60 phút</span>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <button
-                        className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        onClick={() => {
-                          if (resource.skill === "Writing") {
-                            setCurrentPage("writing");
-                          }
-                        }}
-                      >
-                        <PlayCircle className="h-4 w-4 mr-2" />
-                        Bắt đầu
-                      </button>
-                      <button
-                        className="flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                        aria-label="Tải xuống tài liệu"
-                        title="Tải xuống"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -208,7 +263,7 @@ export const IeltsCenter: React.FC = () => {
             Kế hoạch học tập IELTS
           </h2>
           <div className="space-y-4">
-            <div className="flex items-center p-4 bg-blue-50 rounded-lg">
+            <div className="flex items-center p-8 bg-blue-50 rounded-lg">
               <div className="p-2 bg-blue-100 rounded-lg mr-4">
                 <BookOpen className="h-5 w-5 text-blue-600" />
               </div>
@@ -223,7 +278,7 @@ export const IeltsCenter: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center p-4 bg-green-50 rounded-lg">
+            <div className="flex items-center p-8 bg-green-50 rounded-lg">
               <div className="p-2 bg-green-100 rounded-lg mr-4">
                 <PenTool className="h-5 w-5 text-green-600" />
               </div>
@@ -240,7 +295,7 @@ export const IeltsCenter: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center p-4 bg-purple-50 rounded-lg">
+            <div className="flex items-center p-8 bg-purple-50 rounded-lg">
               <div className="p-2 bg-purple-100 rounded-lg mr-4">
                 <Headphones className="h-5 w-5 text-purple-600" />
               </div>

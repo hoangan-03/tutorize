@@ -12,6 +12,7 @@ import "./App.css";
 
 // Contexts
 import { AuthProvider } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 // Components
 import { StagewiseToolbar } from "@stagewise/toolbar-react";
@@ -218,23 +219,25 @@ function App() {
         focusThrottleInterval: 5000,
       }}
     >
-      <AuthProvider>
-        <Router>
-          <AppContent />
-          <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-        </Router>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <Router>
+            <AppContent />
+            <ToastContainer
+              position="top-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+          </Router>
+        </AuthProvider>
+      </LanguageProvider>
     </SWRConfig>
   );
 }

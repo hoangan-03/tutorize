@@ -165,5 +165,5 @@ export class WritingFilterDto extends PaginationDto {
   @ApiPropertyOptional({ description: 'Người dùng' })
   @IsOptional()
   @IsString()
-  userId?: string;
+  userId?: number;
 }

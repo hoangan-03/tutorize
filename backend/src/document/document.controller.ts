@@ -78,7 +78,7 @@ export class DocumentController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy tài liệu' })
   findOne(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.documentService.findOne(id, userId);
   }
@@ -92,7 +92,7 @@ export class DocumentController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDocumentDto: UpdateDocumentDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.documentService.update(id, updateDocumentDto, userId);
   }
@@ -105,7 +105,7 @@ export class DocumentController {
   @ApiResponse({ status: 403, description: 'Không có quyền xóa' })
   remove(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.documentService.remove(id, userId);
   }
@@ -115,7 +115,7 @@ export class DocumentController {
   @ApiOperation({ summary: 'Tải xuống tài liệu' })
   @ApiResponse({ status: 200, description: 'Tải xuống thành công' })
   async download(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
     @Res() res: Response,
   ) {
@@ -128,7 +128,7 @@ export class DocumentController {
   @ApiOperation({ summary: 'Lịch sử truy cập tài liệu (Teacher only)' })
   @ApiResponse({ status: 200, description: 'Lịch sử truy cập' })
   async getAccessHistory(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Query() query: PaginationDto,
   ) {
     return this.documentService.getAccessHistory(+id, query);
@@ -138,7 +138,7 @@ export class DocumentController {
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Phê duyệt tài liệu' })
   @ApiResponse({ status: 200, description: 'Phê duyệt thành công' })
-  async approve(@Param('id') id: string, @CurrentUser() user: any) {
+  async approve(@Param('id') id: number, @CurrentUser() user: any) {
     return this.documentService.approve(+id, user.id);
   }
 }

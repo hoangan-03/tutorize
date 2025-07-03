@@ -26,7 +26,7 @@ export const useDocuments = (params?: PaginationParams) => {
 };
 
 // Get single document
-export const useDocument = (id: string | null) => {
+export const useDocument = (id: number | null) => {
   const {
     data: document,
     error,
@@ -68,7 +68,7 @@ export const useDocumentManagement = () => {
   };
 
   const updateDocument = async (
-    id: string,
+    id: number,
     documentData: Partial<Document>
   ) => {
     try {
@@ -86,7 +86,7 @@ export const useDocumentManagement = () => {
     }
   };
 
-  const deleteDocument = async (id: string) => {
+  const deleteDocument = async (id: number) => {
     try {
       await documentService.deleteDocument(id);
       mutate("/documents");
@@ -99,7 +99,7 @@ export const useDocumentManagement = () => {
     }
   };
 
-  const downloadDocument = async (id: string, fileName: string) => {
+  const downloadDocument = async (id: number, fileName: string) => {
     try {
       const blob = await documentService.downloadDocument(id);
 
@@ -122,7 +122,7 @@ export const useDocumentManagement = () => {
     }
   };
 
-  const approveDocument = async (id: string) => {
+  const approveDocument = async (id: number) => {
     try {
       const document = await documentService.approveDocument(id);
       mutate(`/documents/${id}`, document, false);

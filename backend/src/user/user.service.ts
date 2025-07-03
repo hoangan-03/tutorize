@@ -115,7 +115,7 @@ export class UserService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -143,9 +143,9 @@ export class UserService {
   }
 
   async update(
-    id: string,
+    id: number,
     updateUserDto: UpdateUserDto,
-    currentUserId: string,
+    currentUserId: number,
   ) {
     const user = await this.prisma.user.findUnique({
       where: { id },
@@ -189,7 +189,7 @@ export class UserService {
     return userWithoutPassword;
   }
 
-  async toggleActivation(id: string) {
+  async toggleActivation(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });

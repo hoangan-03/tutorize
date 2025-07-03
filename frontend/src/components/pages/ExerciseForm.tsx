@@ -12,7 +12,7 @@ interface Exercise {
   note: string;
   content: string;
   latexContent: string;
-  createdBy: string;
+  createdBy: number;
   createdAt: string;
   submissions: number;
   status: string;
@@ -173,7 +173,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
         {/* Content Editor */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="border-b border-gray-200 p-4">
+            <div className="border-b border-gray-200 p-8">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Nội dung bài tập
@@ -206,7 +206,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
               </div>
             </div>
 
-            <div className="p-4">
+            <div className="p-8">
               {editMode === "rich" ? (
                 <div>
                   <RichTextEditor

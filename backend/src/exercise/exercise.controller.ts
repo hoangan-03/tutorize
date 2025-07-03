@@ -73,9 +73,9 @@ export class ExerciseController {
   @ApiResponse({ status: 403, description: 'Không có quyền chấm điểm' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
   gradeSubmission(
-    @Param('submissionId') submissionId: string,
+    @Param('submissionId') submissionId: number,
     @Body() gradeExerciseDto: GradeExerciseDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.gradeSubmission(
       submissionId,
@@ -90,7 +90,7 @@ export class ExerciseController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
   findOne(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.findOne(id, userId);
   }
@@ -105,7 +105,7 @@ export class ExerciseController {
   @ApiResponse({ status: 403, description: 'Không có quyền xem đáp án' })
   findOneWithAnswers(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.findOneWithAnswers(id, userId);
   }
@@ -119,7 +119,7 @@ export class ExerciseController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateExerciseDto: UpdateExerciseDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.update(id, updateExerciseDto, userId);
   }
@@ -132,7 +132,7 @@ export class ExerciseController {
   @ApiResponse({ status: 403, description: 'Không có quyền xóa' })
   remove(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.remove(id, userId);
   }
@@ -148,7 +148,7 @@ export class ExerciseController {
   })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
   async submitExercise(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() submitExerciseDto: SubmitExerciseDto,
     @CurrentUser() user: any,
   ) {
@@ -163,7 +163,7 @@ export class ExerciseController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
   getSubmissions(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.getSubmissions(id, userId);
   }
