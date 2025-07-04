@@ -25,6 +25,25 @@ export enum QuizStatus {
   CLOSED = "CLOSED",
 }
 
+export enum Subject {
+  MATH = "MATH",
+  PHYSICS = "PHYSICS",
+  LITERATURE = "LITERATURE",
+  CHEMISTRY = "CHEMISTRY",
+  BIOLOGY = "BIOLOGY",
+  NATURAL_SCIENCE = "NATURAL_SCIENCE",
+  ENGLISH = "ENGLISH",
+  HISTORY = "HISTORY",
+  GEOGRAPHY = "GEOGRAPHY",
+  CIVICS = "CIVICS",
+  CAREER_GUIDANCE = "CAREER_GUIDANCE",
+  LOCAL_STUDIES = "LOCAL_STUDIES",
+  ECONOMICS_LAW = "ECONOMICS_LAW",
+  TECHNOLOGY = "TECHNOLOGY",
+  ART = "ART",
+  MUSIC = "MUSIC",
+}
+
 export enum QuestionType {
   MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
   TRUE_FALSE = "TRUE_FALSE",
@@ -195,6 +214,12 @@ export interface Quiz {
   isPublic: boolean;
   tags: string[];
   instructions?: string;
+  maxAttempts: number;
+  isAllowedReviewed: boolean;
+  isAllowedViewAnswerAfterSubmit: boolean;
+  showResultsImmediately: boolean;
+  shuffleQuestions: boolean;
+  shuffleAnswers: boolean;
   createdAt: string;
   updatedAt: string;
 
@@ -210,7 +235,7 @@ export interface Question {
   question: string;
   type: QuestionType;
   options: string[];
-  correctAnswers: string;
+  correctAnswer: string;
   points: number;
   explanation?: string;
   order: number;
@@ -228,6 +253,7 @@ export interface QuizSubmission {
   id: number;
   quizId: number;
   userId: number;
+  attemptNumber: number;
   score: number;
   totalPoints: number;
   timeSpent: number;

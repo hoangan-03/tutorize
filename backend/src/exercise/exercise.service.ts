@@ -425,4 +425,93 @@ export class ExerciseService {
       },
     });
   }
+
+  async getMySubmissions(userId: number, query: any) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const [submissions, total] = await Promise.all([
+      this.prisma.exerciseSubmission.findMany({
+        where: { userId },
+        include: {
+          exercise: {
+            select: {
+              id: true,
+              name: true,
+              subject: true,
+              grade: true,
+              status: true,
+              deadline: true,
+              creator: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { submittedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.exerciseSubmission.count({
+        where: { userId },
+      }),
+    ]);
+
+    return {
+      data: submissions,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getMyStats(userId: number) {
+    const [submittedCount, averageScore, gradedCount, recentSubmissions] =
+      await Promise.all([
+        this.prisma.exerciseSubmission.count({
+          where: { userId },
+        }),
+        this.prisma.exerciseSubmission.aggregate({
+          where: {
+            userId,
+            score: { not: null },
+          },
+          _avg: { score: true },
+        }),
+        this.prisma.exerciseSubmission.count({
+          where: {
+            userId,
+            status: 'GRADED',
+          },
+        }),
+        this.prisma.exerciseSubmission.findMany({
+          where: { userId },
+          include: {
+            exercise: {
+              select: {
+                id: true,
+                name: true,
+                subject: true,
+              },
+            },
+          },
+          orderBy: { submittedAt: 'desc' },
+          take: 5,
+        }),
+      ]);
+
+    return {
+      submitted: submittedCount,
+      averageScore: Math.round(averageScore._avg.score || 0),
+      graded: gradedCount,
+      pending: submittedCount - gradedCount,
+      recentSubmissions,
+    };
+  }
 }

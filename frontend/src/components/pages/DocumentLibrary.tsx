@@ -135,11 +135,11 @@ export const DocumentLibrary: React.FC = () => {
                       <BookOpen className="h-6 w-6 text-blue-600" />
                     </div>
                     {/* <div className="flex space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <Star className="h-4 w-4 text-gray-300" />
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <Star className="h-4 w-4 text-gray-300" />
                     </div> */}
                   </div>
 

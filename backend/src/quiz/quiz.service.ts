@@ -31,7 +31,7 @@ export class QuizService {
           create: questions.map((question) => ({
             ...question,
             options: question.options || [],
-            correctAnswers: question.correctAnswers || [],
+            correctAnswer: question.correctAnswer || '',
           })),
         },
       },
@@ -141,21 +141,6 @@ export class QuizService {
       include: {
         questions: {
           orderBy: { order: 'asc' },
-          select: {
-            id: true,
-            question: true,
-            type: true,
-            options: true,
-            points: true,
-            order: true,
-            imageUrl: true,
-            audioUrl: true,
-            // Don't include correctAnswers for students
-            ...(userId && {
-              correctAnswers: false,
-              explanation: false,
-            }),
-          },
         },
         creator: {
           select: {
@@ -180,6 +165,20 @@ export class QuizService {
 
     if (!quiz) {
       throw new NotFoundException('Không tìm thấy quiz');
+    }
+
+    // Hide correct answers for students
+    if (userId && quiz.questions) {
+      const questionsWithoutAnswers = quiz.questions.map((question) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { correctAnswer, explanation, ...questionWithoutAnswers } =
+          question;
+        return questionWithoutAnswers;
+      });
+      return {
+        ...quiz,
+        questions: questionsWithoutAnswers,
+      };
     }
 
     return quiz;
@@ -322,19 +321,25 @@ export class QuizService {
       throw new BadRequestException('Quiz đã hết hạn');
     }
 
-    // Check if user already submitted
-    const existingSubmission = await this.prisma.quizSubmission.findUnique({
+    // Check user's previous attempts
+    const userSubmissions = await this.prisma.quizSubmission.findMany({
       where: {
-        quizId_userId: {
-          quizId: id,
-          userId,
-        },
+        quizId: id,
+        userId,
       },
+      orderBy: { attemptNumber: 'desc' },
     });
 
-    if (existingSubmission) {
-      throw new BadRequestException('Bạn đã nộp bài quiz này rồi');
+    const attemptCount = userSubmissions.length;
+
+    // Check if user has exceeded max attempts
+    if (quiz.maxAttempts > 0 && attemptCount >= quiz.maxAttempts) {
+      throw new BadRequestException(
+        `Bạn đã hết lượt làm bài. Số lần làm bài tối đa là ${quiz.maxAttempts}.`,
+      );
     }
+
+    const nextAttemptNumber = attemptCount + 1;
 
     // Calculate score
     let totalScore = 0;
@@ -366,6 +371,7 @@ export class QuizService {
       data: {
         quizId: id,
         userId,
+        attemptNumber: nextAttemptNumber,
         score: totalScore,
         totalPoints,
         timeSpent: timeSpent || 0,
@@ -501,11 +507,13 @@ export class QuizService {
     switch (question.type) {
       case 'MULTIPLE_CHOICE':
       case 'TRUE_FALSE':
-        return question.correctAnswer.includes(userAnswer);
+        // For multiple choice, correctAnswer stores the index of correct option
+        return question.correctAnswer === userAnswer;
       case 'FILL_BLANK':
-        return question.correctAnswer.some(
-          (correct: string) =>
-            correct.toLowerCase().trim() === userAnswer.toLowerCase().trim(),
+        // For fill in the blank, do case-insensitive comparison
+        return (
+          question.correctAnswer.toLowerCase().trim() ===
+          userAnswer.toLowerCase().trim()
         );
       case 'ESSAY':
         // Essay questions need manual grading
@@ -529,5 +537,141 @@ export class QuizService {
         averageScore: stats._avg.score || 0,
       },
     });
+  }
+
+  async getMySubmissions(userId: number, query: any) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const [submissions, total] = await Promise.all([
+      this.prisma.quizSubmission.findMany({
+        where: { userId },
+        include: {
+          quiz: {
+            select: {
+              id: true,
+              title: true,
+              subject: true,
+              grade: true,
+              status: true,
+              deadline: true,
+              creator: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { submittedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.quizSubmission.count({
+        where: { userId },
+      }),
+    ]);
+
+    return {
+      data: submissions,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getQuizSubmissionHistory(quizId: number, userId: number) {
+    const submissions = await this.prisma.quizSubmission.findMany({
+      where: {
+        quizId,
+        userId,
+      },
+      orderBy: { submittedAt: 'desc' },
+      include: {
+        answers: {
+          include: {
+            question: {
+              select: {
+                id: true,
+                question: true,
+                correctAnswer: true,
+                points: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+    });
+
+    const maxAttempts = quiz.maxAttempts || 1;
+    const currentAttempt = Math.max(0, maxAttempts - submissions.length);
+    console.log(maxAttempts);
+    return {
+      quiz,
+      submissions,
+      canRetake: currentAttempt > 0,
+      remainingAttempts: currentAttempt,
+      currentAttempt,
+    };
+  }
+
+  async getMyStats(userId: number) {
+    const [
+      completedCount,
+      averageScore,
+      totalTimeSpent,
+      excellentCount,
+      recentSubmissions,
+    ] = await Promise.all([
+      this.prisma.quizSubmission.count({
+        where: { userId },
+      }),
+      this.prisma.quizSubmission.aggregate({
+        where: { userId },
+        _avg: { score: true },
+      }),
+      this.prisma.quizSubmission.aggregate({
+        where: { userId },
+        _sum: { timeSpent: true },
+      }),
+      this.prisma.quizSubmission.count({
+        where: {
+          userId,
+          score: { gte: 90 },
+        },
+      }),
+      this.prisma.quizSubmission.findMany({
+        where: { userId },
+        include: {
+          quiz: {
+            select: {
+              id: true,
+              title: true,
+              subject: true,
+            },
+          },
+        },
+        orderBy: { submittedAt: 'desc' },
+        take: 5,
+      }),
+    ]);
+
+    return {
+      completed: completedCount,
+      averageScore: Math.round(averageScore._avg.score || 0),
+      excellent: excellentCount,
+      averageTime: Math.round(
+        (totalTimeSpent._sum.timeSpent || 0) / Math.max(completedCount, 1),
+      ),
+      recentSubmissions,
+    };
   }
 }

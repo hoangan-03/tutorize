@@ -71,23 +71,29 @@ enum Role {
 // ============================================================================
 
 model Quiz {
-  id               Int        @id @default(autoincrement())
-  title            String
-  description      String     @db.Text
-  subject          String
-  grade            Int
-  timeLimit        Int // minutes
-  deadline         DateTime
-  status           QuizStatus @default(DRAFT)
-  createdBy        Int
-  totalQuestions   Int        @default(0)
-  totalSubmissions Int        @default(0)
-  averageScore     Float      @default(0)
-  isPublic         Boolean    @default(false)
-  tags             String[]
-  instructions     String?    @db.Text
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  id                             Int        @id @default(autoincrement())
+  title                          String
+  description                    String     @db.Text
+  subject                        String
+  grade                          Int
+  timeLimit                      Int // minutes
+  deadline                       DateTime
+  status                         QuizStatus @default(DRAFT)
+  createdBy                      Int
+  totalQuestions                 Int        @default(0)
+  totalSubmissions               Int        @default(0)
+  averageScore                   Float      @default(0)
+  isPublic                       Boolean    @default(false)
+  tags                           String[]
+  instructions                   String?    @db.Text
+  maxAttempts                    Int        @default(1) // number of times user can take quiz
+  isAllowedReviewed              Boolean    @default(false) // can review quiz after submit
+  isAllowedViewAnswerAfterSubmit Boolean    @default(false) // can view correct answers after submit
+  showResultsImmediately         Boolean    @default(true) // show results right after submit
+  shuffleQuestions               Boolean    @default(false) // randomize question order
+  shuffleAnswers                 Boolean    @default(false) // randomize answer options
+  createdAt                      DateTime   @default(now())
+  updatedAt                      DateTime   @updatedAt
 
   creator     User             @relation("QuizCreator", fields: [createdBy], references: [id])
   questions   Question[]
@@ -119,23 +125,24 @@ model Question {
 }
 
 model QuizSubmission {
-  id          Int              @id @default(autoincrement())
-  quizId      Int
-  userId      Int
-  score       Float            @default(0)
-  totalPoints Float            @default(0)
-  timeSpent   Int              @default(0) // seconds
-  submittedAt DateTime         @default(now())
-  gradedAt    DateTime?
-  feedback    String?          @db.Text
-  status      SubmissionStatus @default(SUBMITTED)
+  id            Int              @id @default(autoincrement())
+  quizId        Int
+  userId        Int
+  attemptNumber Int              @default(1) // which attempt this is (1st, 2nd, etc.)
+  score         Float            @default(0)
+  totalPoints   Float            @default(0)
+  timeSpent     Int              @default(0) // seconds
+  submittedAt   DateTime         @default(now())
+  gradedAt      DateTime?
+  feedback      String?          @db.Text
+  status        SubmissionStatus @default(SUBMITTED)
 
   // Relations
   quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
   user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   answers QuizAnswer[]
 
-  @@unique([quizId, userId])
+  @@unique([quizId, userId, attemptNumber])
   @@map("quiz_submissions")
 }
 

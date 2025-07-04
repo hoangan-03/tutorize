@@ -164,4 +164,39 @@ export class QuizController {
       userId,
     );
   }
+
+  @Get(':id/submission-history')
+  @ApiOperation({ summary: 'Lấy lịch sử nộp bài của user cho quiz này' })
+  @ApiResponse({ status: 200, description: 'Lịch sử nộp bài của user' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy quiz' })
+  getQuizSubmissionHistory(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.quizService.getQuizSubmissionHistory(id, user.id);
+  }
+}
+
+@ApiTags('Quiz Submissions')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('quiz-submissions')
+export class QuizSubmissionController {
+  constructor(private readonly quizService: QuizService) {}
+
+  @Get('my')
+  @ApiOperation({ summary: 'Lấy danh sách bài nộp của tôi' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Danh sách bài nộp của user' })
+  getMySubmissions(@Query() query: any, @CurrentUser() user: any) {
+    return this.quizService.getMySubmissions(user.id, query);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Thống kê bài nộp của tôi' })
+  @ApiResponse({ status: 200, description: 'Thống kê bài nộp' })
+  getMyStats(@CurrentUser() user: any) {
+    return this.quizService.getMyStats(user.id);
+  }
 }

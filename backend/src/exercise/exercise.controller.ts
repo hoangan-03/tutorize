@@ -168,3 +168,27 @@ export class ExerciseController {
     return this.exerciseService.getSubmissions(id, userId);
   }
 }
+
+@ApiTags('Exercise Submissions')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('exercise-submissions')
+export class ExerciseSubmissionController {
+  constructor(private readonly exerciseService: ExerciseService) {}
+
+  @Get('my')
+  @ApiOperation({ summary: 'Lấy danh sách bài nộp của tôi' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Danh sách bài nộp của user' })
+  getMySubmissions(@Query() query: any, @CurrentUser() user: any) {
+    return this.exerciseService.getMySubmissions(user.id, query);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Thống kê bài nộp của tôi' })
+  @ApiResponse({ status: 200, description: 'Thống kê bài nộp' })
+  getMyStats(@CurrentUser() user: any) {
+    return this.exerciseService.getMyStats(user.id);
+  }
+}

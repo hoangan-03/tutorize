@@ -113,7 +113,25 @@ export const quizService = {
     return response.data;
   },
 
-  async submitQuiz(submissionId: number): Promise<QuizSubmission> {
+  async submitQuiz(
+    quizId: number,
+    submitData: {
+      answers: Array<{
+        questionId: number;
+        userAnswer: string;
+        timeTaken?: number;
+      }>;
+      timeSpent?: number;
+    }
+  ): Promise<QuizSubmission> {
+    const response = await api.post<QuizSubmission>(
+      `/quizzes/${quizId}/submit`,
+      submitData
+    );
+    return response.data;
+  },
+
+  async submitQuizOld(submissionId: number): Promise<QuizSubmission> {
     const response = await api.post<QuizSubmission>(
       `/quiz-submissions/${submissionId}/submit`
     );
@@ -165,6 +183,18 @@ export const quizService = {
 
   async getMyQuizStats(): Promise<any> {
     const response = await api.get("/quiz-submissions/stats");
+    return response.data;
+  },
+
+  // Quiz Submission History
+  async getQuizSubmissionHistory(quizId: number): Promise<{
+    quiz: Quiz;
+    submissions: QuizSubmission[];
+    canRetake: boolean;
+    remainingAttempts: number;
+    currentAttempt: number;
+  }> {
+    const response = await api.get(`/quizzes/${quizId}/submission-history`);
     return response.data;
   },
 };

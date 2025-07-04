@@ -26,6 +26,7 @@ async function main() {
     prisma.writingAssessment.deleteMany(),
     prisma.notification.deleteMany(),
     prisma.systemLog.deleteMany(),
+    prisma.systemConfig.deleteMany(),
     prisma.userProfile.deleteMany(),
     prisma.user.deleteMany(),
   ]);
@@ -62,6 +63,7 @@ async function main() {
   // Create sample students
   console.log('👨‍🎓 Creating sample students...');
   const studentPassword = await bcrypt.hash('Student123!', 12);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const student1 = await prisma.user.create({
     data: {
       email: 'student1@tutorplatform.com',
@@ -88,6 +90,7 @@ async function main() {
     },
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const student2 = await prisma.user.create({
     data: {
       email: 'student2@tutorplatform.com',
@@ -116,18 +119,18 @@ async function main() {
 
   // Create sample quiz
   console.log('📝 Creating sample quiz...');
-  const quiz = await prisma.quiz.create({
+  const quiz1 = await prisma.quiz.create({
     data: {
       title: 'Kiểm tra Toán học - Phương trình bậc hai',
       description: 'Bài kiểm tra về phương trình bậc hai và ứng dụng',
-      subject: 'Toán học',
+      subject: 'math',
       grade: 10,
       timeLimit: 45,
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       status: 'ACTIVE',
       createdBy: teacher.id,
       isPublic: true,
-      tags: ['toán học', 'phương trình', 'đại số'],
+      tags: ['math', 'equation', 'algebra'],
       instructions: 'Làm bài cẩn thận, đọc kỹ đề trước khi trả lời.',
       questions: {
         create: [
@@ -170,9 +173,64 @@ async function main() {
     },
   });
 
+  const quiz2 = await prisma.quiz.create({
+    data: {
+      title: 'Kiểm tra Toán học - Hàm số bậc hai',
+      description: 'Bài kiểm tra về hàm số bậc hai và ứng dụng',
+      subject: 'math',
+      grade: 10,
+      timeLimit: 45,
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      status: 'ACTIVE',
+      createdBy: teacher.id,
+      isPublic: true,
+      tags: ['math', 'function', 'algebra'],
+      instructions: 'Làm bài cẩn thận, đọc kỹ đề trước khi trả lời.',
+      questions: {
+        create: [
+          {
+            question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
+            type: 'MULTIPLE_CHOICE',
+            options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
+            correctAnswer: '(2, 1)',
+            points: 1,
+            explanation:
+              'Đỉnh của hàm số bậc hai y = ax² + bx + c là (x, y) = (-b/2a, -Δ/4a)',
+            order: 1,
+          },
+          {
+            question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
+            type: 'MULTIPLE_CHOICE',
+            options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
+            correctAnswer: '(2, 1)',
+            points: 1,
+            explanation:
+              'Đỉnh của hàm số bậc hai y = ax² + bx + c là (x, y) = (-b/2a, -Δ/4a)',
+            order: 2,
+          },
+          {
+            question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
+            type: 'MULTIPLE_CHOICE',
+            options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
+            correctAnswer: '(2, 1)',
+            points: 1,
+            explanation:
+              'Đỉnh của hàm số bậc hai y = ax² + bx + c là (x, y) = (-b/2a, -Δ/4a)',
+            order: 3,
+          },
+        ],
+      },
+    },
+  });
+
   // Update quiz statistics
   await prisma.quiz.update({
-    where: { id: quiz.id },
+    where: { id: quiz1?.id },
+    data: { totalQuestions: 3 },
+  });
+
+  await prisma.quiz.update({
+    where: { id: quiz2?.id },
     data: { totalQuestions: 3 },
   });
 
@@ -182,9 +240,9 @@ async function main() {
     data: {
       name: 'Bài tập về Hàm số bậc hai',
       description: 'Giải các bài tập về đồ thị và tính chất hàm số bậc hai',
-      subject: 'Toán học',
+      subject: 'math',
       grade: 10,
-      deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+      deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       content: `
         <h2>Bài tập về Hàm số bậc hai</h2>
         <p><strong>Bài 1:</strong> Cho hàm số y = x² - 4x + 3</p>
@@ -201,6 +259,25 @@ async function main() {
           <li>Nghiệm kép</li>
           <li>Vô nghiệm</li>
         </ol>
+      `,
+      createdBy: teacher.id,
+      status: 'ACTIVE',
+      maxScore: 100,
+      allowLateSubmission: true,
+      isPublic: true,
+    },
+  });
+
+  // create an exercise with near deadline
+  await prisma.exercise.create({
+    data: {
+      name: 'Bài tập về Hàm số bậc hai',
+      description: 'Giải các bài tập về đồ thị và tính chất hàm số bậc hai',
+      subject: 'math',
+      grade: 12,
+      deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      content: `
+        <h2>Bài tập về Hàm số bậc hai</h2>
       `,
       createdBy: teacher.id,
       status: 'ACTIVE',
@@ -233,6 +310,7 @@ async function main() {
 
   // Create sample IELTS test
   console.log('🎯 Creating sample IELTS test...');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const ieltsTest = await prisma.ieltsTest.create({
     data: {
       title: 'IELTS Reading Practice Test 1',

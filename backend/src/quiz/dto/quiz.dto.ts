@@ -37,10 +37,9 @@ export class CreateQuestionDto {
   @IsString({ each: true })
   options?: string[];
 
-  @ApiProperty({ type: [String], description: 'Đáp án đúng' })
-  @IsArray()
-  @IsString({ each: true })
-  correctAnswers: string[];
+  @ApiProperty({ description: 'Đáp án đúng' })
+  @IsString()
+  correctAnswer: string;
 
   @ApiPropertyOptional({ default: 1, description: 'Điểm số' })
   @IsOptional()
@@ -125,6 +124,52 @@ export class CreateQuizDto {
   @IsString()
   instructions?: string;
 
+  @ApiPropertyOptional({ default: 1, description: 'Số lần làm bài tối đa' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  maxAttempts?: number = 1;
+
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Cho phép xem lại bài làm',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isAllowedReviewed?: boolean = false;
+
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Cho phép xem đáp án sau khi nộp',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isAllowedViewAnswerAfterSubmit?: boolean = false;
+
+  @ApiPropertyOptional({
+    default: true,
+    description: 'Hiển thị kết quả ngay sau khi nộp',
+  })
+  @IsOptional()
+  @IsBoolean()
+  showResultsImmediately?: boolean = true;
+
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Xáo trộn thứ tự câu hỏi',
+  })
+  @IsOptional()
+  @IsBoolean()
+  shuffleQuestions?: boolean = false;
+
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Xáo trộn thứ tự đáp án',
+  })
+  @IsOptional()
+  @IsBoolean()
+  shuffleAnswers?: boolean = false;
+
   @ApiProperty({ type: [CreateQuestionDto], description: 'Danh sách câu hỏi' })
   @IsArray()
   @ValidateNested({ each: true })
@@ -188,6 +233,37 @@ export class UpdateQuizDto {
   @IsOptional()
   @IsString()
   instructions?: string;
+
+  @ApiPropertyOptional({ description: 'Số lần làm bài tối đa' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  maxAttempts?: number;
+
+  @ApiPropertyOptional({ description: 'Cho phép xem lại bài làm' })
+  @IsOptional()
+  @IsBoolean()
+  isAllowedReviewed?: boolean;
+
+  @ApiPropertyOptional({ description: 'Cho phép xem đáp án sau khi nộp' })
+  @IsOptional()
+  @IsBoolean()
+  isAllowedViewAnswerAfterSubmit?: boolean;
+
+  @ApiPropertyOptional({ description: 'Hiển thị kết quả ngay sau khi nộp' })
+  @IsOptional()
+  @IsBoolean()
+  showResultsImmediately?: boolean;
+
+  @ApiPropertyOptional({ description: 'Xáo trộn thứ tự câu hỏi' })
+  @IsOptional()
+  @IsBoolean()
+  shuffleQuestions?: boolean;
+
+  @ApiPropertyOptional({ description: 'Xáo trộn thứ tự đáp án' })
+  @IsOptional()
+  @IsBoolean()
+  shuffleAnswers?: boolean;
 }
 
 export class QuizAnswerDto {
