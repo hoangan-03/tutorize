@@ -202,7 +202,7 @@ export interface Quiz {
   id: number;
   title: string;
   description: string;
-  subject: string;
+  subject: Subject;
   grade: number;
   timeLimit: number;
   deadline: string;
@@ -288,7 +288,7 @@ export interface Exercise {
   id: number;
   name: string;
   description?: string;
-  subject: string;
+  subject: Subject;
   grade: number;
   deadline: string;
   note?: string;
@@ -374,7 +374,7 @@ export interface Document {
   id: number;
   title: string;
   description: string;
-  subject: string;
+  subject: Subject;
   grade: number;
   type: DocumentType;
   fileUrl: string;
