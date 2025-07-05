@@ -19,7 +19,7 @@ import {
   UpdateProfileDto,
 } from './dto/auth.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
-import { Roles } from '../enum';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -51,8 +51,9 @@ export class AuthService {
         password: hashedPassword,
         name,
         role,
-        grade: role === Roles.STUDENT ? grade : null,
-        subject: role === Roles.TEACHER ? subject : null,
+        grade: role === $Enums.Role.STUDENT ? grade : null,
+        subject:
+          role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
         profile: {
           create: {
             preferences: {

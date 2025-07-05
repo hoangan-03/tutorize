@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto, UserFilterDto } from './dto/user.dto';
 import { PaginatedResultDto } from '../common/dto/pagination.dto';
-import { Roles } from '../enum/role.enum';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -36,8 +36,9 @@ export class UserService {
         password: hashedPassword,
         name,
         role,
-        grade: role === Roles.STUDENT ? grade : null,
-        subject: role === Roles.TEACHER ? subject : null,
+        grade: role === $Enums.Role.STUDENT ? grade : null,
+        subject:
+          role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
         profile: {
           create: {
             preferences: {
@@ -160,7 +161,7 @@ export class UserService {
       where: { id: currentUserId },
     });
 
-    if (currentUser.role !== Roles.TEACHER && currentUserId !== id) {
+    if (currentUser.role !== $Enums.Role.TEACHER && currentUserId !== id) {
       throw new ForbiddenException('Không có quyền cập nhật người dùng này');
     }
 

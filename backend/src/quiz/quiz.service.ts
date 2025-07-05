@@ -13,7 +13,7 @@ import {
   GradeSubmissionDto,
 } from './dto/quiz.dto';
 import { PaginatedResultDto } from '../common/dto/pagination.dto';
-import { Roles } from '../enum/role.enum';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
@@ -21,11 +21,10 @@ export class QuizService {
 
   async create(createQuizDto: CreateQuizDto, createdBy: number) {
     const { questions, ...quizData } = createQuizDto;
-
     const quiz = await this.prisma.quiz.create({
       data: {
         ...quizData,
-        createdBy,
+        createdBy: createdBy,
         totalQuestions: questions.length,
         questions: {
           create: questions.map((question) => ({
@@ -201,7 +200,7 @@ export class QuizService {
 
     // Check if user can see answers
     const canSeeAnswers =
-      user?.role === Roles.TEACHER || quiz.createdBy === userId;
+      user?.role === Role.TEACHER || quiz.createdBy === userId;
 
     // Get quiz with conditional answer visibility
     const quizWithAnswers = await this.prisma.quiz.findUnique({

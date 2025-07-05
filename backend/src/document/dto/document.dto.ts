@@ -13,7 +13,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { DocumentType } from '@prisma/client';
+import { DocumentType, Subject } from '@prisma/client';
 
 export class CreateDocumentDto {
   @ApiProperty({ description: 'Tiêu đề tài liệu' })
@@ -33,7 +33,7 @@ export class CreateDocumentDto {
   @ApiProperty({ description: 'Môn học' })
   @IsString()
   @IsNotEmpty()
-  subject: string;
+  subject: Subject;
 
   @ApiProperty({ description: 'Khối lớp' })
   @IsNumber()
@@ -88,7 +88,7 @@ export class UpdateDocumentDto {
   @ApiPropertyOptional({ description: 'Môn học' })
   @IsOptional()
   @IsString()
-  subject?: string;
+  subject?: Subject;
 
   @ApiPropertyOptional({ description: 'Khối lớp' })
   @IsOptional()
@@ -123,7 +123,7 @@ export class DocumentFilterDto extends PaginationDto {
   @ApiPropertyOptional({ description: 'Môn học' })
   @IsOptional()
   @IsString()
-  subject?: string;
+  subject?: Subject;
 
   @ApiPropertyOptional({ description: 'Khối lớp' })
   @IsOptional()

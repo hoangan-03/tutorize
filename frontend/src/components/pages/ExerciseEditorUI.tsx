@@ -1,11 +1,12 @@
 import React from "react";
 import { Plus, Eye, Edit, Trash2, Calendar, Users } from "lucide-react";
 import { Badge } from "../ui/Badge";
+import { Subject } from "../../types/api";
 
 interface Exercise {
   id?: number;
   name: string;
-  subject: string;
+  subject: Subject;
   grade: number;
   deadline: string;
   note: string;

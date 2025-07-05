@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { Roles } from '../../enum';
+import { $Enums } from '@prisma/client';
 
 export class RegisterDto {
   @ApiProperty({ example: 'user@example.com', description: 'Email đăng ký' })
@@ -32,9 +32,9 @@ export class RegisterDto {
   @MaxLength(100, { message: 'Tên không được quá 100 ký tự' })
   name: string;
 
-  @ApiProperty({ enum: Roles, description: 'Vai trò người dùng' })
-  @IsEnum(Roles, { message: 'Vai trò không hợp lệ' })
-  role: Roles;
+  @ApiProperty({ enum: $Enums.Role, description: 'Vai trò người dùng' })
+  @IsEnum($Enums.Role, { message: 'Vai trò không hợp lệ' })
+  role: $Enums.Role;
 
   @ApiPropertyOptional({
     example: 10,
@@ -46,12 +46,12 @@ export class RegisterDto {
   grade?: number;
 
   @ApiPropertyOptional({
-    example: 'Toán học',
+    example: $Enums.Subject.MATH,
     description: 'Môn học (dành cho giáo viên)',
   })
   @IsOptional()
   @IsString()
-  subject?: string;
+  subject?: $Enums.Subject;
 }
 
 export class LoginDto {

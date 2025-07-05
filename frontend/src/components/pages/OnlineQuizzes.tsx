@@ -973,75 +973,6 @@ export const OnlineQuizzes: React.FC = () => {
         {/* Content based on active tab */}
         {(activeTab as string) === "quizzes" && (
           <>
-            {/* Stats Cards - Only show for students */}
-            {!isTeacher && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 ">
-                  <div className="flex items-center justify-center">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <FileText className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">
-                        Bài quiz đã hoàn thành
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {userStats.completed}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-center">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">
-                        Điểm trung bình
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {userStats.averageScore}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <Trophy className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">
-                        Bài quiz xuất sắc
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {userStats.excellent}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <Clock className="h-6 w-6 text-orange-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">
-                        Thời gian trung bình
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {userStats.averageTime} phút
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Quizzes Grid */}
             {loading ? (
               <div className="flex justify-center items-center py-12">
@@ -1049,6 +980,150 @@ export const OnlineQuizzes: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8">
+                {/* Stats Cards - Student view */}
+                {!isTeacher && (
+                  <div className="flex flex-row gap-6 mb-8 col-span-full">
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {userStats.completed}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Đã hoàn thành
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {userStats.averageScore}%
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Điểm TB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Trophy className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {userStats.excellent}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Xuất sắc
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <Clock className="h-6 w-6 text-orange-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {userStats.averageTime}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Phút TB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Stats Cards - Teacher view */}
+                {isTeacher && (
+                  <div className="flex flex-row gap-6 mb-8 col-span-full">
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {quizzes.length}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Tổng quiz
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {
+                              quizzes.filter((q) => q.status === "ACTIVE")
+                                .length
+                            }
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Đang hoạt động
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Users className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {quizzes.reduce(
+                              (total, quiz) =>
+                                total + (quiz.submissions?.length || 0),
+                              0
+                            )}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Lượt nộp bài
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <BarChart3 className="h-6 w-6 text-orange-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {quizzes.filter((q) => q.status === "DRAFT").length}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            Nháp
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {quizzes.map((quiz) => (
                   <div
                     key={quiz.id}

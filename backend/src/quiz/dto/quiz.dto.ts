@@ -16,7 +16,7 @@ import {
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubjectGradeFilterDto } from '../../common/dto/pagination.dto';
-import { QuestionType, QuizStatus } from '../../enum';
+import { QuestionType, QuizStatus, Subject } from '@prisma/client';
 
 export class CreateQuestionDto {
   @ApiProperty({ description: 'Nội dung câu hỏi' })
@@ -82,7 +82,7 @@ export class CreateQuizDto {
   @ApiProperty({ description: 'Môn học' })
   @IsString()
   @IsNotEmpty()
-  subject: string;
+  subject: Subject;
 
   @ApiProperty({ description: 'Khối lớp' })
   @IsNumber()
@@ -193,7 +193,7 @@ export class UpdateQuizDto {
   @ApiPropertyOptional({ description: 'Môn học' })
   @IsOptional()
   @IsString()
-  subject?: string;
+  subject?: Subject;
 
   @ApiPropertyOptional({ description: 'Khối lớp' })
   @IsOptional()
@@ -304,8 +304,8 @@ export class QuizFilterDto extends SubjectGradeFilterDto {
 
   @ApiPropertyOptional({ description: 'Người tạo' })
   @IsOptional()
-  @IsString()
-  createdBy?: string;
+  @IsNumber()
+  createdBy?: number;
 
   @ApiPropertyOptional({ description: 'Tags' })
   @IsOptional()

@@ -5,7 +5,7 @@ function fixLineEndings(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
     const fixedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
+
     if (content !== fixedContent) {
       fs.writeFileSync(filePath, fixedContent, 'utf8');
       console.log(`Fixed: ${filePath}`);
@@ -20,11 +20,11 @@ function fixLineEndings(filePath) {
 
 function walkDir(dir, callback) {
   const files = fs.readdirSync(dir);
-  
+
   files.forEach((file) => {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
-    
+
     if (stat.isDirectory()) {
       // Skip node_modules, .git, dist, and other build directories
       if (!['node_modules', '.git', 'dist', 'build', '.next'].includes(file)) {
@@ -34,11 +34,26 @@ function walkDir(dir, callback) {
       // Only process text files
       const ext = path.extname(file).toLowerCase();
       const textExtensions = [
-        '.ts', '.js', '.tsx', '.jsx', '.json', '.md', '.yml', '.yaml',
-        '.txt', '.sql', '.prisma', '.env', '.gitignore', '.dockerignore',
-        '.html', '.css', '.scss', '.less'
+        '.ts',
+        '.js',
+        '.tsx',
+        '.jsx',
+        '.json',
+        '.md',
+        '.yml',
+        '.yaml',
+        '.txt',
+        '.sql',
+        '.prisma',
+        '.env',
+        '.gitignore',
+        '.dockerignore',
+        '.html',
+        '.css',
+        '.scss',
+        '.less',
       ];
-      
+
       if (textExtensions.includes(ext) || file.startsWith('.')) {
         callback(filePath);
       }
@@ -66,4 +81,4 @@ if (fixedCount > 0) {
   console.log('\n📝 Run the following commands to apply formatting:');
   console.log('npm run format');
   console.log('npm run lint -- --fix');
-} 
+}

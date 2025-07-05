@@ -12,7 +12,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { Roles } from '../../enum/role.enum';
+import { $Enums } from '@prisma/client';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'user@example.com', description: 'Email người dùng' })
@@ -34,9 +34,9 @@ export class CreateUserDto {
   @MaxLength(100, { message: 'Tên không được quá 100 ký tự' })
   name: string;
 
-  @ApiProperty({ enum: Roles, description: 'Vai trò người dùng' })
-  @IsEnum(Roles, { message: 'Vai trò không hợp lệ' })
-  role: Roles;
+  @ApiProperty({ enum: $Enums.Role, description: 'Vai trò người dùng' })
+  @IsEnum($Enums.Role, { message: 'Vai trò không hợp lệ' })
+  role: $Enums.Role;
 
   @ApiPropertyOptional({
     example: 10,
@@ -52,7 +52,7 @@ export class CreateUserDto {
   })
   @IsOptional()
   @IsString()
-  subject?: string;
+  subject?: $Enums.Subject;
 }
 
 export class UpdateUserDto {
@@ -63,10 +63,10 @@ export class UpdateUserDto {
   @MaxLength(100)
   name?: string;
 
-  @ApiPropertyOptional({ enum: Roles, description: 'Vai trò người dùng' })
+  @ApiPropertyOptional({ enum: $Enums.Role, description: 'Vai trò người dùng' })
   @IsOptional()
-  @IsEnum(Roles)
-  role?: Roles;
+  @IsEnum($Enums.Role)
+  role?: $Enums.Role;
 
   @ApiPropertyOptional({ description: 'Khối lớp' })
   @IsOptional()
@@ -76,7 +76,7 @@ export class UpdateUserDto {
   @ApiPropertyOptional({ description: 'Môn học' })
   @IsOptional()
   @IsString()
-  subject?: string;
+  subject?: $Enums.Subject;
 
   @ApiPropertyOptional({ description: 'Trạng thái hoạt động' })
   @IsOptional()
@@ -100,10 +100,10 @@ export class UpdateUserDto {
 }
 
 export class UserFilterDto extends PaginationDto {
-  @ApiPropertyOptional({ enum: Roles, description: 'Lọc theo vai trò' })
+  @ApiPropertyOptional({ enum: $Enums.Role, description: 'Lọc theo vai trò' })
   @IsOptional()
-  @IsEnum(Roles)
-  role?: Roles;
+  @IsEnum($Enums.Role)
+  role?: $Enums.Role;
 
   @ApiPropertyOptional({ description: 'Lọc theo trạng thái hoạt động' })
   @IsOptional()

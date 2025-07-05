@@ -333,6 +333,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                         type="button"
                         onClick={() => deleteQuestion(questionIndex)}
                         className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        title="Xóa câu hỏi"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

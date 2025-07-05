@@ -4,12 +4,12 @@ import {
   Subject,
   DocumentType as DocType,
   ExerciseStatus,
-  Role,
   QuizStatus,
   IeltsSkill,
   IeltsLevel,
   QuestionType,
-} from '../src/enum';
+  Role,
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 

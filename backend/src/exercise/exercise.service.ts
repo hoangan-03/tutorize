@@ -12,7 +12,7 @@ import {
   GradeExerciseDto,
 } from './dto/exercise.dto';
 import { PaginatedResultDto } from '../common/dto/pagination.dto';
-import { Roles } from '../enum/role.enum';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class ExerciseService {
@@ -23,7 +23,7 @@ export class ExerciseService {
       data: {
         name: createExerciseDto.name,
         description: createExerciseDto.description,
-        subject: createExerciseDto.subject,
+        subject: createExerciseDto.subject as $Enums.Subject,
         grade: createExerciseDto.grade,
         deadline: new Date(createExerciseDto.deadline),
         note: createExerciseDto.note,
@@ -332,7 +332,7 @@ export class ExerciseService {
       throw new NotFoundException('Không tìm thấy bài tập');
     }
 
-    if (user?.role !== Roles.TEACHER && exercise.createdBy !== userId) {
+    if (user?.role !== $Enums.Role.TEACHER && exercise.createdBy !== userId) {
       throw new ForbiddenException('Không có quyền xem bài nộp');
     }
 
@@ -385,7 +385,7 @@ export class ExerciseService {
     });
 
     if (
-      user?.role !== Roles.TEACHER ||
+      user?.role !== $Enums.Role.TEACHER ||
       submission.exercise.createdBy !== userId
     ) {
       throw new ForbiddenException('Không có quyền chấm điểm');

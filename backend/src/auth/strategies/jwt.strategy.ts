@@ -3,12 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Roles } from 'src/enum';
+import { $Enums } from '@prisma/client';
 
 export interface JwtPayload {
   sub: number;
   email: string;
-  role: Roles;
+  role: $Enums.Role;
   iat?: number;
   exp?: number;
 }
