@@ -40,7 +40,7 @@ async function main() {
       password: teacherPassword,
       name: 'Nguyễn Thị Mai',
       role: 'TEACHER',
-      subject: 'Toán học',
+      subject: 'MATH',
       isActive: true,
       isVerified: true,
       profile: {
