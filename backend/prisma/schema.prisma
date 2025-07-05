@@ -19,7 +19,7 @@ model User {
   role        Role      @default(STUDENT)
   avatar      String?
   grade       Int?
-  subject     String?
+  subject     Subject?
   isActive    Boolean   @default(true)
   isVerified  Boolean   @default(false)
   lastLoginAt DateTime?
@@ -66,6 +66,25 @@ enum Role {
   STUDENT
 }
 
+enum Subject {
+  MATH
+  PHYSICS
+  LITERATURE
+  CHEMISTRY
+  BIOLOGY
+  NATURAL_SCIENCE
+  ENGLISH
+  HISTORY
+  GEOGRAPHY
+  CIVICS
+  CAREER_GUIDANCE
+  LOCAL_STUDIES
+  ECONOMICS_LAW
+  TECHNOLOGY
+  ART
+  MUSIC
+}
+
 // ============================================================================
 // QUIZ SYSTEM
 // ============================================================================
@@ -74,7 +93,7 @@ model Quiz {
   id                             Int        @id @default(autoincrement())
   title                          String
   description                    String     @db.Text
-  subject                        String
+  subject                        Subject
   grade                          Int
   timeLimit                      Int // minutes
   deadline                       DateTime
@@ -192,7 +211,7 @@ model Exercise {
   id                  Int            @id @default(autoincrement())
   name                String
   description         String?        @db.Text
-  subject             String
+  subject             Subject
   grade               Int
   deadline            DateTime
   note                String?        @db.Text
@@ -297,7 +316,7 @@ model Document {
   id            Int          @id @default(autoincrement())
   title         String
   description   String       @db.Text
-  subject       String
+  subject       Subject
   grade         Int
   type          DocumentType
   fileUrl       String
@@ -340,7 +359,7 @@ model DocumentAccess {
 
 enum DocumentType {
   PDF
-  VIDE
+  VIDEO
   IMAGE
   PRESENTATION
   WORD

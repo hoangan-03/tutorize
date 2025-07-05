@@ -1,5 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import {
+  Subject,
+  DocumentType as DocType,
+  ExerciseStatus,
+  Role,
+  QuizStatus,
+  IeltsSkill,
+  IeltsLevel,
+  QuestionType,
+} from '../src/enum';
 
 const prisma = new PrismaClient();
 
@@ -39,8 +49,8 @@ async function main() {
       email: 'teacher@tutorplatform.com',
       password: teacherPassword,
       name: 'Nguyễn Thị Mai',
-      role: 'TEACHER',
-      subject: 'MATH',
+      role: Role.TEACHER,
+      subject: Subject.MATH,
       isActive: true,
       isVerified: true,
       profile: {
@@ -69,7 +79,7 @@ async function main() {
       email: 'student1@tutorplatform.com',
       password: studentPassword,
       name: 'Trần Văn An',
-      role: 'STUDENT',
+      role: Role.STUDENT,
       grade: 10,
       isActive: true,
       isVerified: true,
@@ -96,7 +106,7 @@ async function main() {
       email: 'student2@tutorplatform.com',
       password: studentPassword,
       name: 'Lê Thị Bình',
-      role: 'STUDENT',
+      role: Role.STUDENT,
       grade: 11,
       isActive: true,
       isVerified: true,
@@ -123,11 +133,11 @@ async function main() {
     data: {
       title: 'Kiểm tra Toán học - Phương trình bậc hai',
       description: 'Bài kiểm tra về phương trình bậc hai và ứng dụng',
-      subject: 'math',
+      subject: Subject.MATH,
       grade: 10,
       timeLimit: 45,
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      status: 'ACTIVE',
+      status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
       isPublic: true,
       tags: ['math', 'equation', 'algebra'],
@@ -136,7 +146,7 @@ async function main() {
         create: [
           {
             question: 'Phương trình x² - 5x + 6 = 0 có nghiệm là:',
-            type: 'MULTIPLE_CHOICE',
+            type: QuestionType.MULTIPLE_CHOICE,
             options: [
               'x = 2, x = 3',
               'x = 1, x = 6',
@@ -152,7 +162,7 @@ async function main() {
           {
             question:
               'Discriminant của phương trình ax² + bx + c = 0 được tính bằng công thức:',
-            type: 'MULTIPLE_CHOICE',
+            type: QuestionType.MULTIPLE_CHOICE,
             options: ['b² - 4ac', 'b² + 4ac', '4ac - b²', 'a² - 4bc'],
             correctAnswer: 'b² - 4ac',
             points: 1,
@@ -162,7 +172,7 @@ async function main() {
           {
             question:
               'Nếu discriminant < 0 thì phương trình bậc hai có bao nhiêu nghiệm thực?',
-            type: 'FILL_BLANK',
+            type: QuestionType.FILL_BLANK,
             correctAnswer: '0',
             points: 1,
             explanation: 'Khi Δ < 0, phương trình không có nghiệm thực',
@@ -177,11 +187,11 @@ async function main() {
     data: {
       title: 'Kiểm tra Toán học - Hàm số bậc hai',
       description: 'Bài kiểm tra về hàm số bậc hai và ứng dụng',
-      subject: 'math',
+      subject: Subject.MATH,
       grade: 10,
       timeLimit: 45,
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      status: 'ACTIVE',
+      status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
       isPublic: true,
       tags: ['math', 'function', 'algebra'],
@@ -190,7 +200,7 @@ async function main() {
         create: [
           {
             question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
-            type: 'MULTIPLE_CHOICE',
+            type: QuestionType.MULTIPLE_CHOICE,
             options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
             correctAnswer: '(2, 1)',
             points: 1,
@@ -200,7 +210,7 @@ async function main() {
           },
           {
             question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
-            type: 'MULTIPLE_CHOICE',
+            type: QuestionType.MULTIPLE_CHOICE,
             options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
             correctAnswer: '(2, 1)',
             points: 1,
@@ -210,7 +220,7 @@ async function main() {
           },
           {
             question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
-            type: 'MULTIPLE_CHOICE',
+            type: QuestionType.MULTIPLE_CHOICE,
             options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
             correctAnswer: '(2, 1)',
             points: 1,
@@ -240,7 +250,7 @@ async function main() {
     data: {
       name: 'Bài tập về Hàm số bậc hai',
       description: 'Giải các bài tập về đồ thị và tính chất hàm số bậc hai',
-      subject: 'math',
+      subject: Subject.MATH,
       grade: 10,
       deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       content: `
@@ -261,7 +271,7 @@ async function main() {
         </ol>
       `,
       createdBy: teacher.id,
-      status: 'ACTIVE',
+      status: ExerciseStatus.ACTIVE,
       maxScore: 100,
       allowLateSubmission: true,
       isPublic: true,
@@ -273,14 +283,14 @@ async function main() {
     data: {
       name: 'Bài tập về Hàm số bậc hai',
       description: 'Giải các bài tập về đồ thị và tính chất hàm số bậc hai',
-      subject: 'math',
+      subject: Subject.MATH,
       grade: 12,
       deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       content: `
         <h2>Bài tập về Hàm số bậc hai</h2>
       `,
       createdBy: teacher.id,
-      status: 'ACTIVE',
+      status: ExerciseStatus.ACTIVE,
       maxScore: 100,
       allowLateSubmission: true,
       isPublic: true,
@@ -294,9 +304,9 @@ async function main() {
       title: 'Công thức Toán học cơ bản',
       description:
         'Tổng hợp các công thức toán học quan trọng cho chương trình THPT',
-      subject: 'Toán học',
+      subject: Subject.MATH,
       grade: 10,
-      type: 'PDF',
+      type: DocType.PDF,
       fileUrl: '/documents/math-formulas.pdf',
       fileSize: 2048000, // 2MB
       uploadedBy: teacher.id,
@@ -315,8 +325,8 @@ async function main() {
     data: {
       title: 'IELTS Reading Practice Test 1',
       description: 'Bài tập luyện đọc IELTS với 3 passages',
-      skill: 'READING',
-      level: 'INTERMEDIATE',
+      skill: IeltsSkill.READING,
+      level: IeltsLevel.INTERMEDIATE,
       timeLimit: 60,
       createdBy: teacher.id,
       sections: {
@@ -335,14 +345,14 @@ async function main() {
               create: [
                 {
                   question: 'According to the passage, who discovered coffee?',
-                  type: 'MULTIPLE_CHOICE',
+                  type: QuestionType.MULTIPLE_CHOICE,
                   options: ['A farmer', 'Kaldi', 'A merchant', 'A traveler'],
                   correctAnswer: 'Kaldi',
                   order: 1,
                 },
                 {
                   question: 'Coffee was first discovered in _______.',
-                  type: 'FILL_BLANK',
+                  type: QuestionType.FILL_BLANK,
                   correctAnswer: 'Ethiopia',
                   order: 2,
                 },
