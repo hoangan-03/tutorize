@@ -11,7 +11,6 @@ import {
   ArrayMinSize,
   Min,
   Max,
-  Matches,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -96,11 +95,7 @@ export class CreateQuizDto {
   timeLimit: number;
 
   @ApiProperty({ description: 'Hạn chót nộp bài' })
-  @IsString()
-  @Matches(/^\d{2}:\d{2}:\d{2} \d{2}-\d{2}-\d{4}$/, {
-    message:
-      'Deadline phải có định dạng HH:MM:SS DD-MM-YYYY (ví dụ: 12:00:00 01-01-2000)',
-  })
+  @IsDateString()
   deadline: string;
 
   @ApiPropertyOptional({ enum: QuizStatus, default: QuizStatus.DRAFT })
@@ -264,6 +259,16 @@ export class UpdateQuizDto {
   @IsOptional()
   @IsBoolean()
   shuffleAnswers?: boolean;
+
+  @ApiPropertyOptional({
+    type: [CreateQuestionDto],
+    description: 'Danh sách câu hỏi',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateQuestionDto)
+  questions?: CreateQuestionDto[];
 }
 
 export class QuizAnswerDto {
@@ -329,4 +334,10 @@ export class GradeSubmissionDto {
   @IsOptional()
   @IsString()
   feedback?: string;
+}
+
+export class UpdateQuizStatusDto {
+  @ApiProperty({ enum: QuizStatus, description: 'Trạng thái mới của quiz' })
+  @IsEnum(QuizStatus)
+  status: QuizStatus;
 }

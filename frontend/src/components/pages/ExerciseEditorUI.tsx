@@ -47,12 +47,6 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                 <h1 className="text-3xl font-bold text-gray-900">
                   Quản lý bài tập
                 </h1>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="inline-block w-2 h-2 bg-green-400 rounded-full"></span>
-                  <span className="text-sm text-green-600 font-medium">
-                    Hệ thống đang hoạt động
-                  </span>
-                </div>
               </div>
             </div>
             <p className="text-gray-600 text-lg leading-relaxed max-w-2xl">

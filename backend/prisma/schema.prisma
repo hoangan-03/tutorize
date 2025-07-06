@@ -183,9 +183,10 @@ model QuizAnswer {
 }
 
 enum QuizStatus {
-  DRAFT
   ACTIVE
-  CLOSED
+  INACTIVE
+  DRAFT
+  OVERDUE
 }
 
 enum QuestionType {

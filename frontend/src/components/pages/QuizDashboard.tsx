@@ -1,7 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  ArrowLeft,
   Users,
   Clock,
   BarChart3,
@@ -11,109 +11,86 @@ import {
   XCircle,
   Calendar,
 } from "lucide-react";
-
-interface QuizResult {
-  studentId: number;
-  studentName: string;
-  score: number;
-  totalPoints: number;
-  timeSpent: number;
-  submittedAt: string;
-  answers: StudentAnswer[];
-}
-
-interface StudentAnswer {
-  questionId: number;
-  answer: string | number;
-  isCorrect: boolean;
-  points: number;
-}
+import { useTranslation } from "react-i18next";
+import { quizService } from "../../services/quizService";
 
 interface QuizDashboardProps {
   quiz: any;
   onBack: () => void;
 }
 
+// Helper function to format time from seconds to human readable format
+const formatTime = (seconds: number): string => {
+  if (!seconds || seconds <= 0) return "0s";
+
+  // Round to nearest second to avoid decimal places
+  const roundedSeconds = Math.round(seconds);
+
+  const hours = Math.floor(roundedSeconds / 3600);
+  const minutes = Math.floor((roundedSeconds % 3600) / 60);
+  const remainingSeconds = roundedSeconds % 60;
+
+  let result = "";
+
+  if (hours > 0) {
+    result += `${hours}hr`;
+  }
+
+  if (minutes > 0) {
+    result += `${minutes}min`;
+  }
+
+  if (remainingSeconds > 0 || (hours === 0 && minutes === 0)) {
+    result += `${remainingSeconds}s`;
+  }
+
+  return result;
+};
+
 export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   quiz,
   onBack,
 }) => {
-  // Sample results data
-  const [results] = useState<QuizResult[]>([
-    {
-      studentId: 1,
-      studentName: "Nguyễn Văn An",
-      score: 8,
-      totalPoints: 10,
-      timeSpent: 25,
-      submittedAt: "2024-06-20T10:30:00",
-      answers: [
-        { questionId: 1, answer: 0, isCorrect: true, points: 1 },
-        { questionId: 2, answer: 1, isCorrect: true, points: 1 },
-      ],
-    },
-    {
-      studentId: 2,
-      studentName: "Trần Thị Bình",
-      score: 6,
-      totalPoints: 10,
-      timeSpent: 28,
-      submittedAt: "2024-06-20T11:15:00",
-      answers: [
-        { questionId: 1, answer: 0, isCorrect: true, points: 1 },
-        { questionId: 2, answer: 2, isCorrect: false, points: 0 },
-      ],
-    },
-    {
-      studentId: 3,
-      studentName: "Lê Minh Cường",
-      score: 9,
-      totalPoints: 10,
-      timeSpent: 22,
-      submittedAt: "2024-06-20T14:45:00",
-      answers: [
-        { questionId: 1, answer: 0, isCorrect: true, points: 1 },
-        { questionId: 2, answer: 1, isCorrect: true, points: 1 },
-      ],
-    },
-  ]);
-
+  const { t } = useTranslation();
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
     "overview" | "students" | "questions"
   >("overview");
 
-  // Calculate statistics
-  const totalSubmissions = results.length;
-  const averageScore =
-    totalSubmissions > 0
-      ? results.reduce((sum, r) => sum + r.score, 0) / totalSubmissions
-      : 0;
-  const averageTime =
-    totalSubmissions > 0
-      ? results.reduce((sum, r) => sum + r.timeSpent, 0) / totalSubmissions
-      : 0;
-  const passRate =
-    totalSubmissions > 0
-      ? (results.filter((r) => r.score >= 5).length / totalSubmissions) * 100
-      : 0;
+  useEffect(() => {
+    loadStats();
+  }, [quiz.id]);
 
-  // Grade distribution
-  const gradeDistribution = {
-    excellent: results.filter((r) => r.score >= 9).length,
-    good: results.filter((r) => r.score >= 7 && r.score < 9).length,
-    average: results.filter((r) => r.score >= 5 && r.score < 7).length,
-    poor: results.filter((r) => r.score < 5).length,
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      const detailedStats = await quizService.getDetailedQuizStats(quiz.id);
+      setStats(detailedStats);
+    } catch (error) {
+      console.error("Error loading quiz stats:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const exportResults = () => {
+    if (!stats?.submissions) return;
+
     const csvContent = [
-      ["Tên học sinh", "Điểm", "Tổng điểm", "Thời gian (phút)", "Ngày nộp"],
-      ...results.map((result) => [
-        result.studentName,
-        result.score.toString(),
-        result.totalPoints.toString(),
-        result.timeSpent.toString(),
-        new Date(result.submittedAt).toLocaleString("vi-VN"),
+      [
+        t("quizzes.dashboard.student"),
+        t("quizzes.dashboard.score"),
+        t("quizzes.dashboard.time"),
+        t("quizzes.dashboard.submittedAt"),
+        t("quizzes.dashboard.status"),
+      ],
+      ...stats.submissions.map((submission: any) => [
+        submission.user?.name || "Không xác định",
+        submission.score.toString(),
+        formatTime(submission.timeSpent || 0),
+        new Date(submission.submittedAt).toLocaleString("vi-VN"),
+        submission.status,
       ]),
     ]
       .map((row) => row.join(","))
@@ -132,29 +109,83 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
     }
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-8xl mx-auto">
+        <div className="flex justify-center items-center py-16">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="max-w-8xl mx-auto">
+        <div className="text-center py-16">
+          <p className="text-gray-600">
+            {t("quizzes.dashboard.cannotLoadStats")}
+          </p>
+          <button
+            onClick={onBack}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            {t("quizzes.dashboard.goBack")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate statistics
+  const totalSubmissions = stats.submissions.length;
+  const averageScore =
+    totalSubmissions > 0
+      ? stats.submissions.reduce(
+          (sum: number, submission: any) => sum + submission.score,
+          0
+        ) / totalSubmissions
+      : 0;
+  const averageTime =
+    totalSubmissions > 0
+      ? stats.submissions.reduce(
+          (sum: number, submission: any) => sum + submission.timeSpent,
+          0
+        ) / totalSubmissions
+      : 0;
+  const passRate =
+    totalSubmissions > 0
+      ? (stats.submissions.filter((submission: any) => submission.score >= 5)
+          .length /
+          totalSubmissions) *
+        100
+      : 0;
+
+  // Grade distribution
+  const gradeDistribution = {
+    excellent: stats.submissions.filter(
+      (submission: any) => submission.score >= 9
+    ).length,
+    good: stats.submissions.filter(
+      (submission: any) => submission.score >= 7 && submission.score < 9
+    ).length,
+    average: stats.submissions.filter(
+      (submission: any) => submission.score >= 5 && submission.score < 7
+    ).length,
+    poor: stats.submissions.filter((submission: any) => submission.score < 5)
+      .length,
+  };
+
   return (
     <div className="max-w-8xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onBack}
-            className="flex items-center text-gray-600 hover:text-gray-800"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            Quay lại
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Quiz</h1>
-            <p className="text-gray-600 mt-1">{quiz.title}</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-end mb-2">
         <button
           onClick={exportResults}
           className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
         >
           <Download className="h-4 w-4 mr-2" />
-          Xuất kết quả
+          {t("quizzes.dashboard.exportResults")}
         </button>
       </div>
 
@@ -164,14 +195,20 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
           <div className="flex items-center space-x-3">
             <Clock className="h-5 w-5 text-blue-600" />
             <div>
-              <p className="text-sm text-gray-500">Thời gian</p>
-              <p className="font-semibold">{quiz.timeLimit} phút</p>
+              <p className="text-sm text-gray-500">
+                {t("quizzes.dashboard.timeLimit")}
+              </p>
+              <p className="font-semibold">
+                {quiz.timeLimit} {t("quizzes.minutes")}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <Calendar className="h-5 w-5 text-red-600" />
             <div>
-              <p className="text-sm text-gray-500">Hạn chót</p>
+              <p className="text-sm text-gray-500">
+                {t("quizzes.dashboard.deadline")}
+              </p>
               <p className="font-semibold">
                 {new Date(quiz.deadline).toLocaleDateString("vi-VN")}
               </p>
@@ -180,14 +217,18 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
           <div className="flex items-center space-x-3">
             <Users className="h-5 w-5 text-purple-600" />
             <div>
-              <p className="text-sm text-gray-500">Tổng câu hỏi</p>
+              <p className="text-sm text-gray-500">
+                {t("quizzes.dashboard.totalQuestions")}
+              </p>
               <p className="font-semibold">{quiz.totalQuestions}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <BarChart3 className="h-5 w-5 text-green-600" />
             <div>
-              <p className="text-sm text-gray-500">Trạng thái</p>
+              <p className="text-sm text-gray-500">
+                {t("quizzes.dashboard.status")}
+              </p>
               <p className="font-semibold capitalize">{quiz.status}</p>
             </div>
           </div>
@@ -205,7 +246,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             }`}
           >
-            Tổng quan
+            {t("quizzes.dashboard.overview")}
           </button>
           <button
             onClick={() => setActiveTab("students")}
@@ -215,7 +256,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             }`}
           >
-            Kết quả học sinh
+            {t("quizzes.dashboard.students")}
           </button>
           <button
             onClick={() => setActiveTab("questions")}
@@ -225,7 +266,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             }`}
           >
-            Phân tích câu hỏi
+            {t("quizzes.dashboard.questions")}
           </button>
         </nav>
       </div>
@@ -242,7 +283,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Tổng lượt làm
+                    {t("quizzes.dashboard.totalSubmissions")}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {totalSubmissions}
@@ -258,10 +299,10 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Điểm trung bình
+                    {t("quizzes.dashboard.averageScore")}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {averageScore.toFixed(1)}
+                    {(averageScore || 0).toFixed(1)}
                   </p>
                 </div>
               </div>
@@ -274,10 +315,10 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Thời gian TB
+                    {t("quizzes.dashboard.averageTime")}
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {averageTime.toFixed(0)} phút
+                    {formatTime(averageTime || 0)}
                   </p>
                 </div>
               </div>
@@ -289,9 +330,11 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                   <TrendingUp className="h-6 w-6 text-orange-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Tỷ lệ đạt</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    {t("quizzes.dashboard.passRate")}
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {passRate.toFixed(0)}%
+                    {(passRate || 0).toFixed(0)}%
                   </p>
                 </div>
               </div>
@@ -301,32 +344,40 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
           {/* Grade Distribution */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Phân loại kết quả
+              {t("quizzes.dashboard.gradeDistribution")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-8 bg-green-50 rounded-lg">
                 <p className="text-2xl font-bold text-green-600">
                   {gradeDistribution.excellent}
                 </p>
-                <p className="text-sm text-gray-600">Xuất sắc (9-10)</p>
+                <p className="text-sm text-gray-600">
+                  {t("quizzes.dashboard.excellent")}
+                </p>
               </div>
               <div className="text-center p-8 bg-blue-50 rounded-lg">
                 <p className="text-2xl font-bold text-blue-600">
                   {gradeDistribution.good}
                 </p>
-                <p className="text-sm text-gray-600">Khá (7-8)</p>
+                <p className="text-sm text-gray-600">
+                  {t("quizzes.dashboard.good")}
+                </p>
               </div>
               <div className="text-center p-8 bg-yellow-50 rounded-lg">
                 <p className="text-2xl font-bold text-yellow-600">
                   {gradeDistribution.average}
                 </p>
-                <p className="text-sm text-gray-600">Trung bình (5-6)</p>
+                <p className="text-sm text-gray-600">
+                  {t("quizzes.dashboard.average")}
+                </p>
               </div>
               <div className="text-center p-8 bg-red-50 rounded-lg">
                 <p className="text-2xl font-bold text-red-600">
                   {gradeDistribution.poor}
                 </p>
-                <p className="text-sm text-gray-600">Yếu (0-4)</p>
+                <p className="text-sm text-gray-600">
+                  {t("quizzes.dashboard.poor")}
+                </p>
               </div>
             </div>
           </div>
@@ -337,7 +388,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">
-              Kết quả chi tiết của học sinh
+              {t("quizzes.dashboard.studentResults")}
             </h3>
           </div>
           <div className="overflow-x-auto">
@@ -345,54 +396,56 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Học sinh
+                    {t("quizzes.dashboard.student")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Điểm số
+                    {t("quizzes.dashboard.score")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Thời gian
+                    {t("quizzes.dashboard.time")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ngày nộp
+                    {t("quizzes.dashboard.submittedAt")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Trạng thái
+                    {t("quizzes.dashboard.status")}
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {results.map((result) => (
-                  <tr key={result.studentId} className="hover:bg-gray-50">
+                {stats.submissions.map((submission: any) => (
+                  <tr key={submission.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {result.studentName}
+                        {submission.user?.name || "Không xác định"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        <span className="font-semibold">{result.score}</span>
+                        <span className="font-semibold">
+                          {submission.score}
+                        </span>
                         <span className="text-gray-500">
-                          /{result.totalPoints}
+                          /{submission.totalPoints}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {result.timeSpent} phút
+                      {formatTime(submission.timeSpent || 0)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(result.submittedAt).toLocaleString("vi-VN")}
+                      {new Date(submission.submittedAt).toLocaleString("vi-VN")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {result.score >= 5 ? (
+                      {submission.score >= 5 ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <CheckCircle className="h-3 w-3 mr-1" />
-                          Đạt
+                          {t("quizzes.dashboard.passed")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           <XCircle className="h-3 w-3 mr-1" />
-                          Không đạt
+                          {t("quizzes.dashboard.failed")}
                         </span>
                       )}
                     </td>
@@ -408,51 +461,68 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">
-              Phân tích câu hỏi
+              {t("quizzes.dashboard.questionAnalysis")}
             </h3>
           </div>
           <div className="p-6">
             <div className="space-y-6">
-              {quiz.questions?.map((question: any, index: number) => {
-                const correctAnswers = results.filter(
-                  (r) =>
-                    r.answers.find((a) => a.questionId === question.id)
-                      ?.isCorrect
-                ).length;
-                const accuracy =
-                  totalSubmissions > 0
-                    ? (correctAnswers / totalSubmissions) * 100
-                    : 0;
-
-                return (
+              {stats.questionAnalysis?.map(
+                (questionStat: any, index: number) => (
                   <div
-                    key={question.id}
+                    key={questionStat.id}
                     className="border border-gray-200 rounded-lg p-8"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <h4 className="font-medium text-gray-900">
-                        Câu {index + 1}
+                        {t("quizzes.question")} {index + 1}
                       </h4>
                       <div className="text-right">
-                        <p className="text-sm text-gray-500">Tỷ lệ đúng</p>
+                        <p className="text-sm text-gray-500">
+                          {t("quizzes.dashboard.accuracy")}
+                        </p>
                         <p className="text-lg font-semibold text-blue-600">
-                          {accuracy.toFixed(0)}%
+                          {questionStat.accuracy}%
                         </p>
                       </div>
                     </div>
-                    <p className="text-gray-700 mb-3">{question.question}</p>
+                    <p className="text-gray-700 mb-3">
+                      {questionStat.question}
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="text-center p-3 bg-blue-50 rounded">
+                        <div className="text-lg font-semibold text-blue-600">
+                          {questionStat.totalAnswers}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {t("quizzes.dashboard.totalAnswers")}
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded">
+                        <div className="text-lg font-semibold text-green-600">
+                          {questionStat.correctAnswers}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {t("quizzes.dashboard.correctAnswers")}
+                        </div>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded">
+                        <div className="text-lg font-semibold text-orange-600">
+                          {questionStat.points}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {t("quizzes.dashboard.points")}
+                        </div>
+                      </div>
+                    </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${accuracy}%` }}
+                        style={{ width: `${questionStat.accuracy}%` }}
                       ></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {correctAnswers}/{totalSubmissions} học sinh trả lời đúng
-                    </p>
                   </div>
-                );
-              })}
+                )
+              )}
             </div>
           </div>
         </div>

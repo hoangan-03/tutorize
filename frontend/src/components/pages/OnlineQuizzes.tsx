@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,14 +39,16 @@ export const OnlineQuizzes: React.FC = () => {
     []
   );
   const [quizResults, setQuizResults] = useState<any>(null);
-  console.log(quizResults);
+  console.log("quizResults", quizResults);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  console.log(quizzes);
   const [loading, setLoading] = useState(true);
   const [userStats, setUserStats] = useState({
-    completed: 0,
+    totalQuizzes: 0,
+    completedQuizzes: 0,
+    overdueQuizzes: 0,
     averageScore: 0,
-    excellent: 0,
-    averageTime: 0,
+    perfectCount: 0,
   });
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0); // seconds remaining
@@ -53,7 +56,7 @@ export const OnlineQuizzes: React.FC = () => {
   useEffect(() => {
     loadQuizzes();
     if (!isTeacher) {
-      loadUserStats();
+      loadStudentStats();
     }
   }, [isTeacher]);
 
@@ -75,11 +78,71 @@ export const OnlineQuizzes: React.FC = () => {
     }
   }, [currentView, timeLeft]);
 
+  // Handle page unload/refresh during quiz
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (currentView === "quiz" && currentQuiz && !isTeacher) {
+        event.preventDefault();
+
+        // Submit quiz with 0 score for exiting
+        submitExitQuiz();
+
+        // Show warning message
+        event.returnValue =
+          "Bạn đang làm bài quiz. Nếu thoát, bài làm sẽ được nộp với điểm 0.";
+        return "Bạn đang làm bài quiz. Nếu thoát, bài làm sẽ được nộp với điểm 0.";
+      }
+    };
+
+    const handlePopState = () => {
+      if (currentView === "quiz" && currentQuiz && !isTeacher) {
+        // Submit quiz with 0 score for back navigation
+        submitExitQuiz();
+      }
+    };
+
+    if (currentView === "quiz" && currentQuiz && !isTeacher) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      window.addEventListener("popstate", handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [currentView, currentQuiz, isTeacher]);
+
+  const submitExitQuiz = async () => {
+    if (!currentQuiz || !currentQuiz.questions || isTeacher) return;
+
+    try {
+      // Create empty answers for all questions (resulting in 0 score)
+      const emptyAnswers = currentQuiz.questions.map((question: any) => ({
+        questionId: question.id,
+        userAnswer: "", // Empty answer
+        timeTaken: 0,
+      }));
+
+      const submitData = {
+        answers: emptyAnswers,
+        timeSpent: Math.floor((Date.now() - quizStartTime) / 1000),
+      };
+
+      await quizService.submitQuiz(currentQuiz.id, submitData);
+    } catch (error) {
+      console.error("Error submitting exit quiz:", error);
+    }
+  };
+
   const loadQuizzes = async () => {
     try {
       setLoading(true);
       const result = await quizService.getQuizzes();
-      setQuizzes(result.data);
+      // Filter quizzes based on user role
+      const filteredQuizzes = isTeacher
+        ? result.data // Teachers can see all quizzes
+        : result.data.filter((quiz: Quiz) => quiz.status === "ACTIVE"); // Students only see active quizzes
+      setQuizzes(filteredQuizzes);
     } catch (error) {
       console.error("Error loading quizzes:", error);
       setQuizzes([]);
@@ -88,45 +151,32 @@ export const OnlineQuizzes: React.FC = () => {
     }
   };
 
-  const loadUserStats = async () => {
+  const loadStudentStats = async () => {
     try {
-      // Load user's quiz submissions to calculate stats
-      const submissions = await quizService.getMySubmissions();
-      const completedQuizzes = submissions.data.filter(
-        (s: { status: string }) =>
-          s.status === "SUBMITTED" || s.status === "GRADED"
+      console.log(
+        "Loading student stats for user role:",
+        isTeacher ? "teacher" : "student"
       );
-
-      const totalScore = completedQuizzes.reduce(
-        (sum: any, sub: { score: any }) => sum + (sub.score || 0),
-        0
-      );
-      const avgScore =
-        completedQuizzes.length > 0
-          ? Math.round(totalScore / completedQuizzes.length)
-          : 0;
-      const excellentCount = completedQuizzes.filter(
-        (sub: { score: any }) => (sub.score || 0) >= 90
-      ).length;
-      const avgTime =
-        completedQuizzes.length > 0
-          ? Math.round(
-              completedQuizzes.reduce(
-                (sum: any, sub: { timeSpent: any }) =>
-                  sum + (sub.timeSpent || 0),
-                0
-              ) / completedQuizzes.length
-            )
-          : 0;
-
+      const stats = await quizService.getStudentStats();
+      console.log("Student stats loaded successfully:", stats);
+      // Ensure averageScore is always a number
       setUserStats({
-        completed: completedQuizzes.length,
-        averageScore: avgScore,
-        excellent: excellentCount,
-        averageTime: avgTime,
+        totalQuizzes: stats.totalQuizzes || 0,
+        completedQuizzes: stats.completedQuizzes || 0,
+        overdueQuizzes: stats.overdueQuizzes || 0,
+        averageScore: stats.averageScore || 0,
+        perfectCount: stats.perfectCount || 0,
       });
     } catch (error) {
-      console.error("Error loading user stats:", error);
+      console.error("Error loading student stats:", error);
+      // Keep default values when API fails
+      setUserStats({
+        totalQuizzes: 0,
+        completedQuizzes: 0,
+        overdueQuizzes: 0,
+        averageScore: 0,
+        perfectCount: 0,
+      });
     }
   };
 
@@ -137,6 +187,25 @@ export const OnlineQuizzes: React.FC = () => {
     setSelectedAnswers([]);
     setQuizResults(null);
     setTimeLeft(0);
+  };
+
+  const handleExitQuiz = async () => {
+    if (currentView === "quiz" && currentQuiz && !isTeacher) {
+      const confirmExit = window.confirm(
+        "Bạn có chắc muốn thoát? Bài làm sẽ được nộp với điểm 0."
+      );
+
+      if (confirmExit) {
+        await submitExitQuiz();
+        // Reload stats after exit submission
+        if (!isTeacher) {
+          loadStudentStats();
+        }
+        resetQuiz();
+      }
+    } else {
+      resetQuiz();
+    }
   };
 
   const beginQuizAttempt = async (quiz: Quiz) => {
@@ -245,7 +314,7 @@ export const OnlineQuizzes: React.FC = () => {
             timeTaken: 0, // You can track time per question if needed
           }))
           .filter(
-            (answer, index) =>
+            (_answer: any, index: number) =>
               selectedAnswers[index] !== undefined &&
               selectedAnswers[index] !== "" &&
               (typeof selectedAnswers[index] === "string"
@@ -275,14 +344,17 @@ export const OnlineQuizzes: React.FC = () => {
           currentQuiz.id
         );
 
+        console.log("SubmissionHistory response:", submissionHistory);
+        console.log(
+          "maxScore from submissionHistory:",
+          submissionHistory.maxScore
+        );
+
         // Calculate results from submission
         const results = {
           correct:
             submission.answers?.filter((a: any) => a.isCorrect).length || 0,
           total: questions.length,
-          percentage: Math.round(
-            (submission.score / submission.totalPoints) * 100
-          ),
           passed: submission.score / submission.totalPoints >= 0.7,
           submission: submission,
           isAutoSubmit: isAutoSubmit,
@@ -290,6 +362,7 @@ export const OnlineQuizzes: React.FC = () => {
           canRetake: submissionHistory.canRetake,
           remainingAttempts: submissionHistory.remainingAttempts,
           currentAttempt: submissionHistory.currentAttempt,
+          maxScore: submissionHistory.maxScore,
           isSubmissionHistory: true,
         };
 
@@ -298,7 +371,7 @@ export const OnlineQuizzes: React.FC = () => {
         setTimeLeft(0); // Stop the timer
 
         // Reload stats after submission
-        loadUserStats();
+        loadStudentStats();
       } catch (error: any) {
         console.error("Error submitting quiz:", error);
 
@@ -356,7 +429,7 @@ export const OnlineQuizzes: React.FC = () => {
                 </div>
                 <div className="flex items-center text-gray-600">
                   <BarChart3 className="h-5 w-5 mr-2" />
-                  <span>85% {t("quizzes.avgScore")}</span>
+                  <span>8.5 {t("quizzes.avgScore")}</span>
                 </div>
               </div>
             </div>
@@ -375,7 +448,9 @@ export const OnlineQuizzes: React.FC = () => {
                   </div>
 
                   <div className="space-y-3">
-                    {question.options &&
+                    {/* Multiple Choice Questions */}
+                    {question.type === "MULTIPLE_CHOICE" &&
+                      question.options &&
                       question.options.map(
                         (option: string, optionIndex: number) => {
                           const isCorrect =
@@ -416,6 +491,66 @@ export const OnlineQuizzes: React.FC = () => {
                           );
                         }
                       )}
+
+                    {/* True/False Questions */}
+                    {question.type === "TRUE_FALSE" && (
+                      <div className="space-y-3">
+                        <div
+                          className={`p-3 border rounded-lg ${
+                            question.correctAnswer === "true"
+                              ? "border-green-500 bg-green-50"
+                              : "border-gray-200 bg-white"
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                                question.correctAnswer === "true"
+                                  ? "border-green-500 bg-green-500"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              {question.correctAnswer === "true" && (
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              )}
+                            </div>
+                            <span className="font-medium text-lg">Đúng</span>
+                            {question.correctAnswer === "true" && (
+                              <span className="ml-auto text-green-600 font-medium">
+                                {t("quizzes.correctAnswer")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div
+                          className={`p-3 border rounded-lg ${
+                            question.correctAnswer === "false"
+                              ? "border-green-500 bg-green-50"
+                              : "border-gray-200 bg-white"
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                                question.correctAnswer === "false"
+                                  ? "border-green-500 bg-green-500"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              {question.correctAnswer === "false" && (
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              )}
+                            </div>
+                            <span className="font-medium text-lg">Sai</span>
+                            {question.correctAnswer === "false" && (
+                              <span className="ml-auto text-green-600 font-medium">
+                                {t("quizzes.correctAnswer")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -498,11 +633,11 @@ export const OnlineQuizzes: React.FC = () => {
                       .padStart(2, "0")}
                     :{(timeLeft % 60).toString().padStart(2, "0")}
                   </span>
-                  {timeLeft <= 300 && (
+                  {/* {timeLeft <= 300 && (
                     <span className="ml-2 text-sm font-medium animate-pulse">
                       {t("quizzes.timeRunningOut")}
                     </span>
-                  )}
+                  )} */}
                 </div>
                 <div className="text-gray-600">
                   {t("quizzes.question")} {currentQuestionIndex + 1}/
@@ -522,9 +657,9 @@ export const OnlineQuizzes: React.FC = () => {
                     : "bg-yellow-50 border-yellow-500 text-yellow-800"
                 }`}
               >
-                <div className="flex items-center">
+                <div className="flex items-center justify-start">
                   <AlertTriangle className="h-5 w-5 mr-3" />
-                  <div>
+                  <div className="text-start">
                     <h3 className="font-medium">
                       {timeLeft <= 60
                         ? "Chỉ còn ít hơn 1 phút!"
@@ -605,8 +740,7 @@ export const OnlineQuizzes: React.FC = () => {
 
               <div className="space-y-4">
                 {/* Multiple Choice Questions */}
-                {(question.type === "MULTIPLE_CHOICE" ||
-                  question.type === "TRUE_FALSE") &&
+                {question.type === "MULTIPLE_CHOICE" &&
                   question.options &&
                   question.options.map((option: string, index: number) => (
                     <button
@@ -637,6 +771,59 @@ export const OnlineQuizzes: React.FC = () => {
                       </div>
                     </button>
                   ))}
+
+                {/* True/False Questions */}
+                {question.type === "TRUE_FALSE" && (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => selectAnswer("true")}
+                      className={`w-full text-left p-8 border-2 rounded-lg transition-colors ${
+                        selectedAnswers[currentQuestionIndex] === "true"
+                          ? "border-blue-500 bg-blue-50 text-blue-900"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                            selectedAnswers[currentQuestionIndex] === "true"
+                              ? "border-blue-500 bg-blue-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {selectedAnswers[currentQuestionIndex] === "true" && (
+                            <div className="w-3 h-3 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <span className="font-medium text-lg">Đúng</span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => selectAnswer("false")}
+                      className={`w-full text-left p-8 border-2 rounded-lg transition-colors ${
+                        selectedAnswers[currentQuestionIndex] === "false"
+                          ? "border-blue-500 bg-blue-50 text-blue-900"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
+                            selectedAnswers[currentQuestionIndex] === "false"
+                              ? "border-blue-500 bg-blue-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {selectedAnswers[currentQuestionIndex] ===
+                            "false" && (
+                            <div className="w-3 h-3 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <span className="font-medium text-lg">Sai</span>
+                      </div>
+                    </button>
+                  </div>
+                )}
 
                 {/* Fill in the Blank Questions */}
                 {question.type === "FILL_BLANK" && (
@@ -687,7 +874,7 @@ export const OnlineQuizzes: React.FC = () => {
 
             <div className="flex justify-between">
               <button
-                onClick={resetQuiz}
+                onClick={handleExitQuiz}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
                 {t("quizzes.exit")}
@@ -768,10 +955,11 @@ export const OnlineQuizzes: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <div className="text-2xl font-bold text-blue-600">
-                            {Math.round(
-                              (submission.score / submission.totalPoints) * 100
-                            )}
-                            %
+                            {(
+                              ((submission.score || 0) /
+                                (submission.totalPoints || 1)) *
+                              10
+                            ).toFixed(1)}
                           </div>
                           <div className="text-sm text-gray-600">
                             {submission.score}/{submission.totalPoints}{" "}
@@ -823,6 +1011,17 @@ export const OnlineQuizzes: React.FC = () => {
                   )
                 )}
               </div>
+
+              {/* Final Score Section */}
+              {quizResults.maxScore !== undefined &&
+                quizResults.maxScore !== null && (
+                  <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xl font-semibold text-blue-900 text-center">
+                      {t("quizzes.finalScore")}{" "}
+                      {(quizResults.maxScore || 0).toFixed(1)}
+                    </p>
+                  </div>
+                )}
 
               {/* Action buttons */}
               <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-200">
@@ -906,11 +1105,26 @@ export const OnlineQuizzes: React.FC = () => {
               </div>
               <div className="p-6 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {quizResults.percentage}%
+                  {(
+                    ((quizResults.submission.score || 0) /
+                      (quizResults.submission.totalPoints || 1)) *
+                    10
+                  ).toFixed(1)}
                 </div>
                 <div className="text-gray-600">{t("quizzes.score")}</div>
               </div>
             </div>
+
+            {/* Show final score if available */}
+            {quizResults.maxScore !== undefined &&
+              quizResults.maxScore !== null && (
+                <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-lg font-semibold text-blue-900">
+                    {t("quizzes.finalScore")}{" "}
+                    {(quizResults.maxScore || 0).toFixed(1)}
+                  </p>
+                </div>
+              )}
 
             <div className="flex justify-center space-x-4">
               <button
@@ -979,10 +1193,10 @@ export const OnlineQuizzes: React.FC = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8">
+              <div className="max-w-8xl mx-auto p-8">
                 {/* Stats Cards - Student view */}
                 {!isTeacher && (
-                  <div className="flex flex-row gap-6 mb-8 col-span-full">
+                  <div className="flex flex-row gap-6 mb-8">
                     <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
                       <div className="flex items-center justify-center">
                         <div className="p-2 bg-blue-100 rounded-lg">
@@ -990,10 +1204,10 @@ export const OnlineQuizzes: React.FC = () => {
                         </div>
                         <div className="ml-2 flex flex-row items-center gap-5">
                           <p className="text-xl font-semibold text-gray-900">
-                            {userStats.completed}
+                            {userStats.totalQuizzes}
                           </p>
                           <p className="text-base font-medium text-gray-600">
-                            Đã hoàn thành
+                            {t("quizzes.totalQuizzes")}
                           </p>
                         </div>
                       </div>
@@ -1006,10 +1220,26 @@ export const OnlineQuizzes: React.FC = () => {
                         </div>
                         <div className="ml-2 flex flex-row items-center gap-5">
                           <p className="text-xl font-semibold text-gray-900">
-                            {userStats.averageScore}%
+                            {userStats.completedQuizzes}
                           </p>
-                          <p className="text-base font-medium text-gray-600">
-                            Điểm TB
+                          <p className="ml-2 text-base font-medium text-gray-600">
+                            {t("quizzes.completed")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-red-100 rounded-lg">
+                          <AlertTriangle className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-5">
+                          <p className="text-lg font-semibold text-gray-900">
+                            {userStats.overdueQuizzes}
+                          </p>
+                          <p className="text-sm font-medium text-gray-600">
+                            {t("quizzes.overdue")}
                           </p>
                         </div>
                       </div>
@@ -1022,86 +1252,10 @@ export const OnlineQuizzes: React.FC = () => {
                         </div>
                         <div className="ml-2 flex flex-row items-center gap-5">
                           <p className="text-xl font-semibold text-gray-900">
-                            {userStats.excellent}
+                            {userStats.perfectCount}
                           </p>
                           <p className="text-base font-medium text-gray-600">
-                            Xuất sắc
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                          <Clock className="h-6 w-6 text-orange-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {userStats.averageTime}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            Phút TB
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Stats Cards - Teacher view */}
-                {isTeacher && (
-                  <div className="flex flex-row gap-6 mb-8 col-span-full">
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <FileText className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {quizzes.length}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            Tổng quiz
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {
-                              quizzes.filter((q) => q.status === "ACTIVE")
-                                .length
-                            }
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            Đang hoạt động
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Users className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {quizzes.reduce(
-                              (total, quiz) =>
-                                total + (quiz.submissions?.length || 0),
-                              0
-                            )}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            Lượt nộp bài
+                            {t("quizzes.perfect")}
                           </p>
                         </div>
                       </div>
@@ -1114,103 +1268,189 @@ export const OnlineQuizzes: React.FC = () => {
                         </div>
                         <div className="ml-2 flex flex-row items-center gap-5">
                           <p className="text-xl font-semibold text-gray-900">
-                            {quizzes.filter((q) => q.status === "DRAFT").length}
+                            {(userStats.averageScore || 0).toFixed(1)}
                           </p>
                           <p className="text-base font-medium text-gray-600">
-                            Nháp
+                            {t("quizzes.averageScore")}
                           </p>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
-                {quizzes.map((quiz) => (
-                  <div
-                    key={quiz.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow relative"
-                  >
-                    <div className="p-2 bg-green-100 rounded-bl-lg absolute top-0 right-0 rounded-tr-xl">
-                      <BookOpen className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 flex-col mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 text-start mr-2 h-14">
-                          {quiz.title}
-                        </h3>
-                        {quiz.description && (
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-2 text-start  h-8">
-                            {quiz.description}
+
+                {/* Stats Cards - Teacher view */}
+                {isTeacher && (
+                  <div className="flex flex-row gap-6 mb-8">
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-2">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {quizzes.length}
                           </p>
-                        )}
-                        <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-                          <Badge variant="subject">
-                            {t(`subject.${quiz.subject.toLowerCase()}`)}
-                          </Badge>
-                          <Badge variant="grade">
-                            {t("exercises.class")} {quiz.grade || "Chung"}
-                          </Badge>
-                          <Badge
-                            variant="status"
-                            className={`${
-                              quiz.status === "ACTIVE"
-                                ? "bg-green-100 text-green-800"
-                                : quiz.status === "DRAFT"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {quiz.status === "ACTIVE"
-                              ? t("status.active")
-                              : quiz.status === "DRAFT"
-                              ? t("status.draft")
-                              : t("status.inactive")}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <FileText className="h-4 w-4 mr-1" />
-                          <span>
-                            {quiz.totalQuestions || 0} {t("quizzes.questions")}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <Clock className="h-4 w-4 mr-1" />
-                          <span>
-                            {quiz.timeLimit || 15} {t("quizzes.minutes")}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <BookCheck className="h-4 w-4 mr-1" />
-                          <span>
-                            {quiz.submissions?.length || 0}{" "}
-                            {t("quizzes.submissions")}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-500 text-start flex items-center">
-                          <Users className="h-4 w-4 mr-1" />
-                          <span>{quiz.creator?.name || "Không xác định"}</span>
+                          <p className="text-base font-medium text-gray-600">
+                            {t("quizzes.totalQuizzes")}
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => startQuiz(quiz)}
-                      disabled={quiz.status !== "ACTIVE" && !isTeacher}
-                      className={`w-full flex text-sm items-center font-bold justify-center px-4 py-2 rounded-md transition-colors ${
-                        quiz.status !== "ACTIVE" && !isTeacher
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : isTeacher
-                          ? "bg-green-700 text-white hover:bg-green-800"
-                          : "bg-blue-700 text-white hover:bg-blue-800"
-                      }`}
-                    >
-                      {isTeacher ? (
-                        <>{t("quizzes.viewWithAnswersButton")}</>
-                      ) : (
-                        <>{t("quizzes.startQuiz")}</>
-                      )}
-                    </button>
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-2">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {
+                              quizzes.filter((q) => q.status === "ACTIVE")
+                                .length
+                            }
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            {t("quizzes.active")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Users className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-2">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {quizzes.reduce(
+                              (total, quiz) =>
+                                total + (quiz.submissions?.length || 0),
+                              0
+                            )}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            {t("quizzes.submissions")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                      <div className="flex items-center justify-center">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <BarChart3 className="h-6 w-6 text-orange-600" />
+                        </div>
+                        <div className="ml-2 flex flex-row items-center gap-2">
+                          <p className="text-xl font-semibold text-gray-900">
+                            {quizzes.filter((q) => q.status === "DRAFT").length}
+                          </p>
+                          <p className="text-base font-medium text-gray-600">
+                            {t("quizzes.draft")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ))}
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {quizzes.map((quiz) => (
+                    <div
+                      key={quiz.id}
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow relative"
+                    >
+                      <div className="p-2 bg-green-100 rounded-bl-lg absolute top-0 right-0 rounded-tr-xl">
+                        <BookOpen className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 flex-col mb-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2 text-start mr-2 h-14">
+                            {quiz.title}
+                          </h3>
+                          {quiz.description && (
+                            <p className="text-gray-600 text-sm mb-4 line-clamp-2 text-start  h-8">
+                              {quiz.description}
+                            </p>
+                          )}
+                          <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+                            <Badge variant="subject">
+                              {t(`subject.${quiz.subject.toLowerCase()}`)}
+                            </Badge>
+                            <Badge variant="grade">
+                              {t("exercises.class")} {quiz.grade || "Chung"}
+                            </Badge>
+                            <Badge
+                              variant="status"
+                              className={`${
+                                (quiz.status as string) === "ACTIVE"
+                                  ? "bg-green-100 text-green-800"
+                                  : (quiz.status as string) === "DRAFT"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : (quiz.status as string) === "OVERDUE"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {(quiz.status as string) === "ACTIVE"
+                                ? t("status.active")
+                                : (quiz.status as string) === "DRAFT"
+                                ? t("status.draft")
+                                : (quiz.status as string) === "OVERDUE"
+                                ? t("status.overdue")
+                                : t("status.inactive")}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500 mb-2">
+                            <FileText className="h-4 w-4 mr-1" />
+                            <span>
+                              {quiz.totalQuestions || 0}{" "}
+                              {t("quizzes.questions")}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500 mb-2">
+                            <Clock className="h-4 w-4 mr-1" />
+                            <span>
+                              {quiz.timeLimit || 15} {t("quizzes.minutes")}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500 mb-2">
+                            <BookCheck className="h-4 w-4 mr-1" />
+                            <span>
+                              {quiz.submissions?.length || 0}{" "}
+                              {t("quizzes.submissions")}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500 text-start flex items-center">
+                            <Users className="h-4 w-4 mr-1" />
+                            <span>
+                              {quiz.creator?.name || "Không xác định"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => startQuiz(quiz)}
+                        disabled={quiz.status !== "ACTIVE" && !isTeacher}
+                        className={`w-full flex text-sm items-center font-bold justify-center px-4 py-2 rounded-md transition-colors ${
+                          quiz.status !== "ACTIVE" && !isTeacher
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : isTeacher
+                            ? "bg-green-700 text-white hover:bg-green-800"
+                            : "bg-blue-700 text-white hover:bg-blue-800"
+                        }`}
+                      >
+                        {isTeacher ? (
+                          <>{t("quizzes.viewWithAnswersButton")}</>
+                        ) : (
+                          <>{t("quizzes.startQuiz")}</>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

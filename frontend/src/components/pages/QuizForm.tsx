@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { Save, Plus, Trash2, ArrowLeft, Clock, Calendar } from "lucide-react";
+import { Save, Plus, Trash2, Clock, Calendar } from "lucide-react";
+import { Subject } from "../../types/api";
 
 interface Question {
   id: number;
   question: string;
   type: "multiple-choice" | "true-false" | "short-answer";
   options: string[];
-  correctAnswer: number | string;
+  correctAnswer: string;
   points: number;
+  order: number;
 }
 
 interface QuizFormData {
@@ -17,7 +19,7 @@ interface QuizFormData {
   grade: number;
   description: string;
   timeLimit: number;
-  deadline: string;
+  deadline: string | null;
   status: "draft" | "active";
   questions: Question[];
 }
@@ -29,28 +31,80 @@ interface QuizFormProps {
 }
 
 export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
+  // Helper function to convert date to datetime-local format
+  const formatDateForInput = (
+    dateString: string | null | undefined
+  ): string => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+
+      // Format to YYYY-MM-DDTHH:mm for datetime-local input
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
+  };
+
+  // Helper function to convert datetime-local format to ISO string
+  const formatDateForAPI = (dateString: string): string => {
+    if (!dateString) return "";
+    try {
+      // Ensure the date string has seconds and timezone
+      let formattedDateString = dateString;
+      if (!formattedDateString.includes(":")) {
+        formattedDateString += ":00";
+      }
+      if (
+        !formattedDateString.includes("Z") &&
+        !formattedDateString.includes("+")
+      ) {
+        // Add timezone offset for local time
+        const date = new Date(formattedDateString);
+        const offset = date.getTimezoneOffset();
+        const hours = Math.abs(Math.floor(offset / 60));
+        const minutes = Math.abs(offset % 60);
+        const sign = offset > 0 ? "-" : "+";
+        formattedDateString += `${sign}${hours
+          .toString()
+          .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+      }
+
+      const date = new Date(formattedDateString);
+      return date.toISOString();
+    } catch (error) {
+      console.error("Error converting date:", error);
+      return "";
+    }
+  };
+
   const [formData, setFormData] = useState<QuizFormData>({
     title: quiz?.title || "",
     subject: quiz?.subject || "Mathematics",
     grade: quiz?.grade || 6,
     description: quiz?.description || "",
     timeLimit: quiz?.timeLimit || 30,
-    deadline: quiz?.deadline || "",
+    deadline: formatDateForInput(quiz?.deadline) || "",
     status: quiz?.status || "draft",
-    questions: quiz?.questions || [],
+    questions: (quiz?.questions || []).map((q: any, index: number) => ({
+      ...q,
+      order: q.order || index + 1,
+    })),
   });
+  console.log("this is formData", formData);
 
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(
     null
   );
 
-  const subjects = [
-    "Mathematics",
-    "Science",
-    "History",
-    "English",
-    "Geography",
-  ];
   const grades = [6, 7, 8, 9, 10, 11, 12];
 
   const addQuestion = () => {
@@ -59,8 +113,9 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
       question: "",
       type: "multiple-choice",
       options: ["", "", "", ""],
-      correctAnswer: 0,
+      correctAnswer: "0",
       points: 1,
+      order: formData.questions.length + 1,
     };
 
     setFormData((prev) => ({
@@ -86,7 +141,12 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   const deleteQuestion = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      questions: prev.questions.filter((_, i) => i !== index),
+      questions: prev.questions
+        .filter((_, i) => i !== index)
+        .map((q, newIndex) => ({
+          ...q,
+          order: newIndex + 1,
+        })),
     }));
     setActiveQuestionIndex(null);
   };
@@ -105,35 +165,23 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+
+    // Convert deadline to proper format for API
+    const quizDataToSave = {
+      ...formData,
+      deadline: formData.deadline ? formatDateForAPI(formData.deadline) : null,
+    };
+
+    onSave(quizDataToSave);
   };
+
+  const subjects = Object.values(Subject);
 
   const isEditMode = !!quiz;
 
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onBack}
-            className="flex items-center text-gray-600 hover:text-gray-800"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            Quay lại
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isEditMode ? "Chỉnh sửa Quiz" : "Tạo Quiz mới"}
-            </h1>
-            <p className="text-gray-600 mt-1">
-              {isEditMode
-                ? "Cập nhật thông tin quiz"
-                : "Điền thông tin để tạo quiz mới"}
-            </p>
-          </div>
-        </div>
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Quiz Settings */}
@@ -144,7 +192,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                 Tiêu đề Quiz *
               </label>
               <input
@@ -160,7 +208,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                 Môn học *
               </label>
               <select
@@ -180,7 +228,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                 Lớp *
               </label>
               <select
@@ -203,15 +251,13 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                 <Clock className="inline h-4 w-4 mr-1" />
                 Thời gian làm bài (phút) *
               </label>
               <input
                 type="number"
                 required
-                min="5"
-                max="180"
                 value={formData.timeLimit}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -224,14 +270,14 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                 <Calendar className="inline h-4 w-4 mr-1" />
                 Hạn chót *
               </label>
               <input
                 type="datetime-local"
-                required
-                value={formData.deadline}
+                required={false}
+                value={formData.deadline || ""}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, deadline: e.target.value }))
                 }
@@ -239,8 +285,8 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            {/* <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                 Trạng thái
               </label>
               <select
@@ -256,11 +302,11 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 <option value="draft">Bản nháp</option>
                 <option value="active">Kích hoạt</option>
               </select>
-            </div>
+            </div> */}
           </div>
 
           <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
               Mô tả
             </label>
             <textarea
@@ -343,7 +389,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                   {activeQuestionIndex === questionIndex && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2  text-start">
                           Nội dung câu hỏi *
                         </label>
                         <textarea
@@ -362,7 +408,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Loại câu hỏi
                           </label>
                           <select
@@ -384,7 +430,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Điểm
                           </label>
                           <input
@@ -404,7 +450,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
 
                       {question.type === "multiple-choice" && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Các phương án trả lời
                           </label>
                           <div className="space-y-3">
@@ -417,11 +463,12 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                                   type="radio"
                                   name={`correct-${questionIndex}`}
                                   checked={
-                                    question.correctAnswer === optionIndex
+                                    question.correctAnswer ===
+                                    optionIndex.toString()
                                   }
                                   onChange={() =>
                                     updateQuestion(questionIndex, {
-                                      correctAnswer: optionIndex,
+                                      correctAnswer: optionIndex.toString(),
                                     })
                                   }
                                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
@@ -452,7 +499,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
 
                       {question.type === "true-false" && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Đáp án đúng
                           </label>
                           <div className="flex space-x-4">
@@ -490,7 +537,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
 
                       {question.type === "short-answer" && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Đáp án mẫu
                           </label>
                           <input

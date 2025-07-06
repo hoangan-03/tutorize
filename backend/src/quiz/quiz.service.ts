@@ -11,6 +11,7 @@ import {
   QuizFilterDto,
   SubmitQuizDto,
   GradeSubmissionDto,
+  UpdateQuizStatusDto,
 } from './dto/quiz.dto';
 import { PaginatedResultDto } from '../common/dto/pagination.dto';
 import { Role } from '@prisma/client';
@@ -27,11 +28,32 @@ export class QuizService {
         createdBy: createdBy,
         totalQuestions: questions.length,
         questions: {
-          create: questions.map((question) => ({
-            ...question,
-            options: question.options || [],
-            correctAnswer: question.correctAnswer || '',
-          })),
+          create: questions.map((question) => {
+            // For multiple choice questions, convert correctAnswer to index if it's a text option
+            let processedCorrectAnswer = question.correctAnswer;
+
+            if (
+              question.type === 'MULTIPLE_CHOICE' &&
+              question.options &&
+              question.options.length > 0
+            ) {
+              // If correctAnswer is a text that matches one of the options, convert to index
+              const optionIndex = question.options.findIndex(
+                (option) => option === question.correctAnswer,
+              );
+              if (optionIndex !== -1) {
+                processedCorrectAnswer = optionIndex.toString();
+              }
+            }
+
+            return {
+              ...question,
+              options: question.options || [],
+              correctAnswer: processedCorrectAnswer
+                ? processedCorrectAnswer.toString()
+                : '',
+            };
+          }),
         },
       },
       include: {
@@ -64,6 +86,9 @@ export class QuizService {
       search,
     } = filterDto;
     const skip = (page - 1) * limit;
+
+    // Auto check and update overdue quizzes
+    await this.checkAndUpdateOverdueQuizzes();
 
     const where: any = {};
 
@@ -109,12 +134,8 @@ export class QuizService {
               email: true,
             },
           },
-          _count: {
-            select: {
-              questions: true,
-              submissions: true,
-            },
-          },
+          questions: true,
+          submissions: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -135,6 +156,9 @@ export class QuizService {
   }
 
   async findOne(id: number, userId?: number) {
+    // Auto check and update overdue quizzes
+    await this.checkAndUpdateOverdueQuizzes();
+
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
       include: {
@@ -252,9 +276,88 @@ export class QuizService {
       throw new ForbiddenException('Không có quyền cập nhật quiz này');
     }
 
-    const updatedQuiz = await this.prisma.quiz.update({
+    const { questions, ...quizData } = updateQuizDto;
+
+    // Prepare update data
+    const updateData: any = {
+      ...quizData,
+    };
+
+    // Only handle questions if they are explicitly provided and different from current
+    if (questions !== undefined) {
+      // Get current questions to compare
+      const currentQuestions = await this.prisma.question.findMany({
+        where: { quizId: id },
+        orderBy: { order: 'asc' },
+      });
+
+      // Check if questions have actually changed
+      const questionsChanged =
+        questions.length !== currentQuestions.length ||
+        questions.some((newQ, index) => {
+          const currentQ = currentQuestions[index];
+          if (!currentQ) return true;
+
+          return (
+            newQ.question !== currentQ.question ||
+            newQ.type !== currentQ.type ||
+            newQ.correctAnswer !== currentQ.correctAnswer ||
+            newQ.points !== currentQ.points ||
+            JSON.stringify(newQ.options) !== JSON.stringify(currentQ.options)
+          );
+        });
+
+      if (questionsChanged) {
+        // Delete existing questions
+        await this.prisma.question.deleteMany({
+          where: { quizId: id },
+        });
+
+        // Create new questions
+        updateData.questions = {
+          create: questions.map((question) => {
+            // For multiple choice questions, convert correctAnswer to index if it's a text option
+            let processedCorrectAnswer = question.correctAnswer;
+
+            if (
+              question.type === 'MULTIPLE_CHOICE' &&
+              question.options &&
+              question.options.length > 0
+            ) {
+              // If correctAnswer is a text that matches one of the options, convert to index
+              const optionIndex = question.options.findIndex(
+                (option) => option === question.correctAnswer,
+              );
+              if (optionIndex !== -1) {
+                processedCorrectAnswer = optionIndex.toString();
+              }
+            }
+
+            return {
+              ...question,
+              options: question.options || [],
+              correctAnswer: processedCorrectAnswer
+                ? processedCorrectAnswer.toString()
+                : '',
+            };
+          }),
+        };
+
+        updateData.totalQuestions = questions.length;
+      }
+    }
+
+    await this.prisma.quiz.update({
       where: { id },
-      data: updateQuizDto,
+      data: updateData,
+    });
+
+    // Auto check and update overdue status after updating quiz
+    await this.checkAndUpdateOverdueQuizzes();
+
+    // Get the latest quiz data after potential status update
+    const finalQuiz = await this.prisma.quiz.findUnique({
+      where: { id },
       include: {
         questions: {
           orderBy: { order: 'asc' },
@@ -269,7 +372,7 @@ export class QuizService {
       },
     });
 
-    return updatedQuiz;
+    return finalQuiz;
   }
 
   async remove(id: number, userId: number) {
@@ -295,6 +398,121 @@ export class QuizService {
     });
 
     return { message: 'Xóa quiz thành công' };
+  }
+
+  async updateStatus(
+    id: number,
+    updateStatusDto: UpdateQuizStatusDto,
+    userId: number,
+  ) {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException('Không tìm thấy quiz');
+    }
+
+    // Only creator or admin can update status
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (user?.role !== 'TEACHER' && quiz.createdBy !== userId) {
+      throw new ForbiddenException(
+        'Không có quyền cập nhật trạng thái quiz này',
+      );
+    }
+
+    // Check if quiz is overdue and trying to change status
+    if (
+      (quiz.status as string) === 'OVERDUE' &&
+      (updateStatusDto.status as string) !== 'OVERDUE'
+    ) {
+      // Check if deadline has been updated to a future date
+      const now = new Date();
+      const deadline = new Date(quiz.deadline);
+
+      if (deadline <= now) {
+        throw new BadRequestException(
+          'Không thể thay đổi trạng thái quiz đã quá hạn. Vui lòng cập nhật deadline trước.',
+        );
+      }
+    }
+
+    const updatedQuiz = await this.prisma.quiz.update({
+      where: { id },
+      data: {
+        status: updateStatusDto.status,
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return updatedQuiz;
+  }
+
+  async checkAndUpdateOverdueQuizzes() {
+    const now = new Date();
+
+    // Find all active quizzes that have passed their deadline
+    const overdueQuizzes = await this.prisma.quiz.findMany({
+      where: {
+        status: 'ACTIVE',
+        deadline: {
+          lt: now,
+        },
+      },
+    });
+
+    // Update status to OVERDUE for all overdue quizzes
+    if (overdueQuizzes.length > 0) {
+      await this.prisma.quiz.updateMany({
+        where: {
+          id: {
+            in: overdueQuizzes.map((q) => q.id),
+          },
+        },
+        data: {
+          status: 'OVERDUE' as any,
+        },
+      });
+    }
+
+    // Find all overdue quizzes that now have future deadlines
+    const reactivatedQuizzes = await this.prisma.quiz.findMany({
+      where: {
+        status: 'OVERDUE',
+        deadline: {
+          gt: now,
+        },
+      },
+    });
+
+    // Update status back to ACTIVE for quizzes with future deadlines
+    if (reactivatedQuizzes.length > 0) {
+      await this.prisma.quiz.updateMany({
+        where: {
+          id: {
+            in: reactivatedQuizzes.map((q) => q.id),
+          },
+        },
+        data: {
+          status: 'ACTIVE' as any,
+        },
+      });
+    }
+
+    return {
+      updatedCount: overdueQuizzes.length + reactivatedQuizzes.length,
+    };
   }
 
   async submit(id: number, submitQuizDto: SubmitQuizDto, userId: number) {
@@ -507,7 +725,10 @@ export class QuizService {
       case 'MULTIPLE_CHOICE':
       case 'TRUE_FALSE':
         // For multiple choice, correctAnswer stores the index of correct option
-        return question.correctAnswer === userAnswer;
+        // Convert both to string for comparison to handle type mismatches
+        const correctAnswerStr = question.correctAnswer.toString();
+        const userAnswerStr = userAnswer.toString();
+        return correctAnswerStr === userAnswerStr;
       case 'FILL_BLANK':
         // For fill in the blank, do case-insensitive comparison
         return (
@@ -589,7 +810,7 @@ export class QuizService {
         quizId,
         userId,
       },
-      orderBy: { submittedAt: 'desc' },
+      orderBy: { submittedAt: 'asc' }, // Changed to ascending order (oldest first)
       include: {
         answers: {
           include: {
@@ -606,71 +827,335 @@ export class QuizService {
       },
     });
 
+    console.log('Submissions found:', submissions.length);
+    console.log(
+      'Submissions data:',
+      submissions.map((s) => ({
+        id: s.id,
+        score: s.score,
+        totalPoints: s.totalPoints,
+        calculatedScore: (s.score / s.totalPoints) * 10,
+      })),
+    );
+
     const quiz = await this.prisma.quiz.findUnique({
       where: { id: quizId },
     });
 
     const maxAttempts = quiz.maxAttempts || 1;
     const currentAttempt = Math.max(0, maxAttempts - submissions.length);
-    console.log(maxAttempts);
+
+    // Calculate maximum score achieved (scaled to 10)
+    const maxScore =
+      submissions.length > 0
+        ? Math.max(
+            ...submissions.map(
+              (s) => ((s.score || 0) / (s.totalPoints || 1)) * 10,
+            ),
+          )
+        : 0;
+
+    console.log('Calculated maxScore:', maxScore);
+
     return {
       quiz,
       submissions,
       canRetake: currentAttempt > 0,
       remainingAttempts: currentAttempt,
       currentAttempt,
+      maxScore,
     };
   }
 
   async getMyStats(userId: number) {
-    const [
-      completedCount,
-      averageScore,
-      totalTimeSpent,
-      excellentCount,
-      recentSubmissions,
-    ] = await Promise.all([
-      this.prisma.quizSubmission.count({
-        where: { userId },
-      }),
-      this.prisma.quizSubmission.aggregate({
-        where: { userId },
-        _avg: { score: true },
-      }),
-      this.prisma.quizSubmission.aggregate({
-        where: { userId },
-        _sum: { timeSpent: true },
-      }),
-      this.prisma.quizSubmission.count({
-        where: {
-          userId,
-          score: { gte: 90 },
-        },
-      }),
-      this.prisma.quizSubmission.findMany({
-        where: { userId },
-        include: {
-          quiz: {
-            select: {
-              id: true,
-              title: true,
-              subject: true,
+    const [completedCount, submissions, totalTimeSpent, recentSubmissions] =
+      await Promise.all([
+        this.prisma.quizSubmission.count({
+          where: { userId },
+        }),
+        this.prisma.quizSubmission.findMany({
+          where: { userId },
+          select: {
+            score: true,
+            totalPoints: true,
+          },
+        }),
+        this.prisma.quizSubmission.aggregate({
+          where: { userId },
+          _sum: { timeSpent: true },
+        }),
+        this.prisma.quizSubmission.findMany({
+          where: { userId },
+          include: {
+            quiz: {
+              select: {
+                id: true,
+                title: true,
+                subject: true,
+              },
             },
           },
-        },
-        orderBy: { submittedAt: 'desc' },
-        take: 5,
-      }),
-    ]);
+          orderBy: { submittedAt: 'desc' },
+          take: 5,
+        }),
+      ]);
+
+    // Calculate average score scaled to 10
+    const averageScore =
+      completedCount > 0
+        ? Math.round(
+            submissions.reduce(
+              (sum, sub) =>
+                sum + ((sub.score || 0) / (sub.totalPoints || 1)) * 10,
+              0,
+            ) / completedCount,
+          )
+        : 0;
+
+    // Calculate excellent count (score >= 9 on scale of 10)
+    const excellentCount = submissions.filter(
+      (sub) => ((sub.score || 0) / (sub.totalPoints || 1)) * 10 >= 9,
+    ).length;
 
     return {
       completed: completedCount,
-      averageScore: Math.round(averageScore._avg.score || 0),
+      averageScore,
       excellent: excellentCount,
       averageTime: Math.round(
         (totalTimeSpent._sum.timeSpent || 0) / Math.max(completedCount, 1),
       ),
       recentSubmissions,
+    };
+  }
+
+  async getTeacherStats(userId: number) {
+    const [totalQuizzes, activeQuizzes, overdueQuizzes, totalSubmissions] =
+      await Promise.all([
+        this.prisma.quiz.count({
+          where: { createdBy: userId },
+        }),
+        this.prisma.quiz.count({
+          where: { createdBy: userId, status: 'ACTIVE' },
+        }),
+        this.prisma.quiz.count({
+          where: { createdBy: userId, status: 'OVERDUE' },
+        }),
+        this.prisma.quizSubmission.count({
+          where: {
+            quiz: {
+              createdBy: userId,
+            },
+          },
+        }),
+      ]);
+
+    return {
+      totalQuizzes,
+      activeQuizzes,
+      overdueQuizzes,
+      totalSubmissions,
+    };
+  }
+
+  async getStudentQuizStats(userId: number) {
+    // Get all quizzes (visible to student)
+    const totalQuizzes = await this.prisma.quiz.count({
+      where: {
+        OR: [
+          { status: 'ACTIVE' },
+          { status: 'OVERDUE' },
+          { status: 'INACTIVE' },
+        ],
+      },
+    });
+
+    // Get overdue quizzes
+    const overdueQuizzes = await this.prisma.quiz.count({
+      where: { status: 'OVERDUE' },
+    });
+
+    // Get user's submissions
+    const submissions = await this.prisma.quizSubmission.findMany({
+      where: { userId },
+      include: {
+        quiz: true,
+      },
+    });
+
+    // Group submissions by quiz to get unique completed quizzes
+    const submissionsByQuiz = submissions.reduce(
+      (acc, submission) => {
+        if (!acc[submission.quizId]) {
+          acc[submission.quizId] = [];
+        }
+        acc[submission.quizId].push(submission);
+        return acc;
+      },
+      {} as Record<number, any[]>,
+    );
+
+    const completedQuizzes = Object.keys(submissionsByQuiz).length;
+
+    // Calculate average score based on highest score per quiz
+    let totalMaxScore = 0;
+    let perfectCount = 0;
+
+    Object.values(submissionsByQuiz).forEach((quizSubmissions: any[]) => {
+      // Get the highest score for this quiz
+      const maxScore = Math.max(
+        ...quizSubmissions.map(
+          (s) => ((s.score || 0) / (s.totalPoints || 1)) * 10,
+        ),
+      );
+      totalMaxScore += maxScore;
+
+      // Check if first attempt was perfect (10/10)
+      const firstAttempt = quizSubmissions.sort(
+        (a, b) =>
+          new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime(),
+      )[0];
+      if (
+        firstAttempt &&
+        ((firstAttempt.score || 0) / (firstAttempt.totalPoints || 1)) * 10 ===
+          10
+      ) {
+        perfectCount++;
+      }
+    });
+
+    const averageScore =
+      completedQuizzes > 0 ? totalMaxScore / completedQuizzes : 0;
+
+    return {
+      totalQuizzes,
+      completedQuizzes,
+      overdueQuizzes,
+      averageScore: Math.round(averageScore),
+      perfectCount,
+    };
+  }
+
+  async getQuizDetailedStats(quizId: number, userId: number) {
+    // Check if user owns this quiz
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+    });
+
+    if (!quiz || quiz.createdBy !== userId) {
+      throw new ForbiddenException('Không có quyền xem thống kê quiz này');
+    }
+
+    // Get submissions for this quiz
+    const submissions = await this.prisma.quizSubmission.findMany({
+      where: { quizId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
+      orderBy: { submittedAt: 'desc' },
+    });
+
+    // Calculate statistics
+    const totalSubmissions = submissions.length;
+    const totalStudents = new Set(submissions.map((s) => s.userId)).size;
+
+    const averageScore =
+      totalSubmissions > 0
+        ? submissions.reduce(
+            (sum, s) => sum + ((s.score || 0) / (s.totalPoints || 1)) * 10,
+            0,
+          ) / totalSubmissions
+        : 0;
+
+    const averageTime =
+      totalSubmissions > 0
+        ? submissions.reduce((sum, s) => sum + (s.timeSpent || 0), 0) /
+          totalSubmissions
+        : 0;
+
+    const passRate =
+      totalSubmissions > 0
+        ? (submissions.filter(
+            (s) => ((s.score || 0) / (s.totalPoints || 1)) * 10 >= 5,
+          ).length /
+            totalSubmissions) *
+          100
+        : 0;
+
+    // Grade distribution
+    const gradeDistribution = {
+      excellent: submissions.filter(
+        (s) => ((s.score || 0) / (s.totalPoints || 1)) * 10 >= 9,
+      ).length,
+      good: submissions.filter((s) => {
+        const score = ((s.score || 0) / (s.totalPoints || 1)) * 10;
+        return score >= 7 && score < 9;
+      }).length,
+      average: submissions.filter((s) => {
+        const score = ((s.score || 0) / (s.totalPoints || 1)) * 10;
+        return score >= 5 && score < 7;
+      }).length,
+      poor: submissions.filter(
+        (s) => ((s.score || 0) / (s.totalPoints || 1)) * 10 < 5,
+      ).length,
+    };
+
+    // Question analysis
+    const questions = await this.prisma.question.findMany({
+      where: { quizId },
+      orderBy: { order: 'asc' },
+    });
+
+    const questionAnalysis = questions.map((question) => {
+      const questionAnswers = submissions.flatMap((s) =>
+        s.answers.filter((a) => a.questionId === question.id),
+      );
+
+      const correctAnswers = questionAnswers.filter((a) => a.isCorrect).length;
+      const accuracy =
+        questionAnswers.length > 0
+          ? (correctAnswers / questionAnswers.length) * 100
+          : 0;
+
+      return {
+        id: question.id,
+        question: question.question,
+        type: question.type,
+        points: question.points,
+        totalAnswers: questionAnswers.length,
+        correctAnswers,
+        accuracy: Math.round(accuracy),
+      };
+    });
+
+    return {
+      quiz,
+      totalSubmissions,
+      totalStudents,
+      averageScore: Math.round(averageScore * 10) / 10,
+      averageTime: Math.round(averageTime),
+      passRate: Math.round(passRate),
+      gradeDistribution,
+      questionAnalysis,
+      submissions: submissions.map((s) => ({
+        id: s.id,
+        user: s.user,
+        score:
+          Math.round(((s.score || 0) / (s.totalPoints || 1)) * 10 * 10) / 10,
+        timeSpent: s.timeSpent,
+        submittedAt: s.submittedAt,
+        status: s.status,
+      })),
     };
   }
 }

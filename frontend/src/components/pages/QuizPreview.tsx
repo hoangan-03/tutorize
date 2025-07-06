@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { ArrowLeft, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle, AlertCircle } from "lucide-react";
 
 interface QuizPreviewProps {
   quiz: any;
   onBack: () => void;
 }
 
-export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
+export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{
     [key: number]: any;
@@ -48,25 +48,9 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onBack}
-            className="flex items-center text-gray-600 hover:text-gray-800"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            Quay lại
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Xem trước Quiz</h1>
-            <p className="text-gray-600 mt-1">{quiz.title}</p>
-          </div>
-        </div>
         <div className="flex items-center space-x-4 text-sm text-gray-500">
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-1" />
-            {quiz.timeLimit} phút
-          </div>
-          <div className="text-blue-600 font-medium">Chế độ xem trước</div>
+          <Clock className="h-4 w-4 mr-1" />
+          {quiz.timeLimit} phút
         </div>
       </div>
 
@@ -152,52 +136,75 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
                   </div>
 
                   {/* Multiple Choice Options */}
-                  {currentQuestion.type === "multiple-choice" && (
+                  {currentQuestion.type === "MULTIPLE_CHOICE" && (
                     <div className="space-y-3">
                       {currentQuestion.options.map(
-                        (option: string, optionIndex: number) => (
-                          <label
-                            key={optionIndex}
-                            className={`flex items-center p-8 border rounded-lg cursor-pointer transition-colors ${
-                              selectedAnswers[currentQuestion.id] ===
-                              optionIndex
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 hover:bg-gray-50"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={`question-${currentQuestion.id}`}
-                              checked={
-                                selectedAnswers[currentQuestion.id] ===
-                                optionIndex
-                              }
-                              onChange={() =>
-                                handleAnswerSelect(
-                                  currentQuestion.id,
+                        (option: string, optionIndex: number) => {
+                          const isCorrect =
+                            currentQuestion.correctAnswer ===
+                            optionIndex.toString();
+
+                          return (
+                            <label
+                              key={optionIndex}
+                              className={`flex items-center p-8 border rounded-lg cursor-pointer transition-colors ${
+                                isCorrect
+                                  ? "border-green-500 bg-green-50"
+                                  : selectedAnswers[currentQuestion.id] ===
+                                    optionIndex
+                                  ? "border-blue-500 bg-blue-50"
+                                  : "border-gray-200 hover:bg-gray-50"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name={`question-${currentQuestion.id}`}
+                                checked={
+                                  selectedAnswers[currentQuestion.id] ===
                                   optionIndex
-                                )
-                              }
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                            />
-                            <span className="ml-3 text-gray-700">
-                              <span className="font-medium mr-2">
-                                {String.fromCharCode(65 + optionIndex)}.
+                                }
+                                onChange={() =>
+                                  handleAnswerSelect(
+                                    currentQuestion.id,
+                                    optionIndex
+                                  )
+                                }
+                                className={`h-4 w-4 focus:ring-2 border-2 ${
+                                  isCorrect
+                                    ? "text-green-600 focus:ring-green-500 border-green-300"
+                                    : "text-blue-600 focus:ring-blue-500 border-gray-300"
+                                }`}
+                              />
+                              <span
+                                className={`ml-3 ${
+                                  isCorrect ? "text-green-700" : "text-gray-700"
+                                }`}
+                              >
+                                <span className="font-medium mr-2">
+                                  {String.fromCharCode(65 + optionIndex)}.
+                                </span>
+                                {option}
                               </span>
-                              {option}
-                            </span>
-                          </label>
-                        )
+                              {isCorrect && (
+                                <span className="ml-auto text-green-600 font-medium text-sm">
+                                  Đáp án đúng
+                                </span>
+                              )}
+                            </label>
+                          );
+                        }
                       )}
                     </div>
                   )}
 
                   {/* True/False Options */}
-                  {currentQuestion.type === "true-false" && (
+                  {currentQuestion.type === "TRUE_FALSE" && (
                     <div className="space-y-3">
                       <label
                         className={`flex items-center p-8 border rounded-lg cursor-pointer transition-colors ${
-                          selectedAnswers[currentQuestion.id] === "true"
+                          currentQuestion.correctAnswer === "true"
+                            ? "border-green-500 bg-green-50"
+                            : selectedAnswers[currentQuestion.id] === "true"
                             ? "border-blue-500 bg-blue-50"
                             : "border-gray-200 hover:bg-gray-50"
                         }`}
@@ -211,15 +218,32 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
                           onChange={() =>
                             handleAnswerSelect(currentQuestion.id, "true")
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          className={`h-4 w-4 focus:ring-2 border-2 ${
+                            currentQuestion.correctAnswer === "true"
+                              ? "text-green-600 focus:ring-green-500 border-green-300"
+                              : "text-blue-600 focus:ring-blue-500 border-gray-300"
+                          }`}
                         />
-                        <span className="ml-3 text-gray-700 font-medium">
+                        <span
+                          className={`ml-3 font-medium ${
+                            currentQuestion.correctAnswer === "true"
+                              ? "text-green-700"
+                              : "text-gray-700"
+                          }`}
+                        >
                           Đúng
                         </span>
+                        {currentQuestion.correctAnswer === "true" && (
+                          <span className="ml-auto text-green-600 font-medium text-sm">
+                            Đáp án đúng
+                          </span>
+                        )}
                       </label>
                       <label
                         className={`flex items-center p-8 border rounded-lg cursor-pointer transition-colors ${
-                          selectedAnswers[currentQuestion.id] === "false"
+                          currentQuestion.correctAnswer === "false"
+                            ? "border-green-500 bg-green-50"
+                            : selectedAnswers[currentQuestion.id] === "false"
                             ? "border-blue-500 bg-blue-50"
                             : "border-gray-200 hover:bg-gray-50"
                         }`}
@@ -233,18 +257,43 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
                           onChange={() =>
                             handleAnswerSelect(currentQuestion.id, "false")
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          className={`h-4 w-4 focus:ring-2 border-2 ${
+                            currentQuestion.correctAnswer === "false"
+                              ? "text-green-600 focus:ring-green-500 border-green-300"
+                              : "text-blue-600 focus:ring-blue-500 border-gray-300"
+                          }`}
                         />
-                        <span className="ml-3 text-gray-700 font-medium">
+                        <span
+                          className={`ml-3 font-medium ${
+                            currentQuestion.correctAnswer === "false"
+                              ? "text-green-700"
+                              : "text-gray-700"
+                          }`}
+                        >
                           Sai
                         </span>
+                        {currentQuestion.correctAnswer === "false" && (
+                          <span className="ml-auto text-green-600 font-medium text-sm">
+                            Đáp án đúng
+                          </span>
+                        )}
                       </label>
                     </div>
                   )}
 
                   {/* Short Answer */}
-                  {currentQuestion.type === "short-answer" && (
+                  {currentQuestion.type === "FILL_BLANK" && (
                     <div>
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Đáp án mẫu:
+                        </label>
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <span className="text-green-700 font-medium">
+                            {currentQuestion.correctAnswer}
+                          </span>
+                        </div>
+                      </div>
                       <textarea
                         value={selectedAnswers[currentQuestion.id] || ""}
                         onChange={(e) =>
@@ -295,9 +344,9 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, onBack }) => {
 
           {/* Preview Notice */}
           <div className="mt-6 p-8 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center">
+            <div className="flex items-center flex-row gap-2">
               <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-              <div>
+              <div className="flex flex-col text-start">
                 <p className="text-sm font-medium text-yellow-800">
                   Chế độ xem trước
                 </p>

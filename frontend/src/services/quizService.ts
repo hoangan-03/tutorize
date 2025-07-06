@@ -15,6 +15,7 @@ export const quizService = {
     const response = await api.get<PaginatedResult<Quiz>>("/quizzes", {
       params,
     });
+    console.log("response.data", response.data);
     return response.data;
   },
 
@@ -34,12 +35,22 @@ export const quizService = {
   },
 
   async updateQuiz(id: number, quizData: Partial<Quiz>): Promise<Quiz> {
-    const response = await api.put<Quiz>(`/quizzes/${id}`, quizData);
+    const response = await api.patch<Quiz>(`/quizzes/${id}`, quizData);
     return response.data;
   },
 
   async deleteQuiz(id: number): Promise<void> {
     await api.delete(`/quizzes/${id}`);
+  },
+
+  async updateQuizStatus(id: number, status: string): Promise<Quiz> {
+    const response = await api.patch<Quiz>(`/quizzes/${id}/status`, { status });
+    return response.data;
+  },
+
+  async checkOverdueQuizzes(): Promise<any> {
+    const response = await api.post("/quizzes/check-overdue");
+    return response.data;
   },
 
   async publishQuiz(id: number): Promise<Quiz> {
@@ -182,7 +193,33 @@ export const quizService = {
   },
 
   async getMyQuizStats(): Promise<any> {
-    const response = await api.get("/quiz-submissions/stats");
+    const response = await api.get("/quizzes/my-submission-stats");
+    return response.data;
+  },
+
+  async getTeacherStats(): Promise<{
+    totalQuizzes: number;
+    activeQuizzes: number;
+    overdueQuizzes: number;
+    totalSubmissions: number;
+  }> {
+    const response = await api.get("/quizzes/teacher-stats");
+    return response.data;
+  },
+
+  async getStudentStats(): Promise<{
+    totalQuizzes: number;
+    completedQuizzes: number;
+    overdueQuizzes: number;
+    averageScore: number;
+    perfectCount: number;
+  }> {
+    const response = await api.get("/quizzes/student-stats");
+    return response.data;
+  },
+
+  async getDetailedQuizStats(quizId: number): Promise<any> {
+    const response = await api.get(`/quizzes/${quizId}/detailed-stats`);
     return response.data;
   },
 
@@ -193,6 +230,7 @@ export const quizService = {
     canRetake: boolean;
     remainingAttempts: number;
     currentAttempt: number;
+    maxScore: number;
   }> {
     const response = await api.get(`/quizzes/${quizId}/submission-history`);
     return response.data;

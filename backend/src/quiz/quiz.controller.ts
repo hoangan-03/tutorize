@@ -24,6 +24,7 @@ import {
   QuizFilterDto,
   SubmitQuizDto,
   GradeSubmissionDto,
+  UpdateQuizStatusDto,
 } from './dto/quiz.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -55,7 +56,7 @@ export class QuizController {
   @ApiQuery({
     name: 'status',
     required: false,
-    enum: ['DRAFT', 'ACTIVE', 'CLOSED'],
+    enum: ['DRAFT', 'ACTIVE', 'INACTIVE'],
   })
   @ApiQuery({ name: 'createdBy', required: false, type: String })
   @ApiQuery({ name: 'tags', required: false, type: String })
@@ -63,6 +64,28 @@ export class QuizController {
   @ApiQuery({ name: 'search', required: false, type: String })
   findAll(@Query() filterDto: QuizFilterDto) {
     return this.quizService.findAll(filterDto);
+  }
+
+  @Get('teacher-stats')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Thống kê quiz cho giáo viên' })
+  @ApiResponse({ status: 200, description: 'Thống kê quiz của giáo viên' })
+  getTeacherStats(@CurrentUser('sub') userId: number) {
+    return this.quizService.getTeacherStats(userId);
+  }
+
+  @Get('student-stats')
+  @ApiOperation({ summary: 'Thống kê quiz cho học sinh' })
+  @ApiResponse({ status: 200, description: 'Thống kê quiz của học sinh' })
+  getStudentStats(@CurrentUser('sub') userId: number) {
+    return this.quizService.getStudentQuizStats(userId);
+  }
+
+  @Get('my-submission-stats')
+  @ApiOperation({ summary: 'Thống kê bài nộp của tôi' })
+  @ApiResponse({ status: 200, description: 'Thống kê bài nộp' })
+  getMySubmissionStats(@CurrentUser() user: any) {
+    return this.quizService.getMyStats(user.id);
   }
 
   @Get(':id')
@@ -115,6 +138,28 @@ export class QuizController {
     @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.remove(id, userId);
+  }
+
+  @Patch(':id/status')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Cập nhật trạng thái quiz' })
+  @ApiResponse({ status: 200, description: 'Cập nhật trạng thái thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy quiz' })
+  @ApiResponse({ status: 403, description: 'Không có quyền cập nhật' })
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateStatusDto: UpdateQuizStatusDto,
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.quizService.updateStatus(id, updateStatusDto, userId);
+  }
+
+  @Post('check-overdue')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Kiểm tra và cập nhật quiz quá hạn' })
+  @ApiResponse({ status: 200, description: 'Kiểm tra thành công' })
+  checkOverdueQuizzes() {
+    return this.quizService.checkAndUpdateOverdueQuizzes();
   }
 
   @Post(':id/submit')
@@ -175,6 +220,19 @@ export class QuizController {
   ) {
     return this.quizService.getQuizSubmissionHistory(id, user.id);
   }
+
+  @Get(':id/detailed-stats')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Thống kê chi tiết quiz (Teacher only)' })
+  @ApiResponse({ status: 200, description: 'Thống kê chi tiết quiz' })
+  @ApiResponse({ status: 403, description: 'Không có quyền xem thống kê' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy quiz' })
+  getQuizDetailedStats(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.quizService.getQuizDetailedStats(id, userId);
+  }
 }
 
 @ApiTags('Quiz Submissions')
@@ -191,12 +249,5 @@ export class QuizSubmissionController {
   @ApiResponse({ status: 200, description: 'Danh sách bài nộp của user' })
   getMySubmissions(@Query() query: any, @CurrentUser() user: any) {
     return this.quizService.getMySubmissions(user.id, query);
-  }
-
-  @Get('stats')
-  @ApiOperation({ summary: 'Thống kê bài nộp của tôi' })
-  @ApiResponse({ status: 200, description: 'Thống kê bài nộp' })
-  getMyStats(@CurrentUser() user: any) {
-    return this.quizService.getMyStats(user.id);
   }
 }
