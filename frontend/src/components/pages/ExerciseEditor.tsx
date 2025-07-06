@@ -6,9 +6,18 @@ import "katex/dist/katex.min.css";
 import { ExerciseList } from "./ExerciseEditorUI";
 import { ExerciseForm } from "./ExerciseForm";
 import { ExercisePreview } from "./ExercisePreview";
+import { ExercisePublicView } from "./ExercisePublicView";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const ExerciseEditor: React.FC = () => {
+  const { isTeacher } = useAuth();
+
+  // If user is a student, show the public view
+  if (!isTeacher) {
+    return <ExercisePublicView />;
+  }
+
+  // Teacher view - original ExerciseEditor logic
   interface Exercise {
     id?: number;
     name: string;
@@ -24,7 +33,7 @@ export const ExerciseEditor: React.FC = () => {
     status: string;
   }
 
-  const { user, isTeacher } = useAuth();
+  const { user } = useAuth();
   const [currentView, setCurrentView] = useState<
     "list" | "create" | "edit" | "preview"
   >("list");
@@ -35,12 +44,12 @@ export const ExerciseEditor: React.FC = () => {
 
   // Filter exercises to show only those created by current teacher
   const exercises = useMemo(() => {
-    if (!isTeacher || !user) return allExercises;
+    if (!user) return allExercises;
 
     // For now, using mock data but in real app this would be an API call
     // with createdBy filter
     return allExercises.filter((exercise) => exercise.createdBy === user.email);
-  }, [isTeacher, user, allExercises]);
+  }, [user, allExercises]);
   const [editMode, setEditMode] = useState<"rich" | "latex">("rich");
 
   // Form state

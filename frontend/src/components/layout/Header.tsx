@@ -25,8 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   mobileMenuOpen,
   setMobileMenuOpen,
 }) => {
-  const [managementDropdownOpen, setManagementDropdownOpen] = useState(false);
-  const { user, logout, isTeacher: isAdmin } = useAuth();
+  const { user, logout, isTeacher } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,7 +37,6 @@ export const Header: React.FC<HeaderProps> = ({
   const handleNavigation = (path: string) => {
     navigate(path);
     setMobileMenuOpen(false);
-    setManagementDropdownOpen(false);
   };
 
   const handleLogout = () => {
@@ -50,6 +48,174 @@ export const Header: React.FC<HeaderProps> = ({
     // Demo functionality would be implemented here
     navigate("/login");
   };
+
+  // Teacher Navigation - 4 tabs: Exercise, Quiz, IELTS, Document
+  const TeacherNavigation = () => (
+    <nav className="hidden lg:flex items-center space-x-1">
+      <button
+        onClick={() => handleNavigation("/exercises")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/exercises")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <Edit className="h-4 w-4 mr-2" />
+        {t("navigation.exercises")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/quizzes")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/quizzes")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <FileText className="h-4 w-4 mr-2" />
+        {t("navigation.quizzes")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/ielts")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/ielts")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <Award className="h-4 w-4 mr-2" />
+        {t("navigation.ielts")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/library")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/library")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <Library className="h-4 w-4 mr-2" />
+        {t("navigation.documents")}
+      </button>
+    </nav>
+  );
+
+  // Student Navigation - 4 tabs: Exercise, Quiz, IELTS, Document
+  const StudentNavigation = () => (
+    <nav className="hidden lg:flex items-center space-x-1">
+      <button
+        onClick={() => handleNavigation("/exercises")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/exercises")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <Edit className="h-4 w-4 mr-2" />
+        {t("navigation.exercises")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/quizzes")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/quizzes")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <FileText className="h-4 w-4 mr-2" />
+        {t("navigation.quizzes")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/ielts")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/ielts")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <Award className="h-4 w-4 mr-2" />
+        {t("navigation.ielts")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/library")}
+        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          isActivePath("/library")
+            ? "text-blue-600 bg-blue-50"
+            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+        }`}
+      >
+        <Library className="h-4 w-4 mr-2" />
+        {t("navigation.documents")}
+      </button>
+    </nav>
+  );
+
+  // Mobile Teacher Navigation
+  const MobileTeacherNavigation = () => (
+    <>
+      <button
+        onClick={() => handleNavigation("/exercises")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <Edit className="h-5 w-5 mr-3" />
+        {t("navigation.exercises")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/quizzes")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <FileText className="h-5 w-5 mr-3" />
+        {t("navigation.quizzes")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/ielts")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <Award className="h-5 w-5 mr-3" />
+        {t("navigation.ielts")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/library")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <Library className="h-5 w-5 mr-3" />
+        {t("navigation.documents")}
+      </button>
+    </>
+  );
+
+  // Mobile Student Navigation
+  const MobileStudentNavigation = () => (
+    <>
+      <button
+        onClick={() => handleNavigation("/exercises")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <Edit className="h-5 w-5 mr-3" />
+        {t("navigation.exercises")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/quizzes")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <FileText className="h-5 w-5 mr-3" />
+        {t("navigation.quizzes")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/ielts")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <Award className="h-5 w-5 mr-3" />
+        {t("navigation.ielts")}
+      </button>
+      <button
+        onClick={() => handleNavigation("/library")}
+        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+      >
+        <Library className="h-5 w-5 mr-3" />
+        {t("navigation.documents")}
+      </button>
+    </>
+  );
 
   return (
     <div className="bg-gray-50 py-4">
@@ -75,111 +241,11 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Navigation */}
               {user ? (
                 /* Logged in navigation */
-                <nav className="hidden lg:flex items-center space-x-1">
-                  <button
-                    onClick={() => handleNavigation("/dashboard")}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      isActivePath("/dashboard")
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }`}
-                  >
-                    <Home className="h-4 w-4 mr-2" />
-                    {t("navigation.dashboard")}
-                  </button>
-                  <button
-                    onClick={() => handleNavigation("/quizzes")}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      isActivePath("/quizzes")
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }`}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    {t("navigation.exercises")}
-                  </button>
-                  {/* <button
-                    onClick={() => handleNavigation("/exercises")}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      isActivePath("/exercises")
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }`}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Exercise
-                  </button> */}
-                  <button
-                    onClick={() => handleNavigation("/ielts")}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      isActivePath("/ielts")
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }`}
-                  >
-                    <Award className="h-4 w-4 mr-2" />
-                    {t("navigation.ielts")}
-                  </button>
-                  <button
-                    onClick={() => handleNavigation("/library")}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      isActivePath("/library")
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                    }`}
-                  >
-                    <Library className="h-4 w-4 mr-2" />
-                    {t("navigation.documents")}
-                  </button>
-
-                  {/* Management Dropdown - Admin Only */}
-                  {isAdmin && (
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setManagementDropdownOpen(!managementDropdownOpen)
-                        }
-                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          isActivePath("/management/exercises") ||
-                          isActivePath("/management/quizzes")
-                            ? "text-blue-600 bg-blue-50"
-                            : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                        }`}
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        {t("navigation.settings")}
-                        <ChevronDown
-                          className={`h-4 w-4 ml-1 transition-transform ${
-                            managementDropdownOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {managementDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                          <button
-                            onClick={() =>
-                              handleNavigation("/management/exercises")
-                            }
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Exercise Management
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleNavigation("/management/quizzes")
-                            }
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center"
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Quiz Management
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </nav>
+                isTeacher ? (
+                  <TeacherNavigation />
+                ) : (
+                  <StudentNavigation />
+                )
               ) : (
                 /* Not logged in navigation */
                 <nav className="hidden lg:flex items-center space-x-1">
@@ -218,9 +284,9 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-gray-600">
                       {user.name}{" "}
-                      {isAdmin && (
+                      {isTeacher && (
                         <span className="text-blue-600 font-medium">
-                          (Admin)
+                          (Teacher)
                         </span>
                       )}
                     </span>
@@ -277,67 +343,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="py-4 space-y-2">
                   {user ? (
                     <>
-                      <button
-                        onClick={() => handleNavigation("/dashboard")}
-                        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                      >
-                        <Home className="h-5 w-5 mr-3" />
-                        {t("navigation.dashboard")}
-                      </button>
-                      <button
-                        onClick={() => handleNavigation("/quizzes")}
-                        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                      >
-                        <FileText className="h-5 w-5 mr-3" />
-                        {t("navigation.exercises")}
-                      </button>
-                      {/* <button
-                        onClick={() => handleNavigation("/exercises")}
-                        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                      >
-                        <Edit className="h-5 w-5 mr-3" />
-                        Exercise
-                      </button> */}
-                      <button
-                        onClick={() => handleNavigation("/ielts")}
-                        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                      >
-                        <Award className="h-5 w-5 mr-3" />
-                        {t("navigation.ielts")}
-                      </button>
-                      <button
-                        onClick={() => handleNavigation("/library")}
-                        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                      >
-                        <Library className="h-5 w-5 mr-3" />
-                        {t("navigation.documents")}
-                      </button>
-
-                      {/* Mobile Management Menu - Admin Only */}
-                      {isAdmin && (
-                        <>
-                          <div className="pl-6 text-xs font-medium text-gray-500 uppercase tracking-wide mt-4 mb-2">
-                            Management (Admin)
-                          </div>
-                          <button
-                            onClick={() =>
-                              handleNavigation("/management/exercises")
-                            }
-                            className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                          >
-                            <Edit className="h-5 w-5 mr-3" />
-                            Exercise Management
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleNavigation("/management/quizzes")
-                            }
-                            className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                          >
-                            <FileText className="h-5 w-5 mr-3" />
-                            Quiz Management
-                          </button>
-                        </>
+                      {isTeacher ? (
+                        <MobileTeacherNavigation />
+                      ) : (
+                        <MobileStudentNavigation />
                       )}
                     </>
                   ) : (
@@ -401,14 +410,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </header>
       </div>
-
-      {/* Overlay to close dropdown when clicking outside */}
-      {managementDropdownOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setManagementDropdownOpen(false)}
-        />
-      )}
     </div>
   );
 };

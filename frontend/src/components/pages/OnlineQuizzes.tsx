@@ -19,17 +19,14 @@ import {
 } from "lucide-react";
 import { quizService } from "../../services/quizService";
 import { Question, Quiz } from "../../types/api";
-import { ExercisePublicView } from "./ExercisePublicView";
 import { useAuth } from "../../contexts/AuthContext";
 import { Badge } from "../ui/Badge";
+import { QuizManagement } from "./QuizManagement";
 
-export const OnlineQuizzes: React.FC = () => {
+// Student Quiz Component
+const StudentQuizView: React.FC = () => {
   const { isTeacher } = useAuth();
   const { t } = useTranslation();
-
-  const [activeTab, setActiveTab] = useState<"quizzes" | "exercises">(
-    "quizzes"
-  );
   const [currentView, setCurrentView] = useState<
     "list" | "quiz" | "result" | "teacher-view"
   >("list");
@@ -1149,332 +1146,296 @@ export const OnlineQuizzes: React.FC = () => {
   return (
     <div className="p-8">
       <div className="max-w-8xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {t("quizzes.testsAndExercises")}
-          </h1>
-          <p className="text-gray-600 mt-2">{t("quizzes.challengeYourself")}</p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="border-b border-gray-200 pl-12">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab("quizzes")}
-                className={`py-2 px-1 border-b-2 font-medium text-lg ${
-                  activeTab === "quizzes"
-                    ? "border-green-500 text-green-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {t("quizzes.tests")}
-              </button>
-              <button
-                onClick={() => setActiveTab("exercises")}
-                className={`py-2 px-1 border-b-2 font-medium text-lg ${
-                  activeTab === "exercises"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {t("quizzes.exercises")}
-              </button>
-            </nav>
-          </div>
-        </div>
-
         {/* Content based on active tab */}
-        {(activeTab as string) === "quizzes" && (
-          <>
-            {/* Quizzes Grid */}
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <div className="max-w-8xl mx-auto p-8">
-                {/* Stats Cards - Student view */}
-                {!isTeacher && (
-                  <div className="flex flex-row gap-6 mb-8">
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <FileText className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {userStats.totalQuizzes}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            {t("quizzes.totalQuizzes")}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {userStats.completedQuizzes}
-                          </p>
-                          <p className="ml-2 text-base font-medium text-gray-600">
-                            {t("quizzes.completed")}
-                          </p>
-                        </div>
+        <>
+          {/* Quizzes Grid */}
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <div className="max-w-8xl mx-auto p-8">
+              {/* Stats Cards - Student view */}
+              {!isTeacher && (
+                <div className="flex flex-row gap-6 mb-8">
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <FileText className="h-6 w-6 text-blue-600" />
                       </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-red-100 rounded-lg">
-                          <AlertTriangle className="h-6 w-6 text-red-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-lg font-semibold text-gray-900">
-                            {userStats.overdueQuizzes}
-                          </p>
-                          <p className="text-sm font-medium text-gray-600">
-                            {t("quizzes.overdue")}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Trophy className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {userStats.perfectCount}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            {t("quizzes.perfect")}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                          <BarChart3 className="h-6 w-6 text-orange-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-5">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {(userStats.averageScore || 0).toFixed(1)}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            {t("quizzes.averageScore")}
-                          </p>
-                        </div>
+                      <div className="ml-2 flex flex-row items-center gap-5">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {userStats.totalQuizzes}
+                        </p>
+                        <p className="text-base font-medium text-gray-600">
+                          {t("quizzes.totalQuizzes")}
+                        </p>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* Stats Cards - Teacher view */}
-                {isTeacher && (
-                  <div className="flex flex-row gap-6 mb-8">
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <FileText className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-2">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {quizzes.length}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            {t("quizzes.totalQuizzes")}
-                          </p>
-                        </div>
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
                       </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-2">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {
-                              quizzes.filter((q) => q.status === "ACTIVE")
-                                .length
-                            }
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            {t("quizzes.active")}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Users className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-2">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {quizzes.reduce(
-                              (total, quiz) =>
-                                total + (quiz.submissions?.length || 0),
-                              0
-                            )}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            {t("quizzes.submissions")}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
-                      <div className="flex items-center justify-center">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                          <BarChart3 className="h-6 w-6 text-orange-600" />
-                        </div>
-                        <div className="ml-2 flex flex-row items-center gap-2">
-                          <p className="text-xl font-semibold text-gray-900">
-                            {quizzes.filter((q) => q.status === "DRAFT").length}
-                          </p>
-                          <p className="text-base font-medium text-gray-600">
-                            {t("quizzes.draft")}
-                          </p>
-                        </div>
+                      <div className="ml-2 flex flex-row items-center gap-5">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {userStats.completedQuizzes}
+                        </p>
+                        <p className="ml-2 text-base font-medium text-gray-600">
+                          {t("quizzes.completed")}
+                        </p>
                       </div>
                     </div>
                   </div>
-                )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {quizzes.map((quiz) => (
-                    <div
-                      key={quiz.id}
-                      className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow relative"
-                    >
-                      <div className="p-2 bg-green-100 rounded-bl-lg absolute top-0 right-0 rounded-tr-xl">
-                        <BookOpen className="h-6 w-6 text-green-600" />
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-red-100 rounded-lg">
+                        <AlertTriangle className="h-6 w-6 text-red-600" />
                       </div>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 flex-col mb-4">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2 text-start mr-2 h-14">
-                            {quiz.title}
-                          </h3>
-                          {quiz.description && (
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-2 text-start  h-8">
-                              {quiz.description}
-                            </p>
-                          )}
-                          <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-                            <Badge variant="subject">
-                              {t(`subject.${quiz.subject.toLowerCase()}`)}
-                            </Badge>
-                            <Badge variant="grade">
-                              {t("exercises.class")} {quiz.grade || "Chung"}
-                            </Badge>
-                            <Badge
-                              variant="status"
-                              className={`${
-                                (quiz.status as string) === "ACTIVE"
-                                  ? "bg-green-100 text-green-800"
-                                  : (quiz.status as string) === "DRAFT"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : (quiz.status as string) === "OVERDUE"
-                                  ? "bg-orange-100 text-orange-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {(quiz.status as string) === "ACTIVE"
-                                ? t("status.active")
-                                : (quiz.status as string) === "DRAFT"
-                                ? t("status.draft")
-                                : (quiz.status as string) === "OVERDUE"
-                                ? t("status.overdue")
-                                : t("status.inactive")}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500 mb-2">
-                            <FileText className="h-4 w-4 mr-1" />
-                            <span>
-                              {quiz.totalQuestions || 0}{" "}
-                              {t("quizzes.questions")}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500 mb-2">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>
-                              {quiz.timeLimit || 15} {t("quizzes.minutes")}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500 mb-2">
-                            <BookCheck className="h-4 w-4 mr-1" />
-                            <span>
-                              {quiz.submissions?.length || 0}{" "}
-                              {t("quizzes.submissions")}
-                            </span>
-                          </div>
-                          <div className="text-sm text-gray-500 text-start flex items-center">
-                            <Users className="h-4 w-4 mr-1" />
-                            <span>
-                              {quiz.creator?.name || "Không xác định"}
-                            </span>
-                          </div>
-                        </div>
+                      <div className="ml-2 flex flex-row items-center gap-5">
+                        <p className="text-lg font-semibold text-gray-900">
+                          {userStats.overdueQuizzes}
+                        </p>
+                        <p className="text-sm font-medium text-gray-600">
+                          {t("quizzes.overdue")}
+                        </p>
                       </div>
-
-                      <button
-                        onClick={() => startQuiz(quiz)}
-                        disabled={quiz.status !== "ACTIVE" && !isTeacher}
-                        className={`w-full flex text-sm items-center font-bold justify-center px-4 py-2 rounded-md transition-colors ${
-                          quiz.status !== "ACTIVE" && !isTeacher
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : isTeacher
-                            ? "bg-green-700 text-white hover:bg-green-800"
-                            : "bg-blue-700 text-white hover:bg-blue-800"
-                        }`}
-                      >
-                        {isTeacher ? (
-                          <>{t("quizzes.viewWithAnswersButton")}</>
-                        ) : (
-                          <>{t("quizzes.startQuiz")}</>
-                        )}
-                      </button>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Trophy className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div className="ml-2 flex flex-row items-center gap-5">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {userStats.perfectCount}
+                        </p>
+                        <p className="text-base font-medium text-gray-600">
+                          {t("quizzes.perfect")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <BarChart3 className="h-6 w-6 text-orange-600" />
+                      </div>
+                      <div className="ml-2 flex flex-row items-center gap-5">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {(userStats.averageScore || 0).toFixed(1)}
+                        </p>
+                        <p className="text-base font-medium text-gray-600">
+                          {t("quizzes.averageScore")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {quizzes.length === 0 && !loading && (
-              <div className="text-center py-12">
-                <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Chưa có quiz nào
-                </h3>
-                <p className="text-gray-600">
-                  Các quiz sẽ hiển thị ở đây khi giáo viên tạo.
-                </p>
-              </div>
-            )}
-          </>
-        )}
+              {/* Stats Cards - Teacher view */}
+              {isTeacher && (
+                <div className="flex flex-row gap-6 mb-8">
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <FileText className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div className="ml-2 flex flex-row items-center gap-2">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {quizzes.length}
+                        </p>
+                        <p className="text-base font-medium text-gray-600">
+                          {t("quizzes.totalQuizzes")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-        {/* Exercise Tab Content */}
-        {activeTab === "exercises" && (
-          <div>
-            <ExercisePublicView />
-          </div>
-        )}
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div className="ml-2 flex flex-row items-center gap-2">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {quizzes.filter((q) => q.status === "ACTIVE").length}
+                        </p>
+                        <p className="text-base font-medium text-gray-600">
+                          {t("quizzes.active")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Users className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div className="ml-2 flex flex-row items-center gap-2">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {quizzes.reduce(
+                            (total, quiz) =>
+                              total + (quiz.submissions?.length || 0),
+                            0
+                          )}
+                        </p>
+                        <p className="text-base font-medium text-gray-600">
+                          {t("quizzes.submissions")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                    <div className="flex items-center justify-center">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <BarChart3 className="h-6 w-6 text-orange-600" />
+                      </div>
+                      <div className="ml-2 flex flex-row items-center gap-2">
+                        <p className="text-xl font-semibold text-gray-900">
+                          {quizzes.filter((q) => q.status === "DRAFT").length}
+                        </p>
+                        <p className="text-base font-medium text-gray-600">
+                          {t("quizzes.draft")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {quizzes.map((quiz) => (
+                  <div
+                    key={quiz.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow relative"
+                  >
+                    <div className="p-2 bg-green-100 rounded-bl-lg absolute top-0 right-0 rounded-tr-xl">
+                      <BookOpen className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 flex-col mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2 text-start mr-2 h-14">
+                          {quiz.title}
+                        </h3>
+                        {quiz.description && (
+                          <p className="text-gray-600 text-sm mb-4 line-clamp-2 text-start  h-8">
+                            {quiz.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+                          <Badge variant="subject">
+                            {t(`subject.${quiz.subject.toLowerCase()}`)}
+                          </Badge>
+                          <Badge variant="grade">
+                            {t("exercises.class")} {quiz.grade || "Chung"}
+                          </Badge>
+                          <Badge
+                            variant="status"
+                            className={`${
+                              (quiz.status as string) === "ACTIVE"
+                                ? "bg-green-100 text-green-800"
+                                : (quiz.status as string) === "DRAFT"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : (quiz.status as string) === "OVERDUE"
+                                ? "bg-orange-100 text-orange-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {(quiz.status as string) === "ACTIVE"
+                              ? t("status.active")
+                              : (quiz.status as string) === "DRAFT"
+                              ? t("status.draft")
+                              : (quiz.status as string) === "OVERDUE"
+                              ? t("status.overdue")
+                              : t("status.inactive")}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <FileText className="h-4 w-4 mr-1" />
+                          <span>
+                            {quiz.totalQuestions || 0} {t("quizzes.questions")}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>
+                            {quiz.timeLimit || 15} {t("quizzes.minutes")}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <BookCheck className="h-4 w-4 mr-1" />
+                          <span>
+                            {quiz.submissions?.length || 0}{" "}
+                            {t("quizzes.submissions")}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 text-start flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          <span>{quiz.creator?.name || "Không xác định"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => startQuiz(quiz)}
+                      disabled={quiz.status !== "ACTIVE" && !isTeacher}
+                      className={`w-full flex text-sm items-center font-bold justify-center px-4 py-2 rounded-md transition-colors ${
+                        quiz.status !== "ACTIVE" && !isTeacher
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : isTeacher
+                          ? "bg-green-700 text-white hover:bg-green-800"
+                          : "bg-blue-700 text-white hover:bg-blue-800"
+                      }`}
+                    >
+                      {isTeacher ? (
+                        <>{t("quizzes.viewWithAnswersButton")}</>
+                      ) : (
+                        <>{t("quizzes.startQuiz")}</>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {quizzes.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Chưa có quiz nào
+              </h3>
+              <p className="text-gray-600">
+                Các quiz sẽ hiển thị ở đây khi giáo viên tạo.
+              </p>
+            </div>
+          )}
+        </>
       </div>
     </div>
   );
+};
+
+// Main OnlineQuizzes component
+export const OnlineQuizzes: React.FC = () => {
+  const { isTeacher } = useAuth();
+
+  // If user is a teacher, show QuizManagement
+  if (isTeacher) {
+    return <QuizManagement />;
+  }
+
+  // If user is a student, show StudentQuizView
+  return <StudentQuizView />;
 };

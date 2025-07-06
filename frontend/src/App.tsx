@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 // Contexts
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
 // Components
@@ -31,6 +31,12 @@ import { OnlineQuizzes } from "./components/pages/OnlineQuizzes";
 import { WritingGrader } from "./components/pages/WritingGrader";
 import { ExerciseEditor } from "./components/pages/ExerciseEditor";
 import { QuizManagement } from "./components/pages/QuizManagement";
+
+// Custom component to redirect based on user role
+const RoleBasedRedirect = () => {
+  const { isTeacher } = useAuth();
+  return <Navigate to={isTeacher ? "/exercises" : "/quizzes"} replace />;
+};
 
 function AppContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -80,37 +86,17 @@ function AppContent() {
           }
         />
 
-        {/* Protected Routes */}
+        {/* Redirect dashboard to role-based page */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Header
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-              />
-              <main>
-                <Dashboard />
-              </main>
+              <RoleBasedRedirect />
             </ProtectedRoute>
           }
         />
 
-        <Route
-          path="/quizzes"
-          element={
-            <ProtectedRoute>
-              <Header
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-              />
-              <main>
-                <OnlineQuizzes />
-              </main>
-            </ProtectedRoute>
-          }
-        />
-
+        {/* Exercise Routes */}
         <Route
           path="/exercises"
           element={
@@ -126,6 +112,23 @@ function AppContent() {
           }
         />
 
+        {/* Quiz Routes */}
+        <Route
+          path="/quizzes"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <OnlineQuizzes />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* IELTS Routes */}
         <Route
           path="/ielts"
           element={
@@ -141,6 +144,7 @@ function AppContent() {
           }
         />
 
+        {/* Document Library Routes */}
         <Route
           path="/library"
           element={
@@ -156,6 +160,7 @@ function AppContent() {
           }
         />
 
+        {/* Writing Routes */}
         <Route
           path="/writing"
           element={
@@ -171,18 +176,12 @@ function AppContent() {
           }
         />
 
-        {/* Admin Routes */}
+        {/* Legacy Management Routes - Redirect to new structure */}
         <Route
           path="/management/exercises"
           element={
             <ProtectedRoute requireAdmin={true}>
-              <Header
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-              />
-              <main>
-                <ExerciseEditor />
-              </main>
+              <Navigate to="/exercises" replace />
             </ProtectedRoute>
           }
         />
@@ -191,13 +190,7 @@ function AppContent() {
           path="/management/quizzes"
           element={
             <ProtectedRoute requireAdmin={true}>
-              <Header
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-              />
-              <main>
-                <QuizManagement />
-              </main>
+              <Navigate to="/quizzes" replace />
             </ProtectedRoute>
           }
         />
