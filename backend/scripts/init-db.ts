@@ -8,6 +8,7 @@ import {
   IeltsSkill,
   IeltsLevel,
   QuestionType,
+  IeltsQuestionType,
   Role,
 } from '@prisma/client';
 
@@ -46,19 +47,19 @@ async function main() {
   const teacherPassword = await bcrypt.hash('Teacher123!', 12);
   const teacher = await prisma.user.create({
     data: {
-      email: 'teacher@tutorplatform.com',
+      email: 'teacher@gmail.com',
       password: teacherPassword,
-      name: 'Nguyễn Thị Mai',
+      name: 'An Nguyen',
       role: Role.TEACHER,
       subject: Subject.MATH,
       isActive: true,
       isVerified: true,
       profile: {
         create: {
-          firstName: 'Mai',
-          lastName: 'Nguyễn Thị',
-          phone: '0123456789',
-          school: 'THPT Nguyễn Du',
+          firstName: 'An',
+          lastName: 'Nguyen',
+          phone: '0932669566',
+          school: 'PTNK',
           preferences: {
             language: 'vi',
             theme: 'light',
@@ -76,19 +77,19 @@ async function main() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const student1 = await prisma.user.create({
     data: {
-      email: 'student1@tutorplatform.com',
+      email: 'student1@gmail.com',
       password: studentPassword,
-      name: 'Trần Văn An',
+      name: 'Nguyen Thuy Thu Khanh',
       role: Role.STUDENT,
       grade: 10,
       isActive: true,
       isVerified: true,
       profile: {
         create: {
-          firstName: 'An',
-          lastName: 'Trần Văn',
+          firstName: 'Thu Khanh',
+          lastName: 'Nguyen Thuy',
           phone: '0987654321',
-          school: 'THPT Lê Quý Đôn',
+          school: 'PTNK',
           preferences: {
             language: 'vi',
             theme: 'light',
@@ -103,19 +104,19 @@ async function main() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const student2 = await prisma.user.create({
     data: {
-      email: 'student2@tutorplatform.com',
+      email: 'student2@gmail.com',
       password: studentPassword,
-      name: 'Lê Thị Bình',
+      name: 'Nguyen Thu Bao Khanh',
       role: Role.STUDENT,
-      grade: 11,
+      grade: 8,
       isActive: true,
       isVerified: true,
       profile: {
         create: {
-          firstName: 'Bình',
-          lastName: 'Lê Thị',
+          firstName: 'Khanh',
+          lastName: 'Nguyen Thu Bao',
           phone: '0912345678',
-          school: 'THPT Lê Quý Đôn',
+          school: 'THCS Le Anh Xuan',
           preferences: {
             language: 'vi',
             theme: 'dark',
@@ -131,17 +132,17 @@ async function main() {
   console.log('📝 Creating sample quiz...');
   const quiz1 = await prisma.quiz.create({
     data: {
-      title: 'Kiểm tra Toán học - Phương trình bậc hai',
+      title: 'Phương trình bậc hai',
       description: 'Bài kiểm tra về phương trình bậc hai và ứng dụng',
       subject: Subject.MATH,
-      grade: 10,
-      timeLimit: 45,
+      grade: 9,
+      timeLimit: 1,
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
       isPublic: true,
       tags: ['math', 'equation', 'algebra'],
-      instructions: 'Làm bài cẩn thận, đọc kỹ đề trước khi trả lời.',
+      instructions: 'Làm bài cẩn thận',
       questions: {
         create: [
           {
@@ -185,17 +186,17 @@ async function main() {
 
   const quiz2 = await prisma.quiz.create({
     data: {
-      title: 'Kiểm tra Toán học - Hàm số bậc hai',
+      title: 'Hàm số bậc hai',
       description: 'Bài kiểm tra về hàm số bậc hai và ứng dụng',
       subject: Subject.MATH,
-      grade: 10,
-      timeLimit: 45,
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      grade: 8,
+      timeLimit: 2,
+      deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
       isPublic: true,
       tags: ['math', 'function', 'algebra'],
-      instructions: 'Làm bài cẩn thận, đọc kỹ đề trước khi trả lời.',
+      instructions: 'Đọc kỹ đề trước khi trả lời.',
       questions: {
         create: [
           {
@@ -208,24 +209,24 @@ async function main() {
               'Đỉnh của hàm số bậc hai y = ax² + bx + c là (x, y) = (-b/2a, -Δ/4a)',
             order: 1,
           },
+          // True/False Question
           {
-            question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
-            type: QuestionType.MULTIPLE_CHOICE,
-            options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
-            correctAnswer: '(2, 1)',
+            question: 'Hàm số bậc nhất y = ax + b có đồ thị là một đường thẳng',
+            type: QuestionType.TRUE_FALSE,
+            correctAnswer: 'True',
             points: 1,
-            explanation:
-              'Đỉnh của hàm số bậc hai y = ax² + bx + c là (x, y) = (-b/2a, -Δ/4a)',
+            explanation: 'Hàm số bậc nhất có đồ thị là một đường thẳng',
             order: 2,
           },
+          // Fill in the blank
           {
-            question: 'Hàm số y = x² - 4x + 3 có đỉnh là:',
-            type: QuestionType.MULTIPLE_CHOICE,
-            options: ['(2, 1)', '(1, 2)', '(2, -1)', '(1, -2)'],
-            correctAnswer: '(2, 1)',
+            question:
+              'Hàm số bậc nhất y = 3x + 2 cắt trục tung tại điểm có tung độ bằng',
+            type: QuestionType.FILL_BLANK,
+            correctAnswer: '2',
             points: 1,
             explanation:
-              'Đỉnh của hàm số bậc hai y = ax² + bx + c là (x, y) = (-b/2a, -Δ/4a)',
+              'Hàm số bậc nhất y = 3x + 2 cắt trục tung tại điểm có tung độ bằng 2 khi x = 0',
             order: 3,
           },
         ],
@@ -233,7 +234,6 @@ async function main() {
     },
   });
 
-  // Update quiz statistics
   await prisma.quiz.update({
     where: { id: quiz1?.id },
     data: { totalQuestions: 3 },
@@ -278,7 +278,6 @@ async function main() {
     },
   });
 
-  // create an exercise with near deadline
   await prisma.exercise.create({
     data: {
       name: 'Bài tập về Hàm số bậc hai',
@@ -345,15 +344,21 @@ async function main() {
               create: [
                 {
                   question: 'According to the passage, who discovered coffee?',
-                  type: QuestionType.MULTIPLE_CHOICE,
+                  type: IeltsQuestionType.MULTIPLE_CHOICE,
                   options: ['A farmer', 'Kaldi', 'A merchant', 'A traveler'],
-                  correctAnswer: 'Kaldi',
+                  correctAnswers: ['Kaldi'],
+                  points: 1,
+                  explanation:
+                    "The passage states 'legend says a goat herder named Kaldi discovered coffee...'",
                   order: 1,
                 },
                 {
                   question: 'Coffee was first discovered in _______.',
-                  type: QuestionType.FILL_BLANK,
-                  correctAnswer: 'Ethiopia',
+                  type: IeltsQuestionType.COMPLETION,
+                  correctAnswers: ['Ethiopia'],
+                  points: 1,
+                  explanation:
+                    "The passage begins 'The story of coffee begins in Ethiopia...'",
                   order: 2,
                 },
               ],
@@ -389,10 +394,10 @@ async function main() {
   console.log('✅ Database initialization completed successfully!');
   console.log(`
     📊 Created:
-    - 1 Teacher (teacher@tutorplatform.com / Teacher123!)
-    - 2 Students (student1@tutorplatform.com, student2@tutorplatform.com / Student123!)
-    - 1 Sample quiz with 3 questions
-    - 1 Sample exercise
+    - 1 Teacher (teacher@gmail.com / Teacher123@)
+    - 2 Students (student1@gmail.com, student2@gmail.com / Student123@)
+    - 2 Sample quiz with each 3 questions
+    - 2 Sample exercise
     - 1 Sample document
     - 1 Sample IELTS test
     - System configuration

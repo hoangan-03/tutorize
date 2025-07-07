@@ -25,6 +25,8 @@ import {
   CreateIeltsQuestionDto,
   SubmitIeltsDto,
   IeltsFilterDto,
+  UpdateIeltsSectionDto,
+  UpdateIeltsQuestionDto,
 } from './dto/ielts.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -129,6 +131,33 @@ export class IeltsController {
     return this.ieltsService.createSection(testId, createSectionDto, user.id);
   }
 
+  @Patch('sections/:id')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Cập nhật một phần' })
+  @ApiResponse({ status: 200, description: 'Cập nhật phần thành công' })
+  updateSection(
+    @Param('id', ParseIntPipe) sectionId: number,
+    @Body() updateSectionDto: UpdateIeltsSectionDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.ieltsService.updateSection(
+      sectionId,
+      updateSectionDto,
+      user.id,
+    );
+  }
+
+  @Delete('sections/:id')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Xóa một phần' })
+  @ApiResponse({ status: 200, description: 'Xóa phần thành công' })
+  removeSection(
+    @Param('id', ParseIntPipe) sectionId: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.ieltsService.removeSection(sectionId, user.id);
+  }
+
   @Post('sections/:id/questions')
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Thêm câu hỏi mới vào phần' })
@@ -145,6 +174,33 @@ export class IeltsController {
       createQuestionDto,
       user.id,
     );
+  }
+
+  @Patch('questions/:id')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Cập nhật một câu hỏi' })
+  @ApiResponse({ status: 200, description: 'Cập nhật câu hỏi thành công' })
+  updateQuestion(
+    @Param('id', ParseIntPipe) questionId: number,
+    @Body() updateQuestionDto: UpdateIeltsQuestionDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.ieltsService.updateQuestion(
+      questionId,
+      updateQuestionDto,
+      user.id,
+    );
+  }
+
+  @Delete('questions/:id')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Xóa một câu hỏi' })
+  @ApiResponse({ status: 200, description: 'Xóa câu hỏi thành công' })
+  removeQuestion(
+    @Param('id', ParseIntPipe) questionId: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.ieltsService.removeQuestion(questionId, user.id);
   }
 
   @Post('tests/:id/submit')
@@ -178,5 +234,17 @@ export class IeltsController {
   @ApiResponse({ status: 200, description: 'Danh sách bài nộp của tôi' })
   getMySubmissions(@CurrentUser() user: any) {
     return this.ieltsService.getMySubmissions(user.id);
+  }
+
+  @Get('submissions/:submissionId/details')
+  @ApiOperation({ summary: 'Lấy chi tiết kết quả bài nộp IELTS' })
+  @ApiResponse({ status: 200, description: 'Chi tiết kết quả' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
+  @ApiResponse({ status: 403, description: 'Không có quyền xem' })
+  getSubmissionDetails(
+    @Param('submissionId', ParseIntPipe) submissionId: number,
+    @CurrentUser('id') userId: number,
+  ) {
+    return this.ieltsService.getSubmissionDetails(submissionId, userId);
   }
 }

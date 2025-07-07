@@ -417,16 +417,18 @@ model IeltsSection {
 }
 
 model IeltsQuestion {
-  id            Int               @id @default(autoincrement())
-  sectionId     Int
-  question      String            @db.Text
-  type          IeltsQuestionType
-  options       String[]          @default([])
-  correctAnswer String            @default("")
-  order         Int
-  imageUrl      String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id             Int               @id @default(autoincrement())
+  sectionId      Int
+  question       String            @db.Text
+  type           IeltsQuestionType
+  options        String[]          @default([])
+  correctAnswers String[]          @default([])
+  order          Int
+  imageUrl       String?
+  points         Int               @default(1)
+  explanation    String?           @db.Text
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   // Relations
   section IeltsSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
@@ -484,11 +486,16 @@ enum IeltsLevel {
 }
 
 enum IeltsQuestionType {
-  MULTIPLE_CHOICE
-  FILL_BLANK
-  MATCHING
-  TRUE_FALSE_NOT_GIVEN
-  ESSAY
+  // Listening & Reading
+  MULTIPLE_CHOICE // Can have one or more correct answers based on correctAnswers array length
+  IDENTIFYING_INFORMATION // True/False/Not Given OR Yes/No/Not Given
+  MATCHING // All types: headings, features, sentence endings, information to paragraphs
+  COMPLETION // All types: sentence, summary, note, table, flow-chart
+  DIAGRAM_LABELING
+  SHORT_ANSWER
+
+  // Writing
+  WRITING
 }
 
 // ============================================================================

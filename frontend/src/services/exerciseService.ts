@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../lib/api";
 import {
   Exercise,
@@ -7,7 +8,6 @@ import {
 } from "../types/api";
 
 export const exerciseService = {
-  // Exercise Management
   async getExercises(
     params?: PaginationParams
   ): Promise<PaginatedResult<Exercise>> {
@@ -56,7 +56,7 @@ export const exerciseService = {
 
   // Exercise Submissions
   async submitExercise(
-    exerciseid: number,
+    exerciseId: number,
     content: string
   ): Promise<ExerciseSubmission> {
     const response = await api.post<ExerciseSubmission>(
@@ -99,7 +99,7 @@ export const exerciseService = {
   },
 
   async getExerciseSubmissions(
-    exerciseid: number,
+    exerciseId: number,
     params?: PaginationParams
   ): Promise<PaginatedResult<ExerciseSubmission>> {
     const response = await api.get<PaginatedResult<ExerciseSubmission>>(
@@ -126,7 +126,7 @@ export const exerciseService = {
   },
 
   // Statistics
-  async getExerciseStats(exerciseid: number): Promise<any> {
+  async getExerciseStats(exerciseId: number): Promise<any> {
     const response = await api.get(`/exercises/${exerciseId}/stats`);
     return response.data;
   },

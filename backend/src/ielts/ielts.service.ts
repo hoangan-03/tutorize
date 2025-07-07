@@ -11,6 +11,8 @@ import {
   CreateIeltsQuestionDto,
   SubmitIeltsDto,
   IeltsFilterDto,
+  UpdateIeltsSectionDto,
+  UpdateIeltsQuestionDto,
 } from './dto/ielts.dto';
 
 @Injectable()
@@ -19,17 +21,29 @@ export class IeltsService {
 
   // IELTS Test Management
   async create(createIeltsTestDto: CreateIeltsTestDto, createdBy: number) {
+    const { sections, ...testData } = createIeltsTestDto;
+
+    const sectionsCreateData = sections?.map((section) => {
+      const { questions, ...sectionData } = section;
+      return {
+        ...sectionData,
+        questions: questions ? { create: questions } : undefined,
+      };
+    });
+
     return this.prisma.ieltsTest.create({
       data: {
-        title: createIeltsTestDto.title,
-        description: createIeltsTestDto.description ?? '',
-        skill: createIeltsTestDto.skill,
-        level: createIeltsTestDto.level,
-        timeLimit: createIeltsTestDto.timeLimit,
-        instructions: createIeltsTestDto.instructions ?? '',
+        ...testData,
+        description: testData.description ?? '',
+        instructions: testData.instructions ?? '',
         creator: {
           connect: { id: createdBy },
         },
+        sections: sectionsCreateData
+          ? {
+              create: sectionsCreateData as any, // Type assertion to bypass type error
+            }
+          : undefined,
       },
       include: {
         creator: {
@@ -49,7 +63,7 @@ export class IeltsService {
   }
 
   async findAll(filterDto: IeltsFilterDto) {
-    const { page = 1, limit = 10, skill, level, search } = filterDto;
+    const { page = 1, limit = 10, skill, level, search, createdBy } = filterDto;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -67,6 +81,10 @@ export class IeltsService {
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
       ];
+    }
+
+    if (createdBy) {
+      where.createdBy = createdBy;
     }
 
     const [data, total] = await Promise.all([
@@ -265,14 +283,65 @@ export class IeltsService {
       data: {
         title: createSectionDto.title,
         instructions: createSectionDto.description ?? '',
+        passageText: createSectionDto.content ?? '',
         timeLimit: 30, // Default 30 minutes per section
         order: createSectionDto.order,
-        passageText: createSectionDto.content ?? '',
         audioUrl: createSectionDto.audioUrl ?? '',
         test: {
           connect: { id: testId },
         },
       },
+    });
+  }
+
+  async updateSection(
+    sectionId: number,
+    updateSectionDto: UpdateIeltsSectionDto,
+    userId: number,
+  ) {
+    const section = await this.prisma.ieltsSection.findUnique({
+      where: { id: sectionId },
+      include: { test: true },
+    });
+
+    if (!section) {
+      throw new NotFoundException('Không tìm thấy phần');
+    }
+
+    if (section.test.createdBy !== userId) {
+      throw new ForbiddenException(
+        'Không có quyền cập nhật phần cho bài test này',
+      );
+    }
+
+    return this.prisma.ieltsSection.update({
+      where: { id: sectionId },
+      data: {
+        title: updateSectionDto.title,
+        instructions: updateSectionDto.description,
+        passageText: updateSectionDto.content,
+        order: updateSectionDto.order,
+        audioUrl: updateSectionDto.audioUrl,
+      },
+    });
+  }
+
+  async removeSection(sectionId: number, userId: number) {
+    const section = await this.prisma.ieltsSection.findUnique({
+      where: { id: sectionId },
+      include: { test: true },
+    });
+
+    if (!section) {
+      throw new NotFoundException('Không tìm thấy phần');
+    }
+
+    if (section.test.createdBy !== userId) {
+      throw new ForbiddenException('Không có quyền xóa phần cho bài test này');
+    }
+
+    return this.prisma.ieltsSection.delete({
+      where: { id: sectionId },
     });
   }
 
@@ -305,6 +374,53 @@ export class IeltsService {
     });
   }
 
+  async updateQuestion(
+    questionId: number,
+    updateQuestionDto: UpdateIeltsQuestionDto,
+    userId: number,
+  ) {
+    const question = await this.prisma.ieltsQuestion.findUnique({
+      where: { id: questionId },
+      include: { section: { include: { test: true } } },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Không tìm thấy câu hỏi');
+    }
+
+    if (question.section.test.createdBy !== userId) {
+      throw new ForbiddenException(
+        'Không có quyền cập nhật câu hỏi cho bài test này',
+      );
+    }
+
+    return this.prisma.ieltsQuestion.update({
+      where: { id: questionId },
+      data: updateQuestionDto,
+    });
+  }
+
+  async removeQuestion(questionId: number, userId: number) {
+    const question = await this.prisma.ieltsQuestion.findUnique({
+      where: { id: questionId },
+      include: { section: { include: { test: true } } },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Không tìm thấy câu hỏi');
+    }
+
+    if (question.section.test.createdBy !== userId) {
+      throw new ForbiddenException(
+        'Không có quyền xóa câu hỏi cho bài test này',
+      );
+    }
+
+    return this.prisma.ieltsQuestion.delete({
+      where: { id: questionId },
+    });
+  }
+
   // Submission
   async submit(testId: number, submitIeltsDto: SubmitIeltsDto, userId: number) {
     const ieltsTest = await this.prisma.ieltsTest.findUnique({
@@ -324,23 +440,49 @@ export class IeltsService {
 
     // Calculate score based on IELTS 9.0 band system
     let totalQuestions = 0;
-    let correctAnswers = 0;
+    let correctAnswersCount = 0;
 
     // Get all questions from all sections
     const allQuestions = ieltsTest.sections.flatMap((s) => s.questions);
     totalQuestions = allQuestions.length;
 
+    const isCorrect = (
+      userAnswer: string,
+      correctAnswers: string[],
+    ): boolean => {
+      if (!correctAnswers || correctAnswers.length === 0) {
+        return userAnswer === '';
+      }
+      if (correctAnswers.length === 1) {
+        return userAnswer.trim() === correctAnswers[0].trim();
+      }
+      // For multiple answers, assume comma-separated and order-insensitive
+      const userAnswersSet = new Set(
+        userAnswer.split(',').map((s) => s.trim()),
+      );
+      const correctAnswersSet = new Set(correctAnswers.map((s) => s.trim()));
+      if (userAnswersSet.size !== correctAnswersSet.size) {
+        return false;
+      }
+      for (const ans of userAnswersSet) {
+        if (!correctAnswersSet.has(ans)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
     // Calculate correct answers
     for (const answer of submitIeltsDto.answers) {
       const question = allQuestions.find((q) => q.id === answer.questionId);
-      if (question && question.correctAnswer === answer.answer) {
-        correctAnswers++;
+      if (question && isCorrect(answer.answer, question.correctAnswers)) {
+        correctAnswersCount++;
       }
     }
 
     // Calculate percentage and convert to IELTS band score
     const percentage =
-      totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+      totalQuestions > 0 ? (correctAnswersCount / totalQuestions) * 100 : 0;
     const bandScore = this.convertToIeltsBand(percentage);
 
     // Create submission
@@ -351,7 +493,7 @@ export class IeltsService {
         skill: ieltsTest.skill,
         score: bandScore,
         detailedScores: {
-          correctAnswers,
+          correctAnswers: correctAnswersCount,
           totalQuestions,
           percentage: Math.round(percentage * 100) / 100,
         },
@@ -364,14 +506,17 @@ export class IeltsService {
     for (const answer of submitIeltsDto.answers) {
       const question = allQuestions.find((q) => q.id === answer.questionId);
       if (question) {
-        const isCorrect = question.correctAnswer === answer.answer;
+        const isAnswerCorrect = isCorrect(
+          answer.answer,
+          question.correctAnswers,
+        );
 
         await this.prisma.ieltsAnswer.create({
           data: {
             submissionId: submission.id,
             questionId: answer.questionId,
             userAnswer: answer.answer,
-            isCorrect,
+            isCorrect: isAnswerCorrect,
           },
         });
       }
@@ -474,9 +619,90 @@ export class IeltsService {
     return this.prisma.ieltsSubmission.findMany({
       where: { userId },
       include: {
-        test: true,
+        test: {
+          select: {
+            id: true,
+            title: true,
+            skill: true,
+            level: true,
+          },
+        },
       },
       orderBy: { submittedAt: 'desc' },
     });
+  }
+
+  async getSubmissionDetails(submissionId: number, userId: number) {
+    const submission = await this.prisma.ieltsSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        user: {
+          select: { id: true, name: true, role: true },
+        },
+        test: {
+          include: {
+            creator: {
+              select: { id: true },
+            },
+            sections: {
+              orderBy: { order: 'asc' },
+              include: {
+                questions: {
+                  orderBy: { order: 'asc' },
+                },
+              },
+            },
+          },
+        },
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Không tìm thấy bài nộp.');
+    }
+
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    const isOwner = submission.userId === userId;
+    // creator of the test
+    const isCreator = submission.test.createdBy === userId;
+
+    if (!isOwner && !(isCreator && currentUser?.role === 'TEACHER')) {
+      throw new ForbiddenException('Bạn không có quyền xem kết quả này.');
+    }
+
+    // Restructure data for easier frontend consumption
+    const testWithUserAnswers = {
+      ...submission,
+      test: {
+        ...submission.test,
+        sections: submission.test.sections.map((section) => ({
+          ...section,
+          questions: section.questions.map((question) => {
+            const userAnswer = submission.answers.find(
+              (ans) => ans.questionId === question.id,
+            );
+            return {
+              ...question,
+              userAnswer: userAnswer?.userAnswer,
+              isCorrect: userAnswer?.isCorrect,
+            };
+          }),
+        })),
+      },
+    };
+
+    // Clean up redundant data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (testWithUserAnswers as any).answers;
+
+    return testWithUserAnswers;
   }
 }

@@ -8,7 +8,9 @@ import {
   IsArray,
   Min,
   Max,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { IeltsSkill, IeltsLevel, IeltsQuestionType } from '@prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
@@ -41,6 +43,16 @@ export class CreateIeltsTestDto {
   @IsOptional()
   @IsString()
   instructions?: string;
+
+  @ApiPropertyOptional({
+    description: 'Các phần của bài test',
+    type: () => [CreateIeltsSectionDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateIeltsSectionDto)
+  sections?: CreateIeltsSectionDto[];
 }
 
 export class UpdateIeltsTestDto {
@@ -102,6 +114,44 @@ export class CreateIeltsSectionDto {
   @IsOptional()
   @IsString()
   audioUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Các câu hỏi trong phần',
+    type: () => [CreateIeltsQuestionDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateIeltsQuestionDto)
+  questions?: CreateIeltsQuestionDto[];
+}
+
+export class UpdateIeltsSectionDto {
+  @ApiPropertyOptional({ description: 'Tên phần' })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiPropertyOptional({ description: 'Mô tả phần' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ description: 'Thứ tự phần' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  order?: number;
+
+  @ApiPropertyOptional({ description: 'Nội dung phần (đọc hiểu, nghe)' })
+  @IsOptional()
+  @IsString()
+  content?: string;
+
+  @ApiPropertyOptional({ description: 'URL audio (cho Listening)' })
+  @IsOptional()
+  @IsString()
+  audioUrl?: string;
 }
 
 export class CreateIeltsQuestionDto {
@@ -148,6 +198,56 @@ export class CreateIeltsQuestionDto {
   explanation?: string;
 }
 
+export class UpdateIeltsQuestionDto {
+  @ApiPropertyOptional({ description: 'Câu hỏi' })
+  @IsOptional()
+  @IsString()
+  question?: string;
+
+  @ApiPropertyOptional({
+    enum: IeltsQuestionType,
+    description: 'Loại câu hỏi',
+  })
+  @IsOptional()
+  @IsEnum(IeltsQuestionType)
+  type?: IeltsQuestionType;
+
+  @ApiPropertyOptional({
+    description: 'Các lựa chọn (cho multiple choice)',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  options?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Đáp án đúng',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  correctAnswers?: string[];
+
+  @ApiPropertyOptional({ description: 'Điểm số' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  points?: number;
+
+  @ApiPropertyOptional({ description: 'Thứ tự câu hỏi' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  order?: number;
+
+  @ApiPropertyOptional({ description: 'Giải thích đáp án' })
+  @IsOptional()
+  @IsString()
+  explanation?: string;
+}
+
 export class SubmitIeltsDto {
   @ApiProperty({
     description: 'Danh sách câu trả lời',
@@ -175,4 +275,10 @@ export class IeltsFilterDto extends PaginationDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({ description: 'Lọc theo người tạo (teacher id)' })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  createdBy?: number;
 }

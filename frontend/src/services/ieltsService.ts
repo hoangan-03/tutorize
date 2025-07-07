@@ -1,12 +1,23 @@
 import api from "../lib/api";
 import { PaginationParams, PaginatedResult } from "../types/api";
 
+export type IeltsSkill = "READING" | "WRITING" | "LISTENING" | "SPEAKING";
+export type IeltsLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+export type IeltsQuestionType =
+  | "MULTIPLE_CHOICE"
+  | "IDENTIFYING_INFORMATION"
+  | "MATCHING"
+  | "COMPLETION"
+  | "DIAGRAM_LABELING"
+  | "SHORT_ANSWER"
+  | "WRITING";
+
 export interface IeltsTest {
   id: number;
   title: string;
   description?: string;
-  skill: "READING" | "WRITING" | "LISTENING" | "SPEAKING";
-  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  skill: IeltsSkill;
+  level: IeltsLevel;
   timeLimit: number;
   instructions?: string;
   createdBy: number;
@@ -25,7 +36,7 @@ export interface IeltsSection {
   title: string;
   description?: string;
   order: number;
-  content?: string;
+  passageText?: string;
   audioUrl?: string;
   questions: IeltsQuestion[];
 }
@@ -33,13 +44,8 @@ export interface IeltsSection {
 export interface IeltsQuestion {
   id: number;
   question: string;
-  type:
-    | "MULTIPLE_CHOICE"
-    | "TRUE_FALSE"
-    | "FILL_BLANK"
-    | "ESSAY"
-    | "MATCHING"
-    | "ORDERING";
+  isCorrect?: boolean;
+  type: IeltsQuestionType;
   options?: string[];
   correctAnswers?: string[];
   points: number;
@@ -51,11 +57,26 @@ export interface IeltsSubmission {
   id: number;
   testId: number;
   userId: number;
+  skill: IeltsSkill;
   score: number;
-  totalPoints: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  detailedScores: any;
+  feedback: string;
   submittedAt: string;
-  test: IeltsTest;
+  gradedAt?: string;
+  test?: Partial<IeltsTest>;
   answers: IeltsAnswer[];
+}
+
+export interface IeltsSubmissionResult extends IeltsSubmission {
+  test: IeltsTest & {
+    sections: (IeltsSection & {
+      questions: (IeltsQuestion & {
+        userAnswer?: string;
+        isCorrect?: boolean;
+      })[];
+    })[];
+  };
 }
 
 export interface IeltsAnswer {
@@ -114,7 +135,7 @@ export const ieltsService = {
 
   // Section Management
   async createSection(
-    testid: number,
+    testId: number,
     sectionData: Partial<IeltsSection>
   ): Promise<IeltsSection> {
     const response = await api.post<IeltsSection>(
@@ -126,7 +147,7 @@ export const ieltsService = {
 
   // Question Management
   async createQuestion(
-    sectionid: number,
+    sectionId: number,
     questionData: Partial<IeltsQuestion>
   ): Promise<IeltsQuestion> {
     const response = await api.post<IeltsQuestion>(
@@ -138,7 +159,7 @@ export const ieltsService = {
 
   // Test Taking
   async submitTest(
-    testid: number,
+    testId: number,
     answers: { questionId: number; answer: string }[]
   ): Promise<IeltsSubmission> {
     const response = await api.post<IeltsSubmission>(
@@ -154,9 +175,18 @@ export const ieltsService = {
     return response.data;
   },
 
-  async getTestSubmissions(testid: number): Promise<IeltsSubmission[]> {
-    const response = await api.get<IeltsSubmission[]>(
+  async getTestSubmissions(testId: number): Promise<IeltsSubmission[]> {
+    const response = await api.get<PaginatedResult<IeltsSubmission>>(
       `/ielts/tests/${testId}/submissions`
+    );
+    return response.data.data;
+  },
+
+  async getSubmissionDetails(
+    submissionId: number
+  ): Promise<IeltsSubmissionResult> {
+    const response = await api.get<IeltsSubmissionResult>(
+      `/ielts/submissions/${submissionId}/details`
     );
     return response.data;
   },

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../lib/api";
 import { Document, PaginationParams, PaginatedResult } from "../types/api";
 
