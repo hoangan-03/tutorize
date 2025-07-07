@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -92,7 +93,7 @@ const QuestionRenderer: React.FC<{
       return (
         <div className="space-y-4">
           <p
-            className="font-semibold text-gray-800"
+            className="font-semibold text-gray-800 text-start"
             dangerouslySetInnerHTML={{ __html: question.question }}
           />
           {(question.subQuestions || []).map((subQ, index) => {
@@ -109,11 +110,11 @@ const QuestionRenderer: React.FC<{
               <div key={index} className="flex items-start gap-4">
                 <label
                   htmlFor={`q${question.id}-sub${index}`}
-                  className="flex-shrink-0 w-max font-semibold text-gray-800 mt-1"
+                  className="flex-shrink-0 w-max font-semibold text-gray-800 text-start"
                 >
                   Câu {fullQuestionNumber}:
                 </label>
-                <div className="flex-grow">
+                <div className="flex-grow text-start">
                   <p
                     className="text-gray-700"
                     dangerouslySetInnerHTML={{ __html: subQ }}
@@ -164,7 +165,7 @@ const QuestionRenderer: React.FC<{
       return (
         <div className="space-y-4">
           <p
-            className="font-semibold text-gray-800"
+            className="font-semibold text-gray-800 text-start"
             dangerouslySetInnerHTML={{ __html: question.question }}
           />
           {/* Options List */}
@@ -172,7 +173,10 @@ const QuestionRenderer: React.FC<{
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
                 {options.map((opt, optIndex) => (
-                  <li key={optIndex} className="text-sm text-gray-700">
+                  <li
+                    key={optIndex}
+                    className="text-base text-gray-700 text-start"
+                  >
                     {opt}
                   </li>
                 ))}
@@ -201,7 +205,7 @@ const QuestionRenderer: React.FC<{
                 >
                   <label
                     htmlFor={`q${question.id}-sub${index}`}
-                    className="md:col-span-2 text-sm text-gray-800"
+                    className="md:col-span-2 text-gray-800 text-start"
                   >
                     <span className="font-semibold">
                       Câu {fullQuestionNumber}:
@@ -212,7 +216,7 @@ const QuestionRenderer: React.FC<{
                     id={`q${question.id}-sub${index}`}
                     value={currentAnswer}
                     onChange={(e) => handleMatchingChange(e.target.value)}
-                    className="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base py-2 px-4"
                   >
                     <option value="">Chọn...</option>
                     {options.map((opt, optIndex) => (
@@ -336,6 +340,25 @@ export const IeltsTestPlayer: React.FC = () => {
     },
     [answers, testId, clearAttemptAndNavigate]
   );
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (timeLeft <= 0 || !test) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          // Auto-submit when time is up
+          handleSubmit(true);
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, test, handleSubmit]);
 
   const handleExit = () => {
     if (window.confirm("Bạn có chắc chắn muốn thoát? Tiến trình sẽ bị hủy.")) {
@@ -461,7 +484,6 @@ export const IeltsTestPlayer: React.FC = () => {
 
         {/* Right side: Questions */}
         <div className="bg-white p-6 rounded-lg shadow-sm h-full max-h-[70vh] overflow-y-auto">
-          <h2 className="text-lg font-semibold mb-4">Câu hỏi</h2>
           <div className="space-y-8">
             {(currentSection.questions || []).map((q, groupIndex) => {
               const offsetWithinSection = (currentSection.questions || [])

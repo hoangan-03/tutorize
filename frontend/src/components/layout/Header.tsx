@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   BookOpen,
@@ -9,8 +9,6 @@ import {
   Award,
   Library,
   Edit,
-  Settings,
-  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { LanguageSwitcher } from "../ui/LanguageSwitcher";
@@ -219,7 +217,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <div className="bg-gray-50 py-4">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-18">
         <header className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="px-6">
             <div className="flex justify-between items-center h-16">

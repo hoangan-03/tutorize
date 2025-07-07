@@ -708,14 +708,10 @@ export const ExercisePublicView: React.FC = () => {
                   </div>
                   <div className="flex flex-col gap-2 text-start">
                     <h4 className="text-lg font-semibold text-gray-900">
-                      {isTeacher
-                        ? ''
-                        : t("exercises.readyToSubmit")}
+                      {isTeacher ? "" : t("exercises.readyToSubmit")}
                     </h4>
                     <p className="text-gray-600">
-                      {isTeacher
-                        ? ''
-                        : t("exercises.completeAndSubmit")}
+                      {isTeacher ? "" : t("exercises.completeAndSubmit")}
                     </p>
                   </div>
                 </div>
@@ -748,86 +744,79 @@ export const ExercisePublicView: React.FC = () => {
 
   // Exercise List View
   return (
-    <div className="p-8">
+    <div className="p-18">
       <div className="max-w-8xl mx-auto">
-        {/* <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {t("exercises.fromTeachers")}
-          </h1>
-          <p className="text-gray-600 mt-2">{t("exercises.viewAndComplete")}</p>
-        </div> */}
-
         {/* Stats Cards */}
         <div className="flex flex-row gap-6 mb-8">
-          <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-            <div className="flex items-center justify-center">
+          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+            <div className="w-10 flex-shrink-0 flex items-center justify-center">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <BookOpen className="h-6 w-6 text-purple-600" />
               </div>
-              <div className="ml-2 flex flex-row items-center gap-5">
-                <p className="text-xl font-semibold text-gray-900">
-                  {exercises.length}
-                </p>
-                <p className="text-base font-medium text-gray-600">
-                  {t("exercises.total")}
-                </p>
-              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <p className="text-xl font-semibold text-gray-900">
+                {exercises.length}
+              </p>
+              <p className="text-base font-medium text-gray-600">
+                {t("exercises.total")}
+              </p>
             </div>
           </div>
 
-          <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-            <div className="flex items-center">
+          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+            <div className="w-10 flex-shrink-0 flex items-center justify-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Calendar className="h-6 w-6 text-green-600" />
               </div>
-              <div className="ml-2 flex flex-row items-center gap-5">
-                <p className="text-xl font-semibold text-gray-900">
-                  {
-                    exercises.filter((ex: Exercise) => ex.status === "ACTIVE")
-                      .length
-                  }
-                </p>
-                <p className="text-base font-medium text-gray-600">
-                  {t("status.active")}
-                </p>
-              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <p className="text-xl font-semibold text-gray-900">
+                {
+                  exercises.filter((ex: Exercise) => ex.status === "ACTIVE")
+                    .length
+                }
+              </p>
+              <p className="text-base font-medium text-gray-600">
+                {t("status.active")}
+              </p>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-            <div className="flex items-center justify-center">
+          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+            <div className="w-10 flex-shrink-0 flex items-center justify-center">
               <div className="p-2 bg-red-100 rounded-lg">
                 <CalendarClock className="h-6 w-6 text-red-600" />
               </div>
-              <div className="ml-2 flex flex-row items-center gap-5">
-                <p className="text-xl font-semibold text-gray-900">
-                  {
-                    exercises.filter(
-                      (ex: Exercise) =>
-                        ex.status === "ACTIVE" &&
-                        new Date(ex.deadline) < new Date() &&
-                        new Date(ex.deadline) > new Date()
-                    ).length
-                  }
-                </p>
-                <p className="text-base font-medium text-gray-600">
-                  {t("exercises.overdue")}
-                </p>
-              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <p className="text-xl font-semibold text-gray-900">
+                {
+                  exercises.filter(
+                    (ex: Exercise) =>
+                      ex.status === "ACTIVE" &&
+                      new Date(ex.deadline) < new Date() &&
+                      new Date(ex.deadline) > new Date()
+                  ).length
+                }
+              </p>
+              <p className="text-base font-medium text-gray-600">
+                {t("exercises.overdue")}
+              </p>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-            <div className="flex items-center justify-center">
+          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+            <div className="w-10 flex-shrink-0 flex items-center justify-center">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <GraduationCap className="h-6 w-6 text-orange-600" />
               </div>
-              <div className="ml-2 flex flex-row items-center gap-5">
-                <p className="text-xl font-semibold text-gray-900">7</p>
-                <p className="text-base font-medium text-gray-600">
-                  {t("exercises.completed")}
-                </p>
-              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <p className="text-xl font-semibold text-gray-900">7</p>
+              <p className="text-base font-medium text-gray-600">
+                {t("exercises.completed")}
+              </p>
             </div>
           </div>
         </div>

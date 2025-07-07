@@ -353,63 +353,89 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Exercise Info Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sticky top-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-100">
               Thông tin bài tập
             </h2>
 
-            <div className="space-y-4">
-              <div className="flex items-center text-sm">
-                <BookOpen className="h-4 w-4 mr-2 text-blue-600" />
-                <div>
-                  <span className="text-gray-500">Môn học:</span>
-                  <div className="font-medium">{exercise.subject}</div>
+            <div className="space-y-5">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                <div className="flex items-center mb-2">
+                  <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-900">
+                    Môn học
+                  </span>
+                </div>
+                <div className="font-semibold text-blue-800 text-base">
+                  {exercise.subject}
                 </div>
               </div>
 
-              <div className="flex items-center text-sm">
-                <GraduationCap className="h-4 w-4 mr-2 text-blue-600" />
-                <div>
-                  <span className="text-gray-500">Lớp:</span>
-                  <div className="font-medium">Lớp {exercise.grade}</div>
+              <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                <div className="flex items-center mb-2">
+                  <GraduationCap className="h-5 w-5 mr-2 text-green-600" />
+                  <span className="text-sm font-medium text-green-900">
+                    Lớp học
+                  </span>
+                </div>
+                <div className="font-semibold text-green-800 text-base">
+                  Lớp {exercise.grade}
                 </div>
               </div>
 
-              <div className="flex items-center text-sm">
-                <Calendar className="h-4 w-4 mr-2 text-red-600" />
-                <div>
-                  <span className="text-gray-500">Hạn nộp:</span>
-                  <div className="font-medium text-red-600">
-                    {new Date(exercise.deadline).toLocaleDateString("vi-VN")}
+              <div className="bg-red-50 rounded-lg p-4 border border-red-100">
+                <div className="flex items-center mb-2">
+                  <Calendar className="h-5 w-5 mr-2 text-red-600" />
+                  <span className="text-sm font-medium text-red-900">
+                    Hạn nộp
+                  </span>
+                </div>
+                <div className="font-semibold text-red-800 text-base">
+                  {new Date(exercise.deadline).toLocaleDateString("vi-VN")}
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <div className="flex items-center mb-2">
+                  <User className="h-5 w-5 mr-2 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-900">
+                    Giáo viên
+                  </span>
+                </div>
+                <div className="font-semibold text-gray-800 text-base">
+                  {exercise.createdBy}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                  <div className="text-xs font-medium text-purple-900 mb-1">
+                    Ngày tạo
+                  </div>
+                  <div className="font-semibold text-purple-800 text-sm">
+                    {new Date(exercise.createdAt).toLocaleDateString("vi-VN")}
                   </div>
                 </div>
-              </div>
-
-              <div className="flex items-center text-sm">
-                <User className="h-4 w-4 mr-2 text-gray-600" />
-                <div>
-                  <span className="text-gray-500">Giáo viên:</span>
-                  <div className="font-medium">{exercise.createdBy}</div>
+                <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
+                  <div className="text-xs font-medium text-indigo-900 mb-1">
+                    Bài nộp
+                  </div>
+                  <div className="font-semibold text-indigo-800 text-sm">
+                    {exercise.submissions}
+                  </div>
                 </div>
-              </div>
-
-              <div className="text-sm">
-                <span className="text-gray-500">Ngày tạo:</span>
-                <div className="font-medium">
-                  {new Date(exercise.createdAt).toLocaleDateString("vi-VN")}
-                </div>
-              </div>
-
-              <div className="text-sm">
-                <span className="text-gray-500">Số bài nộp:</span>
-                <div className="font-medium">{exercise.submissions}</div>
               </div>
             </div>
 
             {exercise.note && (
-              <div className="mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="text-sm text-gray-500 mb-1">Ghi chú:</div>
-                <div className="text-sm font-medium">{exercise.note}</div>
+              <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="text-sm font-medium text-amber-900 mb-2 flex items-center">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+                  Ghi chú
+                </div>
+                <div className="text-sm text-amber-800 leading-relaxed">
+                  {exercise.note}
+                </div>
               </div>
             )}
           </div>

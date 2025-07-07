@@ -1,71 +1,105 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Eye,
+  Calendar,
+  Users,
+  BookOpen,
+  FileText,
+  BookCheck,
+  Edit,
+  Trash2,
+  BarChart3,
+  UserCheck,
+  Play,
+  Pause,
+  Plus,
+  CheckCircle,
+} from "lucide-react";
 
 // Import KaTeX for LaTeX rendering
 import "katex/dist/katex.min.css";
-import { ExerciseList } from "./ExerciseEditorUI";
 import { ExerciseForm } from "./ExerciseForm";
 import { ExercisePreview } from "./ExercisePreview";
 import { ExercisePublicView } from "./ExercisePublicView";
+import { TeacherSubmissionsView } from "./TeacherSubmissionsView";
+import { ExerciseDashboard } from "./ExerciseDashboard";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { exerciseService } from "../../services/exerciseService";
+import { Exercise, Subject, ExerciseStatus } from "../../types/api";
+import { Badge } from "../ui/Badge";
 
 export const ExerciseEditor: React.FC = () => {
-  const { isTeacher } = useAuth();
+  const { isTeacher, user } = useAuth();
+  const { t } = useTranslation();
+
+  // All hooks must be called before any early returns
+  const [currentView, setCurrentView] = useState<
+    "list" | "create" | "edit" | "preview" | "submissions" | "dashboard"
+  >("list");
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null
+  );
+  const [editMode, setEditMode] = useState<"rich" | "latex">("rich");
+
+  // Form state with correct types
+  const [formData, setFormData] = useState<Exercise>({
+    id: 0,
+    name: "",
+    subject: "MATH" as Subject,
+    grade: 6,
+    deadline: "",
+    note: "",
+    content: "",
+    createdBy: user?.id || 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    submissions: 0,
+    status: "ACTIVE" as ExerciseStatus,
+    maxScore: 100,
+    allowLateSubmission: false,
+    isPublic: true,
+  });
+
+  useEffect(() => {
+    if (isTeacher) {
+      loadExercises();
+    }
+  }, [isTeacher]);
+
+  // Teacher stats
+  const teacherStats = useMemo(() => {
+    return {
+      totalExercises: exercises.length,
+      activeExercises: exercises.filter((ex) => ex.status === "ACTIVE").length,
+      draftExercises: exercises.filter((ex) => ex.status === "DRAFT").length,
+      totalSubmissions: exercises.reduce(
+        (sum, ex) => sum + (ex.submissions || 0),
+        0
+      ),
+    };
+  }, [exercises]);
 
   // If user is a student, show the public view
   if (!isTeacher) {
     return <ExercisePublicView />;
   }
 
-  // Teacher view - original ExerciseEditor logic
-  interface Exercise {
-    id?: number;
-    name: string;
-    subject: string;
-    grade: number;
-    deadline: string;
-    note: string;
-    content: string;
-    latexContent: string;
-    createdBy: number;
-    createdAt: string;
-    submissions: number;
-    status: string;
-  }
-
-  const { user } = useAuth();
-  const [currentView, setCurrentView] = useState<
-    "list" | "create" | "edit" | "preview"
-  >("list");
-  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
-    null
-  );
-
-  // Filter exercises to show only those created by current teacher
-  const exercises = useMemo(() => {
-    if (!user) return allExercises;
-
-    // For now, using mock data but in real app this would be an API call
-    // with createdBy filter
-    return allExercises.filter((exercise) => exercise.createdBy === user.email);
-  }, [user, allExercises]);
-  const [editMode, setEditMode] = useState<"rich" | "latex">("rich");
-
-  // Form state
-  const [formData, setFormData] = useState<Exercise>({
-    name: "",
-    subject: "Mathematics",
-    grade: 6,
-    deadline: "",
-    note: "",
-    content: "",
-    latexContent: "",
-    createdBy: user?.email || "Admin",
-    createdAt: new Date().toISOString().split("T")[0],
-    submissions: 0,
-    status: "active",
-  });
+  const loadExercises = async () => {
+    try {
+      setLoading(true);
+      const result = await exerciseService.getExercises();
+      setExercises(result.data);
+    } catch (error) {
+      console.error("Error loading exercises:", error);
+      setExercises([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -74,25 +108,20 @@ export const ExerciseEditor: React.FC = () => {
     }));
   };
 
-  const handleSave = () => {
-    if (selectedExercise) {
-      setAllExercises((prev) =>
-        prev.map((ex) =>
-          ex.id === selectedExercise.id
-            ? { ...formData, id: selectedExercise.id }
-            : ex
-        )
-      );
-    } else {
-      const newExercise = {
-        ...formData,
-        id: Math.max(...allExercises.map((ex) => ex.id)) + 1,
-        createdBy: user?.email || "Admin", // Set current user as creator
-      };
-      setAllExercises((prev) => [...prev, newExercise]);
+  const handleSave = async () => {
+    try {
+      if (selectedExercise) {
+        await exerciseService.updateExercise(selectedExercise.id!, formData);
+      } else {
+        await exerciseService.createExercise(formData);
+      }
+      await loadExercises();
+      setCurrentView("list");
+      resetForm();
+    } catch (error) {
+      console.error("Error saving exercise:", error);
+      alert("Có lỗi khi lưu bài tập. Vui lòng thử lại.");
     }
-    setCurrentView("list");
-    resetForm();
   };
 
   const handleEdit = (exercise: Exercise) => {
@@ -101,9 +130,29 @@ export const ExerciseEditor: React.FC = () => {
     setCurrentView("edit");
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (exercise: Exercise) => {
     if (confirm("Bạn có chắc chắn muốn xóa bài tập này?")) {
-      setAllExercises((prev) => prev.filter((ex) => ex.id !== id));
+      try {
+        await exerciseService.deleteExercise(exercise.id!);
+        await loadExercises();
+      } catch (error) {
+        console.error("Error deleting exercise:", error);
+        alert("Có lỗi khi xóa bài tập. Vui lòng thử lại.");
+      }
+    }
+  };
+
+  const handleToggleStatus = async (exercise: Exercise) => {
+    try {
+      const newStatus = exercise.status === "ACTIVE" ? "ARCHIVED" : "ACTIVE";
+      await exerciseService.updateExercise(exercise.id!, {
+        ...exercise,
+        status: newStatus as ExerciseStatus,
+      });
+      await loadExercises();
+    } catch (error) {
+      console.error("Error updating exercise status:", error);
+      alert("Có lỗi khi cập nhật trạng thái bài tập. Vui lòng thử lại.");
     }
   };
 
@@ -113,44 +162,43 @@ export const ExerciseEditor: React.FC = () => {
     setCurrentView("preview");
   };
 
+  const handleViewSubmissions = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+    setCurrentView("submissions");
+  };
+
+  const handleViewDashboard = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+    setCurrentView("dashboard");
+  };
+
   const resetForm = () => {
     setFormData({
+      id: 0,
       name: "",
-      subject: "Mathematics",
+      subject: "MATH" as Subject,
       grade: 6,
       deadline: "",
       note: "",
       content: "",
-      latexContent: "",
-      createdBy: user?.email || "Admin",
-      createdAt: new Date().toISOString().split("T")[0],
+      createdBy: user?.id || 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       submissions: 0,
-      status: "active",
+      status: "ACTIVE" as ExerciseStatus,
+      maxScore: 100,
+      allowLateSubmission: false,
+      isPublic: true,
     });
     setSelectedExercise(null);
   };
 
-  // List View
-  if (currentView === "list") {
-    return (
-      <div className="p-8">
-        <ExerciseList
-          exercises={exercises}
-          onEdit={handleEdit}
-          onPreview={handlePreview}
-          onDelete={handleDelete}
-          onCreateNew={() => setCurrentView("create")}
-        />
-      </div>
-    );
-  }
-
   // Create/Edit View
   if (currentView === "create" || currentView === "edit") {
     return (
-      <div className="p-8">
+      <div className="p-18">
         <ExerciseForm
-          formData={formData}
+          formData={formData as any}
           onInputChange={handleInputChange}
           onSave={handleSave}
           onCancel={() => setCurrentView("list")}
@@ -165,9 +213,9 @@ export const ExerciseEditor: React.FC = () => {
   // Preview View
   if (currentView === "preview") {
     return (
-      <div className="p-8">
+      <div className="p-18">
         <ExercisePreview
-          exercise={formData}
+          exercise={formData as any}
           onBack={() => setCurrentView("list")}
           onEdit={() => setCurrentView("edit")}
           isReadOnly={false}
@@ -176,5 +224,301 @@ export const ExerciseEditor: React.FC = () => {
     );
   }
 
-  return null;
+  // Submissions View
+  if (currentView === "submissions" && selectedExercise) {
+    return (
+      <TeacherSubmissionsView
+        exercise={selectedExercise}
+        onBack={() => setCurrentView("list")}
+      />
+    );
+  }
+
+  // Dashboard View
+  if (currentView === "dashboard" && selectedExercise) {
+    return (
+      <ExerciseDashboard
+        exercise={selectedExercise}
+        onBack={() => setCurrentView("list")}
+      />
+    );
+  }
+
+  // Main List View - Teacher with card layout like student view
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Enhanced Header Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 mb-8 shadow-xl">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <BookOpen className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-white">
+                    Quản lý bài tập
+                  </h1>
+                </div>
+              </div>
+              <p className="text-white/90 text-lg leading-relaxed max-w-2xl text-start">
+                Tạo và quản lý bài tập cho học sinh. Hỗ trợ nhiều môn học và
+                hình thức bài tập.
+              </p>
+              <div className="flex items-center space-x-6 mt-4 text-sm text-white/80">
+                <div className="flex items-center space-x-1">
+                  <BookOpen className="h-4 w-4" />
+                  <span>{teacherStats.totalExercises} bài tập</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Users className="h-4 w-4" />
+                  <span>{teacherStats.totalSubmissions} bài nộp</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Cập nhật gần nhất:{" "}
+                    {new Date().toLocaleDateString("vi-VN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end space-y-3">
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setCurrentView("create")}
+                  className="flex items-center px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  <span>Tạo bài tập mới</span>
+                </button>
+              </div>
+              <p className="text-xs text-white/70 text-right">
+                Nhấn để tạo bài tập
+                <br />
+                với trình soạn thảo thông minh
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-xl">
+                <BookOpen className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">
+                  Tổng bài tập
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teacherStats.totalExercises}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-xl">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Đang mở</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teacherStats.activeExercises}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+            <div className="flex items-center">
+              <div className="p-3 bg-yellow-100 rounded-xl">
+                <FileText className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Bản nháp</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teacherStats.draftExercises}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <UserCheck className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Bài nộp</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teacherStats.totalSubmissions}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Exercise List */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+            </div>
+          ) : exercises.length === 0 ? (
+            <div className="text-center py-16">
+              <BookOpen className="h-20 w-20 text-gray-300 mx-auto mb-6" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Chưa có bài tập nào
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Tạo bài tập đầu tiên để bắt đầu quản lý bài tập cho học sinh.
+              </p>
+              <button
+                onClick={() => setCurrentView("create")}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold"
+              >
+                Tạo bài tập mới
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {exercises.map((exercise: Exercise) => (
+                <div
+                  key={exercise.id}
+                  className="p-6 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <h3 className="text-xl font-semibold text-gray-900">
+                          {exercise.name}
+                        </h3>
+                        <Badge
+                          variant="status"
+                          className={`${
+                            exercise.status === "ACTIVE"
+                              ? "bg-green-100 text-green-800"
+                              : exercise.status === "DRAFT"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : exercise.status === "ARCHIVED"
+                              ? "bg-gray-100 text-gray-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {exercise.status === "ACTIVE"
+                            ? t("status.active")
+                            : exercise.status === "DRAFT"
+                            ? t("status.draft")
+                            : exercise.status === "ARCHIVED"
+                            ? "Lưu trữ"
+                            : t("status.inactive")}
+                        </Badge>
+                        <Badge variant="subject">
+                          {t(`subject.${exercise.subject.toLowerCase()}`)}
+                        </Badge>
+                        <Badge variant="grade">
+                          {t("exercises.class")} {exercise.grade}
+                        </Badge>
+                      </div>
+
+                      <p className="text-gray-600 mb-4 text-sm leading-relaxed text-start">
+                        {exercise.note}
+                      </p>
+
+                      <div className="flex items-center space-x-6 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          {new Date(exercise.deadline).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </div>
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2" />
+                          {exercise.submissions || 0} bài nộp
+                        </div>
+                        <div className="flex items-center">
+                          <BookCheck className="h-4 w-4 mr-2" />
+                          Điểm tối đa: {exercise.maxScore}
+                        </div>
+                        <div className="flex items-center">
+                          <FileText className="h-4 w-4 mr-2" />
+                          {exercise.creator?.name || "Bạn"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleViewDashboard(exercise)}
+                        className="p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
+                        title="Xem thống kê"
+                      >
+                        <BarChart3 className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleViewSubmissions(exercise)}
+                        className="p-3 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                        title="Xem bài nộp"
+                      >
+                        <UserCheck className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handlePreview(exercise)}
+                        className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                        title="Xem trước"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(exercise)}
+                        className="p-3 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(exercise)}
+                        className={`p-3 rounded-xl transition-colors ${
+                          exercise.status === "ACTIVE"
+                            ? "text-orange-600 hover:bg-orange-50"
+                            : "text-green-600 hover:bg-green-50"
+                        }`}
+                        title={
+                          exercise.status === "ACTIVE" ? "Lưu trữ" : "Kích hoạt"
+                        }
+                      >
+                        {exercise.status === "ACTIVE" ? (
+                          <Pause className="h-5 w-5" />
+                        ) : (
+                          <Play className="h-5 w-5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(exercise)}
+                        className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title="Xóa"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };

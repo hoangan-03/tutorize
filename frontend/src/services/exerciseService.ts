@@ -57,12 +57,25 @@ export const exerciseService = {
   // Exercise Submissions
   async submitExercise(
     exerciseId: number,
-    content: string
+    content: string,
+    files?: File[]
   ): Promise<ExerciseSubmission> {
+    const formData = new FormData();
+    formData.append("content", content);
+
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+    }
+
     const response = await api.post<ExerciseSubmission>(
       `/exercises/${exerciseId}/submit`,
+      formData,
       {
-        content,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
     );
     return response.data;

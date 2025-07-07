@@ -1063,31 +1063,48 @@ const StudentQuizView: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="p-6 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {quizResults.correct}
+              <div className="p-6 bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                <div className="w-10 flex-shrink-0 flex items-center justify-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <FileText className="h-6 w-6 text-blue-600" />
+                  </div>
                 </div>
-                <div className="text-gray-600">
-                  {t("quizzes.correctAnswers")}
-                </div>
-              </div>
-              <div className="p-6 bg-gray-50 rounded-lg">
-                <div className="text-2xl font-bold text-gray-600">
-                  {quizResults.total}
-                </div>
-                <div className="text-gray-600">
-                  {t("quizzes.totalQuestions")}
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <p className="text-xl font-semibold text-gray-900">
+                    {quizResults.correct}
+                  </p>
+                  <p className="text-gray-600">{t("quizzes.correctAnswers")}</p>
                 </div>
               </div>
-              <div className="p-6 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  {(
-                    ((quizResults.submission.score || 0) /
-                      (quizResults.submission.totalPoints || 1)) *
-                    10
-                  ).toFixed(1)}
+              <div className="p-6 bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                <div className="w-10 flex-shrink-0 flex items-center justify-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
                 </div>
-                <div className="text-gray-600">{t("quizzes.score")}</div>
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <p className="text-xl font-semibold text-gray-900">
+                    {quizResults.total}
+                  </p>
+                  <p className="text-gray-600">{t("quizzes.totalQuestions")}</p>
+                </div>
+              </div>
+              <div className="p-6 bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                <div className="w-10 flex-shrink-0 flex items-center justify-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <BarChart3 className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <p className="text-xl font-semibold text-gray-900">
+                    {(
+                      ((quizResults.submission.score || 0) /
+                        (quizResults.submission.totalPoints || 1)) *
+                      10
+                    ).toFixed(1)}
+                  </p>
+                  <p className="text-gray-600">{t("quizzes.score")}</p>
+                </div>
               </div>
             </div>
 
@@ -1123,7 +1140,7 @@ const StudentQuizView: React.FC = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-18">
       <div className="max-w-8xl mx-auto">
         {/* Content based on active tab */}
 
@@ -1134,87 +1151,87 @@ const StudentQuizView: React.FC = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : (
-            <div className="max-w-8xl mx-auto p-8">
+            <div className="max-w-8xl mx-auto">
               {/* Stats Cards - Student view */}
               {!isTeacher && (
                 <div className="flex flex-row gap-6 mb-8">
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                    <div className="flex items-center justify-center">
+                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <FileText className="h-6 w-6 text-blue-600" />
                       </div>
-                      <div className="ml-2 flex flex-row items-center gap-5">
-                        <p className="text-xl font-semibold text-gray-900">
-                          {userStats.totalQuizzes}
-                        </p>
-                        <p className="text-base font-medium text-gray-600">
-                          {t("quizzes.totalQuizzes")}
-                        </p>
-                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <p className="text-xl font-semibold text-gray-900">
+                        {userStats.totalQuizzes}
+                      </p>
+                      <p className="text-base font-medium text-gray-600">
+                        {t("quizzes.totalQuizzes")}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                    <div className="flex items-center justify-center">
+                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-green-100 rounded-lg">
                         <CheckCircle className="h-6 w-6 text-green-600" />
                       </div>
-                      <div className="ml-2 flex flex-row items-center gap-5">
-                        <p className="text-xl font-semibold text-gray-900">
-                          {userStats.completedQuizzes}
-                        </p>
-                        <p className="ml-2 text-base font-medium text-gray-600">
-                          {t("quizzes.completed")}
-                        </p>
-                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <p className="text-xl font-semibold text-gray-900">
+                        {userStats.completedQuizzes}
+                      </p>
+                      <p className="ml-2 text-base font-medium text-gray-600">
+                        {t("quizzes.completed")}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                    <div className="flex items-center justify-center">
+                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-red-100 rounded-lg">
                         <AlertTriangle className="h-6 w-6 text-red-600" />
                       </div>
-                      <div className="ml-2 flex flex-row items-center gap-5">
-                        <p className="text-lg font-semibold text-gray-900">
-                          {userStats.overdueQuizzes}
-                        </p>
-                        <p className="text-sm font-medium text-gray-600">
-                          {t("quizzes.overdue")}
-                        </p>
-                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {userStats.overdueQuizzes}
+                      </p>
+                      <p className="text-sm font-medium text-gray-600">
+                        {t("quizzes.overdue")}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                    <div className="flex items-center justify-center">
+                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-purple-100 rounded-lg">
                         <Trophy className="h-6 w-6 text-purple-600" />
                       </div>
-                      <div className="ml-2 flex flex-row items-center gap-5">
-                        <p className="text-xl font-semibold text-gray-900">
-                          {userStats.perfectCount}
-                        </p>
-                        <p className="text-base font-medium text-gray-600">
-                          {t("quizzes.perfect")}
-                        </p>
-                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <p className="text-xl font-semibold text-gray-900">
+                        {userStats.perfectCount}
+                      </p>
+                      <p className="text-base font-medium text-gray-600">
+                        {t("quizzes.perfect")}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[180px]">
-                    <div className="flex items-center justify-center">
+                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-orange-100 rounded-lg">
                         <BarChart3 className="h-6 w-6 text-orange-600" />
                       </div>
-                      <div className="ml-2 flex flex-row items-center gap-5">
-                        <p className="text-xl font-semibold text-gray-900">
-                          {(userStats.averageScore || 0).toFixed(1)}
-                        </p>
-                        <p className="text-base font-medium text-gray-600">
-                          {t("quizzes.averageScore")}
-                        </p>
-                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <p className="text-xl font-semibold text-gray-900">
+                        {(userStats.averageScore || 0).toFixed(1)}
+                      </p>
+                      <p className="text-base font-medium text-gray-600">
+                        {t("quizzes.averageScore")}
+                      </p>
                     </div>
                   </div>
                 </div>
