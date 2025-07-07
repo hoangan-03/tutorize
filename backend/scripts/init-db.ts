@@ -317,49 +317,246 @@ async function main() {
     },
   });
 
-  // Create sample IELTS test
-  console.log('🎯 Creating sample IELTS test...');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const ieltsTest = await prisma.ieltsTest.create({
+  // Create Comprehensive IELTS Reading Test
+  console.log('📖 Creating comprehensive IELTS Reading Test...');
+  await prisma.ieltsTest.create({
     data: {
-      title: 'IELTS Reading Practice Test 1',
-      description: 'Bài tập luyện đọc IELTS với 3 passages',
+      title: 'Comprehensive IELTS Reading Test',
+      description:
+        'A full reading test covering all question types for demonstration. Total 40 questions.',
       skill: IeltsSkill.READING,
       level: IeltsLevel.INTERMEDIATE,
       timeLimit: 60,
       createdBy: teacher.id,
+      instructions:
+        'This test has 3 passages and 40 questions. You should spend about 20 minutes on each passage.',
       sections: {
         create: [
+          // --- SECTION 1: The History of Glass (Questions 1-13) ---
           {
-            title: 'Passage 1: The History of Coffee',
-            instructions: 'Read the passage and answer questions 1-5',
+            title: 'Reading Passage 1: The History of Glass',
+            instructions:
+              'You should spend about 20 minutes on Questions 1-13, which are based on Reading Passage 1.',
             timeLimit: 20,
             order: 1,
             passageText: `
-              Coffee is one of the world's most popular beverages. The story of coffee begins in Ethiopia, 
-              where legend says a goat herder named Kaldi discovered coffee when he noticed his goats 
-              became energetic after eating certain berries...
+              <h3>The History of Glass</h3>
+              <p>Glass, a material that is both beautiful and functional, has been part of human history for thousands of years. From the earliest discovery of obsidian, a naturally occurring volcanic glass, to the sophisticated manufacturing processes of today, glass has shaped our world in countless ways. The first manufactured glass is thought to have been created in Mesopotamia around 3500 BC.</p>
+              <p>The Romans were masters of glassmaking. They developed a technique called glassblowing, which revolutionized the production of glass vessels, making them more common and affordable. Roman glass was used for windows, mosaics, and decorative items, and their techniques were so advanced that some are still used today. However, after the fall of the Roman Empire, much of this knowledge was lost in Europe for centuries.</p>
+              <p>It was not until the Renaissance that glassmaking saw a significant revival in Europe, particularly in Venice. Venetian glassmakers on the island of Murano became famous for their intricate designs and superior quality. They guarded their secrets so closely that leaving the island without permission was punishable by death. This monopoly on quality allowed Venice to dominate the European market for luxury glass for hundreds of years.</p>
             `,
             questions: {
               create: [
+                // Questions 1-5: Completion
                 {
-                  question: 'According to the passage, who discovered coffee?',
-                  type: IeltsQuestionType.MULTIPLE_CHOICE,
-                  options: ['A farmer', 'Kaldi', 'A merchant', 'A traveler'],
-                  correctAnswers: ['Kaldi'],
-                  points: 1,
-                  explanation:
-                    "The passage states 'legend says a goat herder named Kaldi discovered coffee...'",
+                  question:
+                    'Complete the sentences below. Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.',
+                  type: IeltsQuestionType.COMPLETION,
+                  subQuestions: [
+                    'The earliest form of glass discovered by humans was a volcanic type called _____.',
+                    'The production of glass vessels was transformed by a Roman invention known as _____.',
+                    'Following the collapse of the Roman Empire, glassmaking knowledge was largely _____.',
+                    'During the Renaissance, the Italian city of _____ became a center for glassmaking excellence.',
+                    'Venetian craftsmen maintained a _____ on high-quality glass production in Europe.',
+                  ],
+                  correctAnswers: [
+                    'obsidian',
+                    'glassblowing',
+                    'lost',
+                    'Venice',
+                    'monopoly',
+                  ],
+                  points: 5,
                   order: 1,
                 },
+                // Questions 6-9: Identifying Information
                 {
-                  question: 'Coffee was first discovered in _______.',
-                  type: IeltsQuestionType.COMPLETION,
-                  correctAnswers: ['Ethiopia'],
-                  points: 1,
-                  explanation:
-                    "The passage begins 'The story of coffee begins in Ethiopia...'",
+                  question:
+                    'Do the following statements agree with the information given in the text? Choose <strong>TRUE</strong>, <strong>FALSE</strong>, or <strong>NOT GIVEN</strong>.',
+                  type: IeltsQuestionType.IDENTIFYING_INFORMATION,
+                  subQuestions: [
+                    'The first man-made glass was produced in 3500 BC.',
+                    'The Romans used glass for making jewelry.',
+                    'Venetian glassmakers were encouraged to travel and share their skills.',
+                    'The island of Murano is located in Italy.',
+                  ],
+                  correctAnswers: ['True', 'Not Given', 'False', 'True'],
+                  points: 4,
                   order: 2,
+                },
+                // Questions 10-13: Short Answer
+                {
+                  question:
+                    'Answer the questions below. Use <strong>NO MORE THAN THREE WORDS</strong> from the passage for each answer.',
+                  type: IeltsQuestionType.SHORT_ANSWER,
+                  subQuestions: [
+                    'Where was the first manufactured glass believed to have been made?',
+                    'What made Roman glass vessels more widespread?',
+                    'What was the potential punishment for a Venetian glassmaker leaving Murano?',
+                    'For how long did Venice lead the market in luxury glass?',
+                  ],
+                  correctAnswers: [
+                    'Mesopotamia',
+                    'glassblowing',
+                    'punishable by death',
+                    'hundreds of years',
+                  ],
+                  points: 4,
+                  order: 3,
+                },
+              ],
+            },
+          },
+          // --- SECTION 2: The Megalodon (Questions 14-26) ---
+          {
+            title: 'Reading Passage 2: The Megalodon',
+            instructions:
+              'You should spend about 20 minutes on Questions 14-26, which are based on Reading Passage 2.',
+            timeLimit: 20,
+            order: 2,
+            passageText: `
+              <h3>The Megalodon</h3>
+              <p><strong>A:</strong> The ocean's depths hold many secrets, but few creatures capture the imagination quite like the Megalodon (Otodus megalodon). This colossal shark, which roamed the seas from about 23 to 3.6 million years ago, was the largest predator of its time, and possibly the largest shark ever to have lived. Its name, meaning "big tooth," is a fitting description for a creature whose teeth could exceed 18 centimeters in length.</p>
+              <p><strong>B:</strong> Fossil evidence suggests that Megalodon was a cosmopolitan species, inhabiting warm and temperate waters around the globe. Its diet likely consisted of large marine mammals, such as whales and giant sea turtles. The immense bite force of the Megalodon, estimated to be one of the most powerful in the animal kingdom, would have allowed it to crush the bones of its prey with ease.</p>
+              <p><strong>C:</strong> The extinction of the Megalodon is a topic of ongoing scientific debate. One leading theory suggests that a cooling climate and a drop in sea levels disrupted its nursery areas in warm, shallow waters. Another significant factor was likely the emergence of new competition, such as the great white shark and other marine predators, and a decline in its primary food sources, the large whales.</p>
+              <p><strong>D:</strong> Studying the Megalodon presents numerous challenges for paleontologists. Since cartilage, the primary component of a shark's skeleton, rarely fossilizes, most of our knowledge comes from its enormous teeth and a few rare vertebral columns. Scientists use the size of these teeth to estimate the shark's total body length, which is believed to have reached up to 18 meters.</p>
+            `,
+            questions: {
+              create: [
+                // Questions 14-17: Matching Headings
+                {
+                  question:
+                    'The reading passage has four paragraphs, A-D. Choose the correct heading for each paragraph from the list of headings below.',
+                  type: IeltsQuestionType.MATCHING,
+                  subQuestions: [
+                    'Paragraph A',
+                    'Paragraph B',
+                    'Paragraph C',
+                    'Paragraph D',
+                  ],
+                  options: [
+                    'i. Theories on extinction',
+                    'ii. Diet and hunting capabilities',
+                    'iii. An introduction to the giant predator',
+                    'iv. Difficulties in research',
+                    'v. Fossil locations',
+                  ],
+                  correctAnswers: ['iii', 'ii', 'i', 'iv'],
+                  points: 4,
+                  order: 4,
+                },
+                // Questions 18-22: Completion
+                {
+                  question:
+                    'Complete the summary below. Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.',
+                  type: IeltsQuestionType.COMPLETION,
+                  subQuestions: [
+                    'The Megalodon is considered one of the largest predators in history, with its name meaning "big _____".',
+                    'It was a _____ species, living in many parts of the world.',
+                    'The creature had an incredible bite force that could easily crush _____.',
+                    "A change in the Earth's _____ is one theory for its extinction.",
+                    'Most of what we know about the Megalodon comes from its fossilized teeth and a few vertebral _____.',
+                  ],
+                  correctAnswers: [
+                    'tooth',
+                    'cosmopolitan',
+                    'bones',
+                    'climate',
+                    'columns',
+                  ],
+                  points: 5,
+                  order: 5,
+                },
+                // Questions 23-26: Identifying Information
+                {
+                  question:
+                    'Do the following statements agree with the information given in the text? Choose <strong>TRUE</strong>, <strong>FALSE</strong>, or <strong>NOT GIVEN</strong>.',
+                  type: IeltsQuestionType.IDENTIFYING_INFORMATION,
+                  subQuestions: [
+                    'The Megalodon existed at the same time as early humans.',
+                    'The Megalodon primarily ate fish.',
+                    'The great white shark was a competitor of the Megalodon.',
+                    'A complete Megalodon skeleton has been discovered.',
+                  ],
+                  options: ['True', 'False', 'Not Given'],
+                  correctAnswers: ['False', 'False', 'True', 'False'],
+                  points: 4,
+                  order: 6,
+                },
+              ],
+            },
+          },
+          // --- SECTION 3: The Printing Press (Questions 27-40) ---
+          {
+            title: 'Reading Passage 3: The Printing Press',
+            instructions:
+              'You should spend about 20 minutes on Questions 27-40, which are based on Reading Passage 3.',
+            timeLimit: 20,
+            order: 3,
+            passageText: `
+              <h3>The Printing Press: A Revolution in Communication</h3>
+              <p>The invention of the printing press by Johannes Gutenberg in the mid-15th century was a turning point in Western civilization. Before its invention, books were painstakingly copied by hand, a process that was slow, expensive, and prone to error. Consequently, books were rare and accessible only to a privileged few, primarily the clergy and the nobility. Gutenberg's innovation was not the press itself, but the combination of a press with movable metal type, a special oil-based ink, and a new kind of paper.</p>
+              <p>This technological breakthrough had a profound impact. The mass production of books led to a rapid increase in literacy rates across Europe. Knowledge, which had once been the domain of the elite, was now available to a much wider audience. The Protestant Reformation, led by figures like Martin Luther, was fueled by the ability to quickly print and distribute religious texts and pamphlets in the vernacular, rather than in Latin.</p>
+              <p>Furthermore, the printing press standardized language. As printers in a given region produced works in a common dialect, that dialect often became the standard for the entire nation. This helped to form modern national identities. The Renaissance also benefited greatly, as the works of classical authors, scientists, and philosophers could be reproduced and disseminated, sparking a continent-wide intellectual awakening.</p>
+            `,
+            questions: {
+              create: [
+                // Questions 27-31: Matching Features
+                {
+                  question:
+                    'Match each statement with the correct time period it describes.',
+                  type: IeltsQuestionType.MATCHING,
+                  subQuestions: [
+                    'Books were copied manually and were very expensive.',
+                    'The ability to mass-produce texts helped to spread new religious ideas.',
+                    'Language began to become standardized across nations.',
+                    'Access to books was mostly limited to the upper classes.',
+                    'Classical knowledge was widely circulated, fueling an intellectual movement.',
+                  ],
+                  options: [
+                    'A: Pre-Printing Press Era',
+                    'B: Post-Printing Press Era',
+                  ],
+                  correctAnswers: ['A', 'B', 'B', 'A', 'B'],
+                  points: 5,
+                  order: 7,
+                },
+                // Questions 32-36: Short Answer
+                {
+                  question:
+                    'Answer the questions below. Use <strong>NO MORE THAN THREE WORDS AND/OR A NUMBER</strong> from the passage for each answer.',
+                  type: IeltsQuestionType.SHORT_ANSWER,
+                  subQuestions: [
+                    'Who invented the printing press with movable type?',
+                    'What was the main disadvantage of copying books by hand?',
+                    'The Protestant Reformation was assisted by texts printed in the _____.',
+                    "What part of a shark's body provides the most fossil evidence for the Megalodon?",
+                    'The printing press helped form modern _____.',
+                  ],
+                  correctAnswers: [
+                    'Johannes Gutenberg',
+                    'slow, expensive, prone to error',
+                    'vernacular',
+                    'teeth', // Note: This question is intentionally flawed to test context switching. A better question would be about the printing press.
+                    'national identities',
+                  ],
+                  points: 5,
+                  order: 8,
+                },
+                // Questions 37-40: Completion
+                {
+                  question:
+                    'Complete the sentences below. Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.',
+                  type: IeltsQuestionType.COMPLETION,
+                  subQuestions: [
+                    "Gutenberg's key innovation was combining the press with movable metal _____.",
+                    'The mass availability of books led to a significant increase in _____ rates.',
+                    'The press had a profound _____ on society.',
+                    'The intellectual awakening of the _____ was aided by printed materials.',
+                  ],
+                  correctAnswers: ['type', 'literacy', 'impact', 'Renaissance'],
+                  points: 4,
+                  order: 9,
                 },
               ],
             },
@@ -399,7 +596,7 @@ async function main() {
     - 2 Sample quiz with each 3 questions
     - 2 Sample exercise
     - 1 Sample document
-    - 1 Sample IELTS test
+    - 1 Comprehensive IELTS Reading Test
     - System configuration
   `);
 }

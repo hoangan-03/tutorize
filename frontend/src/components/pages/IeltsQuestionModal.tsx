@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { IeltsQuestion, IeltsQuestionType } from "../../services/ieltsService";
-import { TrashIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import React, { useState, useEffect, useMemo } from "react";
+import type {
+  IeltsQuestion,
+  IeltsQuestionType,
+} from "../../services/ieltsService";
+import { X } from "lucide-react";
 
 interface IeltsQuestionModalProps {
   isOpen: boolean;
@@ -9,16 +12,99 @@ interface IeltsQuestionModalProps {
   question: Partial<IeltsQuestion> | null;
 }
 
-const QUESTION_TYPES = [
+const QUESTION_TYPES: IeltsQuestionType[] = [
   "MULTIPLE_CHOICE",
   "IDENTIFYING_INFORMATION",
   "MATCHING",
   "COMPLETION",
-  "DIAGRAM_LABELING",
   "SHORT_ANSWER",
-  "WRITING_TASK_1",
-  "WRITING_TASK_2",
 ];
+
+const typeConfigs: Record<
+  IeltsQuestionType,
+  {
+    subQuestions: { show: boolean; label?: string; placeholder?: string };
+    options: { show: boolean; label?: string; placeholder?: string };
+    correctAnswers: { label: string; placeholder: string; helpText: string };
+  }
+> = {
+  MULTIPLE_CHOICE: {
+    subQuestions: { show: false },
+    options: {
+      show: true,
+      label: "Các lựa chọn trả lời",
+      placeholder: "Lựa chọn A\nLựa chọn B...",
+    },
+    correctAnswers: {
+      label: "Đáp án đúng",
+      placeholder: "Nhập chính xác nội dung của lựa chọn đúng.",
+      helpText: "Nếu có nhiều đáp án đúng, mỗi đáp án một dòng.",
+    },
+  },
+  IDENTIFYING_INFORMATION: {
+    subQuestions: {
+      show: true,
+      label: "Các nhận định cần xác minh",
+      placeholder:
+        "Ví dụ:\nNhận định 1: The author is a biologist.\nNhận định 2: The study was conducted in Africa.",
+    },
+    options: {
+      show: true,
+      label: "Các lựa chọn (Tùy chỉnh)",
+      placeholder: "True\nFalse\nNot Given\n(Để trống sẽ dùng mặc định)",
+    },
+    correctAnswers: {
+      label: "Đáp án đúng (theo thứ tự nhận định)",
+      placeholder: "True\nNot Given...",
+      helpText: "Số lượng đáp án phải khớp với số lượng nhận định.",
+    },
+  },
+  MATCHING: {
+    subQuestions: {
+      show: true,
+      label: "Các mục cần nối (Câu hỏi)",
+      placeholder:
+        "Ví dụ:\nCâu 1: A reference to a past study\nCâu 2: A description of the methodology",
+    },
+    options: {
+      show: true,
+      label: "Các lựa chọn để nối",
+      placeholder: "Ví dụ:\nLựa chọn A: Paragraph A\nLựa chọn B: Paragraph B",
+    },
+    correctAnswers: {
+      label: "Đáp án đúng (theo thứ tự câu hỏi)",
+      placeholder: "Lựa chọn B\nLựa chọn A...",
+      helpText: "Số lượng đáp án phải khớp với số lượng câu hỏi.",
+    },
+  },
+  SHORT_ANSWER: {
+    subQuestions: {
+      show: true,
+      label: "Danh sách câu hỏi",
+      placeholder:
+        "Ví dụ:\nCâu 1: What was the primary reason?\nCâu 2: In what year...?",
+    },
+    options: { show: false },
+    correctAnswers: {
+      label: "Đáp án đúng (theo thứ tự câu hỏi)",
+      placeholder: "Đáp án cho câu 1\nĐáp án cho câu 2...",
+      helpText: "Số lượng đáp án phải khớp với số lượng câu hỏi.",
+    },
+  },
+  COMPLETION: {
+    subQuestions: {
+      show: true,
+      label: "Các câu/mục cần hoàn thành",
+      placeholder: "Ví dụ:\n1. The author is a [__].\n2. He lives in [__].",
+    },
+    options: { show: false },
+    correctAnswers: {
+      label: "Đáp án đúng (theo thứ tự)",
+      placeholder: "writer\nLondon",
+      helpText: "Số lượng đáp án phải khớp với số lượng câu.",
+    },
+  },
+};
 
 export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
   isOpen,
@@ -27,17 +113,23 @@ export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
   question,
 }) => {
   const [questionData, setQuestionData] = useState<Partial<IeltsQuestion>>({});
+  const [optionsStr, setOptionsStr] = useState("");
+  const [correctAnswersStr, setCorrectAnswersStr] = useState("");
+  const [subQuestionsStr, setSubQuestionsStr] = useState("");
 
   useEffect(() => {
-    setQuestionData(
-      question || {
-        type: "MULTIPLE_CHOICE",
-        points: 1,
-        options: [],
-        correctAnswers: [],
-      }
-    );
-  }, [question]);
+    const initialData = question || {
+      type: "MULTIPLE_CHOICE",
+      points: 1,
+      options: [],
+      correctAnswers: [],
+      subQuestions: [],
+    };
+    setQuestionData(initialData);
+    setOptionsStr((initialData.options || []).join("\n"));
+    setCorrectAnswersStr((initialData.correctAnswers || []).join("\n"));
+    setSubQuestionsStr((initialData.subQuestions || []).join("\n"));
+  }, [question, isOpen]);
 
   if (!isOpen) return null;
 
@@ -55,233 +147,208 @@ export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
     setQuestionData((prev) => ({ ...prev, [name]: parseInt(value, 10) || 0 }));
   };
 
-  const handleListChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number,
-    field: "options" | "correctAnswers"
-  ) => {
-    const newList = [...(questionData[field] || [])];
-    newList[index] = e.target.value;
-    setQuestionData((prev) => ({ ...prev, [field]: newList }));
-  };
-
-  const addListItem = (field: "options" | "correctAnswers") => {
-    const newList = [...(questionData[field] || []), ""];
-    setQuestionData((prev) => ({ ...prev, [field]: newList }));
-  };
-
-  const removeListItem = (
-    index: number,
-    field: "options" | "correctAnswers"
-  ) => {
-    const newList = [...(questionData[field] || [])];
-    newList.splice(index, 1);
-    setQuestionData((prev) => ({ ...prev, [field]: newList }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(questionData);
+    const finalQuestionData = {
+      ...questionData,
+      options: optionsStr.split("\n").filter(Boolean),
+      correctAnswers: correctAnswersStr.split("\n").filter(Boolean),
+      subQuestions: subQuestionsStr.split("\n").filter(Boolean),
+    };
+    onSave(finalQuestionData);
   };
 
+  const currentConfig = typeConfigs[questionData.type as IeltsQuestionType];
+
+  if (!currentConfig) {
+    return null;
+  }
+
+  const inputClass =
+    "mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm";
+  const textareaClass = `${inputClass} min-h-[120px]`;
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-8 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">
-          {question?.id ? "Chỉnh sửa câu hỏi" : "Thêm câu hỏi mới"}
-        </h3>
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-6 max-h-[80vh] overflow-y-auto pr-4"
-        >
-          {/* Main Question Content */}
-          <div>
-            <label
-              htmlFor="question"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Nội dung câu hỏi / Hướng dẫn
-            </label>
-            <textarea
-              name="question"
-              id="question"
-              value={questionData.question || ""}
-              onChange={handleInputChange}
-              rows={4}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Type */}
-            <div>
-              <label
-                htmlFor="type"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Loại câu hỏi
-              </label>
-              <select
-                name="type"
-                id="type"
-                value={questionData.type}
-                onChange={handleInputChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-              >
-                {QUESTION_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* Points */}
-            <div>
-              <label
-                htmlFor="points"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Điểm
-              </label>
-              <input
-                type="number"
-                name="points"
-                id="points"
-                value={questionData.points || 1}
-                onChange={handleNumericInputChange}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            {/* Order */}
-            <div>
-              <label
-                htmlFor="order"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Thứ tự
-              </label>
-              <input
-                type="number"
-                name="order"
-                id="order"
-                value={questionData.order || 1}
-                onChange={handleNumericInputChange}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Dynamic Fields */}
-          <div className="space-y-6">
-            {/* Options for Multiple Choice */}
-            {questionData.type === "MULTIPLE_CHOICE" && (
-              <div>
-                <h4 className="text-md font-medium text-gray-700">
-                  Các lựa chọn
-                </h4>
-                <div className="mt-2 space-y-2">
-                  {(questionData.options || []).map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={option}
-                        onChange={(e) => handleListChange(e, index, "options")}
-                        className="flex-grow block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        placeholder={`Lựa chọn ${index + 1}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeListItem(index, "options")}
-                        aria-label="Xóa lựa chọn"
-                      >
-                        <TrashIcon className="h-5 w-5 text-red-500" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addListItem("options")}
-                    className="flex items-center text-sm text-indigo-600 hover:text-indigo-800"
-                  >
-                    <PlusCircleIcon className="h-5 w-5 mr-1" />
-                    Thêm lựa chọn
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Correct Answers */}
-            <div>
-              <h4 className="text-md font-medium text-gray-700">Đáp án đúng</h4>
-              <p className="text-xs text-gray-500">
-                Thêm nhiều đáp án nếu câu hỏi có nhiều câu trả lời (ví dụ: điền
-                vào chỗ trống)
-              </p>
-              <div className="mt-2 space-y-2">
-                {(questionData.correctAnswers || []).map((answer, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={answer}
-                      onChange={(e) =>
-                        handleListChange(e, index, "correctAnswers")
-                      }
-                      className="flex-grow block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder={`Đáp án ${index + 1}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeListItem(index, "correctAnswers")}
-                      aria-label="Xóa đáp án"
-                    >
-                      <TrashIcon className="h-5 w-5 text-red-500" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addListItem("correctAnswers")}
-                  className="flex items-center text-sm text-indigo-600 hover:text-indigo-800"
-                >
-                  <PlusCircleIcon className="h-5 w-5 mr-1" />
-                  Thêm đáp án
-                </button>
-              </div>
-            </div>
-
-            {/* Explanation */}
-            <div>
-              <label
-                htmlFor="explanation"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Giải thích đáp án
-              </label>
-              <textarea
-                name="explanation"
-                id="explanation"
-                value={questionData.explanation || ""}
-                onChange={handleInputChange}
-                rows={3}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="pt-5 border-t border-gray-200 flex justify-end space-x-3">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex justify-center items-center z-50 transition-opacity duration-300">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 transform transition-all duration-300 scale-95 animate-in-zoom">
+        <form onSubmit={handleSubmit}>
+          {/* Header */}
+          <div className="flex justify-between items-center p-5 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">
+              {questionData.id ? "Chỉnh sửa Câu hỏi" : "Tạo Câu hỏi mới"}
+            </h2>
             <button
               type="button"
               onClick={onClose}
-              className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              aria-label="Đóng"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Type, Points, Order */}
+              <div>
+                <label
+                  htmlFor="type"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Loại câu hỏi
+                </label>
+                <select
+                  name="type"
+                  id="type"
+                  value={questionData.type}
+                  onChange={handleInputChange}
+                  className={inputClass}
+                >
+                  {QUESTION_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="points"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Tổng điểm
+                </label>
+                <input
+                  type="number"
+                  name="points"
+                  id="points"
+                  value={questionData.points || 1}
+                  onChange={handleNumericInputChange}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="order"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Thứ tự
+                </label>
+                <input
+                  type="number"
+                  name="order"
+                  id="order"
+                  value={questionData.order || 1}
+                  onChange={handleNumericInputChange}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="question"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Câu hỏi chính / Hướng dẫn chung
+              </label>
+              <textarea
+                name="question"
+                id="question"
+                value={questionData.question || ""}
+                onChange={handleInputChange}
+                rows={3}
+                className={textareaClass}
+                placeholder="Nhập hướng dẫn chung cho nhóm câu hỏi này. Ví dụ: Match each heading with the correct paragraph."
+                required
+              />
+            </div>
+
+            {/* Dynamic Fields based on Type */}
+            <div className="space-y-6 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                {/* SubQuestions */}
+                {currentConfig.subQuestions.show && (
+                  <div>
+                    <label
+                      htmlFor="subQuestions"
+                      className="block text-sm font-bold text-gray-700"
+                    >
+                      {currentConfig.subQuestions.label}
+                    </label>
+                    <textarea
+                      id="subQuestions"
+                      value={subQuestionsStr}
+                      onChange={(e) => setSubQuestionsStr(e.target.value)}
+                      className={textareaClass}
+                      placeholder={currentConfig.subQuestions.placeholder}
+                    />
+                  </div>
+                )}
+
+                {/* Options */}
+                {currentConfig.options.show && (
+                  <div>
+                    <label
+                      htmlFor="options"
+                      className="block text-sm font-bold text-gray-700"
+                    >
+                      {currentConfig.options.label}
+                    </label>
+                    <textarea
+                      id="options"
+                      value={optionsStr}
+                      onChange={(e) => setOptionsStr(e.target.value)}
+                      className={textareaClass}
+                      placeholder={currentConfig.options.placeholder}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Correct Answers (always shown, but might span full width) */}
+              <div
+                className={
+                  currentConfig.subQuestions.show || currentConfig.options.show
+                    ? ""
+                    : "md:col-span-2"
+                }
+              >
+                <label
+                  htmlFor="correctAnswers"
+                  className="block text-sm font-bold text-gray-700"
+                >
+                  {currentConfig.correctAnswers.label}
+                </label>
+                <textarea
+                  id="correctAnswers"
+                  value={correctAnswersStr}
+                  onChange={(e) => setCorrectAnswersStr(e.target.value)}
+                  className={textareaClass}
+                  placeholder={currentConfig.correctAnswers.placeholder}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {currentConfig.correctAnswers.helpText}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end items-center p-5 bg-gray-50 border-t border-gray-200 rounded-b-xl space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 shadow-sm"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm"
             >
-              Lưu
+              Lưu Câu hỏi
             </button>
           </div>
         </form>

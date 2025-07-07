@@ -406,6 +406,7 @@ model IeltsSection {
   order        Int
   passageText  String?  @db.Text // for reading
   audioUrl     String? // for listening
+  imageUrl     String? // for diagrams
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -421,6 +422,7 @@ model IeltsQuestion {
   sectionId      Int
   question       String            @db.Text
   type           IeltsQuestionType
+  subQuestions   String[]          @default([]) // For matching questions
   options        String[]          @default([])
   correctAnswers String[]          @default([])
   order          Int
@@ -486,16 +488,11 @@ enum IeltsLevel {
 }
 
 enum IeltsQuestionType {
-  // Listening & Reading
-  MULTIPLE_CHOICE // Can have one or more correct answers based on correctAnswers array length
-  IDENTIFYING_INFORMATION // True/False/Not Given OR Yes/No/Not Given
-  MATCHING // All types: headings, features, sentence endings, information to paragraphs
-  COMPLETION // All types: sentence, summary, note, table, flow-chart
-  DIAGRAM_LABELING
+  MULTIPLE_CHOICE
+  IDENTIFYING_INFORMATION // True/False/Not Given, Yes/No/Not Given
+  MATCHING // Matching headings, features, sentence endings
+  COMPLETION // Sentence, summary, note, table, flow-chart completion
   SHORT_ANSWER
-
-  // Writing
-  WRITING
 }
 
 // ============================================================================

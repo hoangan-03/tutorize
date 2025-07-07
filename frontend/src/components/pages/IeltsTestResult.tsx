@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ieltsService,
   IeltsSubmissionResult,
@@ -77,6 +77,22 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
     fetchSubmission();
   }, [submissionId]);
 
+  const questionNumberOffsets = useMemo(() => {
+    if (!submission?.test) return [];
+    const offsets = [0];
+    let total = 0;
+    for (let i = 0; i < submission.test.sections.length - 1; i++) {
+      const section = submission.test.sections[i];
+      let sectionQuestions = 0;
+      (section.questions || []).forEach((q) => {
+        sectionQuestions += Math.max(1, (q.subQuestions || []).length);
+      });
+      total += sectionQuestions;
+      offsets.push(total);
+    }
+    return offsets;
+  }, [submission?.test]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -114,6 +130,77 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
     );
   }
 
+  const renderQuestionResult = (
+    questionGroup: IeltsSubmissionResult["test"]["sections"][0]["questions"][0],
+    questionNumberOffset: number
+  ) => {
+    const hasSubQuestions = (questionGroup.subQuestions || []).length > 0;
+    const userAnswers = JSON.parse(questionGroup.userAnswer || "{}");
+
+    return (
+      <div className="border border-gray-200 p-4 rounded-md">
+        <p
+          className="font-semibold text-gray-800 text-start"
+          dangerouslySetInnerHTML={{ __html: questionGroup.question }}
+        />
+        <div className="mt-4 space-y-3">
+          {(questionGroup.subQuestions || [questionGroup.question]).map(
+            (subQ: string, index: number) => {
+              const fullQuestionNumber = questionNumberOffset + index + 1;
+              const userAnswer = hasSubQuestions
+                ? userAnswers[index] || "Chưa trả lời"
+                : questionGroup.userAnswer || "Chưa trả lời";
+              const correctAnswer = (questionGroup.correctAnswers || [])[index];
+              const isCorrect = userAnswer === correctAnswer;
+
+              return (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    {isCorrect ? (
+                      <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircleIcon className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                  <div className="flex-grow text-sm text-start">
+                    <p className="font-semibold text-gray-700">
+                      Câu {fullQuestionNumber}:{" "}
+                      {hasSubQuestions && (
+                        <span dangerouslySetInnerHTML={{ __html: subQ }} />
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <strong className="text-gray-600 w-28 text-right">
+                        Bạn trả lời:
+                      </strong>
+                      <span
+                        className={`font-medium ${
+                          isCorrect ? "text-green-700" : "text-red-700"
+                        }`}
+                      >
+                        {userAnswer}
+                      </span>
+                    </div>
+                    {!isCorrect && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <strong className="text-gray-600 w-28 text-right">
+                          Đáp án đúng:
+                        </strong>
+                        <span className="font-medium text-blue-700">
+                          {correctAnswer}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const { test } = submission;
 
   return (
@@ -142,13 +229,13 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
             </button>
           </div>
           <div className="mt-6 flex flex-row gap-4 text-center">
-            <div className="bg-blue-100 p-4 rounded-lg">
+            <div className="bg-blue-100 p-4 rounded-lg flex-shrink-0">
               <p className="text-sm font-medium text-blue-800">Band Score</p>
               <p className="mt-1 text-3xl font-bold text-blue-900">
                 {submission.score.toFixed(1)}
               </p>
             </div>
-            <div className="bg-green-100 p-4 rounded-lg text-start">
+            <div className="bg-green-100 p-4 rounded-lg text-start flex-grow">
               <p className="text-sm font-medium text-green-800">Feedback</p>
               <p className="mt-1 text-md text-green-900">
                 {submission.feedback}
@@ -189,28 +276,24 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
               )}
 
               <div className="space-y-6">
-                {section.questions.map((question, questionIndex) => (
-                  <div
-                    key={question.id}
-                    className="border border-gray-200 p-4 rounded-md"
-                  >
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        {question.isCorrect ? (
-                          <CheckCircleIcon className="h-6 w-6 text-green-500" />
-                        ) : (
-                          <XCircleIcon className="h-6 w-6 text-red-500" />
-                        )}
-                      </div>
-                      <div className="ml-3 text-start">
-                        <p className="font-semibold text-gray-800">
-                          Câu {questionIndex + 1}: {question.question}
-                        </p>
-                        {getAnswerDisplay(question)}
-                      </div>
+                {section.questions.map((question, groupIndex) => {
+                  const offsetWithinSection = (section.questions || [])
+                    .slice(0, groupIndex)
+                    .reduce(
+                      (acc, prevQ) =>
+                        acc + Math.max(1, (prevQ.subQuestions || []).length),
+                      0
+                    );
+
+                  const finalOffset =
+                    (questionNumberOffsets[sectionIndex] || 0) +
+                    offsetWithinSection;
+                  return (
+                    <div key={question.id}>
+                      {renderQuestionResult(question, finalOffset)}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}

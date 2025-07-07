@@ -1,7 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FileText,
   Clock,
@@ -25,8 +26,10 @@ import { QuizManagement } from "./QuizManagement";
 
 // Student Quiz Component
 const StudentQuizView: React.FC = () => {
-  const { isTeacher } = useAuth();
+  const { user, isTeacher } = useAuth();
   const { t } = useTranslation();
+  const { quizId } = useParams<{ quizId: string }>();
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<
     "list" | "quiz" | "result" | "teacher-view"
   >("list");
@@ -50,86 +53,66 @@ const StudentQuizView: React.FC = () => {
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0); // seconds remaining
 
+  const storageKey = useMemo(() => {
+    if (!user || !quizId) return null;
+    return `quiz-attempt-${user.id}-${quizId}`;
+  }, [user, quizId]);
+
+  // Load state from localStorage
   useEffect(() => {
-    loadQuizzes();
-    if (!isTeacher) {
-      loadStudentStats();
-    }
-  }, [isTeacher]);
-
-  // Countdown timer effect
-  useEffect(() => {
-    if (currentView === "quiz" && timeLeft > 0) {
-      const timer = setTimeout(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            // Time's up! Auto submit
-            finishQuiz();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [currentView, timeLeft]);
-
-  // Handle page unload/refresh during quiz
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (currentView === "quiz" && currentQuiz && !isTeacher) {
-        event.preventDefault();
-
-        // Submit quiz with 0 score for exiting
-        submitExitQuiz();
-
-        // Show warning message
-        event.returnValue =
-          "Bạn đang làm bài quiz. Nếu thoát, bài làm sẽ được nộp với điểm 0.";
-        return "Bạn đang làm bài quiz. Nếu thoát, bài làm sẽ được nộp với điểm 0.";
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const state = JSON.parse(saved);
+        setSelectedAnswers(state.answers);
+        setTimeLeft(state.timeLeft);
       }
-    };
-
-    const handlePopState = () => {
-      if (currentView === "quiz" && currentQuiz && !isTeacher) {
-        // Submit quiz with 0 score for back navigation
-        submitExitQuiz();
-      }
-    };
-
-    if (currentView === "quiz" && currentQuiz && !isTeacher) {
-      window.addEventListener("beforeunload", handleBeforeUnload);
-      window.addEventListener("popstate", handlePopState);
     }
+  }, [storageKey]);
 
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [currentView, currentQuiz, isTeacher]);
+  // Persist state to localStorage
+  useEffect(() => {
+    if (storageKey && currentView === "quiz") {
+      const stateToSave = { answers: selectedAnswers, timeLeft };
+      localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    }
+  }, [selectedAnswers, timeLeft, storageKey, currentView]);
 
-  const submitExitQuiz = async () => {
-    if (!currentQuiz || !currentQuiz.questions || isTeacher) return;
+  useEffect(() => {
+    // If there is a quizId in the URL, start the quiz directly
+    if (quizId && !currentQuiz) {
+      beginQuizAttempt(Number(quizId));
+    } else if (!quizId) {
+      // Otherwise, load the list of quizzes
+      loadQuizzes();
+      if (!isTeacher) {
+        loadStudentStats();
+      }
+    }
+  }, [quizId, isTeacher]);
 
-    try {
-      // Create empty answers for all questions (resulting in 0 score)
-      const emptyAnswers = currentQuiz.questions.map((question: any) => ({
-        questionId: question.id,
-        userAnswer: "", // Empty answer
-        timeTaken: 0,
-      }));
+  const clearAttemptAndNavigate = useCallback(() => {
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+    navigate("/quizzes");
+  }, [storageKey, navigate]);
 
-      const submitData = {
-        answers: emptyAnswers,
-        timeSpent: Math.floor((Date.now() - quizStartTime) / 1000),
-      };
-
-      await quizService.submitQuiz(currentQuiz.id, submitData);
-    } catch (error) {
-      console.error("Error submitting exit quiz:", error);
+  // Updated to handle submission for unload
+  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    if (currentView === "quiz" && quizId) {
+      event.preventDefault();
+      // This will trigger the submission
+      finishQuiz(true);
     }
   };
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [currentView, quizId]);
 
   const loadQuizzes = async () => {
     try {
@@ -189,26 +172,22 @@ const StudentQuizView: React.FC = () => {
   const handleExitQuiz = async () => {
     if (currentView === "quiz" && currentQuiz && !isTeacher) {
       const confirmExit = window.confirm(
-        "Bạn có chắc muốn thoát? Bài làm sẽ được nộp với điểm 0."
+        "Bạn có chắc muốn thoát? Bài làm sẽ được tự động nộp với kết quả hiện tại."
       );
 
       if (confirmExit) {
-        await submitExitQuiz();
-        // Reload stats after exit submission
-        if (!isTeacher) {
-          loadStudentStats();
-        }
-        resetQuiz();
+        await finishQuiz(true); // Auto-submit on exit
+        clearAttemptAndNavigate(); // Clear state and navigate away
       }
     } else {
-      resetQuiz();
+      // For other views or for teachers, just go back
+      clearAttemptAndNavigate();
     }
   };
 
-  const beginQuizAttempt = async (quiz: Quiz) => {
+  const beginQuizAttempt = async (id: number) => {
     try {
-      // Luôn lấy chi tiết quiz mới nhất với các câu hỏi cho một lượt làm bài mới
-      const detailedQuiz = await quizService.getQuiz(quiz.id);
+      const detailedQuiz = await quizService.getQuiz(id);
 
       if (!detailedQuiz.questions || detailedQuiz.questions.length === 0) {
         alert("Quiz này hiện không có câu hỏi nào để làm.");
@@ -246,7 +225,7 @@ const StudentQuizView: React.FC = () => {
         submissionHistory.submissions &&
         submissionHistory.submissions.length > 0
       ) {
-        // Người dùng đã làm bài này trước đó, hiển thị view lịch sử
+        // User has taken this quiz, show history view
         setCurrentQuiz(submissionHistory.quiz);
         setQuizResults({
           ...submissionHistory,
@@ -254,8 +233,8 @@ const StudentQuizView: React.FC = () => {
         });
         setCurrentView("result");
       } else {
-        // Đây là lần làm bài đầu tiên
-        await beginQuizAttempt(quiz);
+        // This is the first attempt, navigate to the player
+        navigate(`/quiz/${quiz.id}/play`);
       }
     } catch (error) {
       console.error("Lỗi khi tải chi tiết quiz:", error);
@@ -1032,7 +1011,7 @@ const StudentQuizView: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   {quizResults.currentAttempt > 0 ? (
                     <button
-                      onClick={() => beginQuizAttempt(currentQuiz!)}
+                      onClick={() => beginQuizAttempt(Number(quizId))}
                       className="inline-flex items-center gap-2 px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                       <RotateCw className="h-4 w-4" />
@@ -1131,7 +1110,7 @@ const StudentQuizView: React.FC = () => {
                 {t("quizzes.backToList")}
               </button>
               <button
-                onClick={() => beginQuizAttempt(currentQuiz!)}
+                onClick={() => beginQuizAttempt(Number(quizId))}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 {t("quizzes.retake")}

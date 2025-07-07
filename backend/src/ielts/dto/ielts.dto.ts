@@ -115,6 +115,11 @@ export class CreateIeltsSectionDto {
   @IsString()
   audioUrl?: string;
 
+  @ApiPropertyOptional({ description: 'URL hình ảnh (cho Diagram Labeling)' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
   @ApiPropertyOptional({
     description: 'Các câu hỏi trong phần',
     type: () => [CreateIeltsQuestionDto],
@@ -152,6 +157,11 @@ export class UpdateIeltsSectionDto {
   @IsOptional()
   @IsString()
   audioUrl?: string;
+
+  @ApiPropertyOptional({ description: 'URL hình ảnh (cho Diagram Labeling)' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 export class CreateIeltsQuestionDto {
@@ -163,6 +173,15 @@ export class CreateIeltsQuestionDto {
   @ApiProperty({ enum: IeltsQuestionType, description: 'Loại câu hỏi' })
   @IsEnum(IeltsQuestionType)
   type: IeltsQuestionType;
+
+  @ApiPropertyOptional({
+    description: 'Các câu hỏi phụ (cho Matching)',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  subQuestions?: string[];
 
   @ApiPropertyOptional({
     description: 'Các lựa chọn (cho multiple choice)',
@@ -211,6 +230,15 @@ export class UpdateIeltsQuestionDto {
   @IsOptional()
   @IsEnum(IeltsQuestionType)
   type?: IeltsQuestionType;
+
+  @ApiPropertyOptional({
+    description: 'Các câu hỏi phụ (cho Matching)',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  subQuestions?: string[];
 
   @ApiPropertyOptional({
     description: 'Các lựa chọn (cho multiple choice)',

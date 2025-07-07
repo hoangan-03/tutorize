@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { IeltsSection } from "../../services/ieltsService";
+import type { IeltsSection } from "../../services/ieltsService";
+import { X } from "lucide-react";
 
 interface IeltsSectionModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
   const [sectionData, setSectionData] = useState<Partial<IeltsSection>>({});
 
   useEffect(() => {
-    setSectionData(section || {});
+    setSectionData(section || { title: "", order: 1 });
   }, [section]);
 
   if (!isOpen) return null;
@@ -39,108 +40,146 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
     onSave(sectionData);
   };
 
+  const inputClass =
+    "mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm";
+  const textareaClass = `${inputClass} min-h-[100px]`;
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-8 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">
-          {section?.id ? "Chỉnh sửa phần thi" : "Thêm phần thi mới"}
-        </h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Tiêu đề
-            </label>
-            <input
-              type="text"
-              name="title"
-              id="title"
-              value={sectionData.title || ""}
-              onChange={handleInputChange}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Hướng dẫn
-            </label>
-            <textarea
-              name="description"
-              id="description"
-              value={sectionData.description || ""}
-              onChange={handleInputChange}
-              rows={3}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="order"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Thứ tự
-            </label>
-            <input
-              type="number"
-              name="order"
-              id="order"
-              value={sectionData.order || 0}
-              onChange={handleNumericInputChange}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="content"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Nội dung / Đoạn văn (Reading)
-            </label>
-            <textarea
-              name="content"
-              id="content"
-              value={sectionData.content || ""}
-              onChange={handleInputChange}
-              rows={8}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="audioUrl"
-              className="block text-sm font-medium text-gray-700"
-            >
-              URL Audio (Listening)
-            </label>
-            <input
-              type="text"
-              name="audioUrl"
-              id="audioUrl"
-              value={sectionData.audioUrl || ""}
-              onChange={handleInputChange}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div className="pt-4 flex justify-end space-x-3">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex justify-center items-center z-50 transition-opacity duration-300">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all duration-300 scale-95 animate-in-zoom">
+        <form onSubmit={handleSubmit}>
+          {/* Header */}
+          <div className="flex justify-between items-center p-5 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">
+              {sectionData.id ? "Chỉnh sửa Phần thi" : "Tạo Phần thi mới"}
+            </h2>
             <button
               type="button"
               onClick={onClose}
-              className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              aria-label="Đóng"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div>
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Tiêu đề
+              </label>
+              <input
+                type="text"
+                name="title"
+                id="title"
+                value={sectionData.title || ""}
+                onChange={handleInputChange}
+                className={inputClass}
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="instructions"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Hướng dẫn
+              </label>
+              <textarea
+                name="instructions"
+                id="instructions"
+                value={sectionData.description || ""}
+                onChange={handleInputChange}
+                rows={3}
+                className={textareaClass}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="order"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Thứ tự
+              </label>
+              <input
+                type="number"
+                name="order"
+                id="order"
+                value={sectionData.order || 0}
+                onChange={handleNumericInputChange}
+                className={inputClass}
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="passageText"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Nội dung / Đoạn văn (Reading)
+              </label>
+              <textarea
+                name="passageText"
+                id="passageText"
+                value={sectionData.passageText || ""}
+                onChange={handleInputChange}
+                rows={6}
+                className={textareaClass}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="audioUrl"
+                className="block text-sm font-medium text-gray-700"
+              >
+                URL Audio (Listening)
+              </label>
+              <input
+                type="text"
+                name="audioUrl"
+                id="audioUrl"
+                value={sectionData.audioUrl || ""}
+                onChange={handleInputChange}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="imageUrl"
+                className="block text-sm font-medium text-gray-700"
+              >
+                URL Hình ảnh (Diagram)
+              </label>
+              <input
+                type="text"
+                name="imageUrl"
+                id="imageUrl"
+                value={sectionData.imageUrl || ""}
+                onChange={handleInputChange}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end items-center p-5 bg-gray-50 border-t border-gray-200 rounded-b-xl space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 shadow-sm"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm"
             >
-              Lưu
+              Lưu thay đổi
             </button>
           </div>
         </form>

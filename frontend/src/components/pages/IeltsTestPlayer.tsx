@@ -1,63 +1,49 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import {
   ieltsService,
   IeltsTest,
   IeltsQuestion,
-  IeltsQuestionType,
 } from "../../services/ieltsService";
 
-interface IeltsTestPlayerProps {
-  testId: number;
-  onBack: () => void;
-}
+// Store complex answers as a JSON string for simplicity
+export type Answer = string;
+export type AnswerState = Record<number, Answer>;
 
-const renderQuestionInput = (
-  question: IeltsQuestion,
-  userAnswer: string | undefined,
-  handleAnswerChange: (questionId: number, answer: string) => void
-) => {
-  const isMultipleCorrect = (question.correctAnswers || []).length > 1;
+const QuestionRenderer: React.FC<{
+  question: IeltsQuestion;
+  userAnswer: Answer | undefined;
+  handleAnswerChange: (questionId: number, answer: Answer) => void;
+  questionNumberOffset: number;
+}> = ({ question, userAnswer, handleAnswerChange, questionNumberOffset }) => {
+  const userAnswersForGroup = useMemo(() => {
+    try {
+      return userAnswer ? JSON.parse(userAnswer) : {};
+    } catch {
+      return {}; // Handle cases where answer is not a valid JSON
+    }
+  }, [userAnswer]);
+
+  const hasSubQuestions = (question.subQuestions || []).length > 0;
 
   switch (question.type) {
-    case "MULTIPLE_CHOICE":
+    case "MULTIPLE_CHOICE": {
+      // This type does not have sub-questions, it's a single question
       return (
         <div className="space-y-2 mt-2">
+          <p className="font-semibold text-gray-800 text-start">
+            <span className="font-bold">Câu {questionNumberOffset + 1}:</span>{" "}
+            <span dangerouslySetInnerHTML={{ __html: question.question }} />
+          </p>
           {(question.options || []).map((option, index) => (
-            <div key={index} className="flex items-center">
+            <div key={index} className="flex items-center ml-4">
               <input
                 id={`q${question.id}-option${index}`}
                 name={`q${question.id}`}
-                type={isMultipleCorrect ? "checkbox" : "radio"}
+                type={"radio"}
                 value={option}
-                onChange={(e) =>
-                  handleAnswerChange(question.id, e.target.value)
-                }
-                className={
-                  isMultipleCorrect
-                    ? "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    : "h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                }
-              />
-              <label
-                htmlFor={`q${question.id}-option${index}`}
-                className="ml-3 block text-sm font-medium text-gray-700"
-              >
-                {option}
-              </label>
-            </div>
-          ))}
-        </div>
-      );
-    case "IDENTIFYING_INFORMATION":
-      return (
-        <div className="space-y-2 mt-2">
-          {["True", "False", "Not Given"].map((option, index) => (
-            <div key={index} className="flex items-center">
-              <input
-                id={`q${question.id}-option${index}`}
-                name={`q${question.id}`}
-                type="radio"
-                value={option}
+                checked={userAnswer === option}
                 onChange={(e) =>
                   handleAnswerChange(question.id, e.target.value)
                 }
@@ -73,71 +59,266 @@ const renderQuestionInput = (
           ))}
         </div>
       );
-    case "COMPLETION":
+    }
+    case "IDENTIFYING_INFORMATION":
     case "SHORT_ANSWER":
+    case "COMPLETION": {
+      if (!hasSubQuestions) {
+        // Fallback for single questions of these types
+        return (
+          <div>
+            <p className="font-semibold text-gray-800 text-start">
+              <span className="font-bold">Câu {questionNumberOffset + 1}:</span>{" "}
+              <span dangerouslySetInnerHTML={{ __html: question.question }} />
+            </p>
+            <input
+              type="text"
+              value={userAnswer || ""}
+              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+              placeholder="Nhập câu trả lời..."
+              className="mt-2 block w-full max-w-lg rounded-lg border-gray-200 bg-gray-50 px-4 py-2 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+        );
+      }
+
+      const choices =
+        question.type === "IDENTIFYING_INFORMATION"
+          ? question.options && question.options.length > 0
+            ? question.options
+            : ["True", "False", "Not Given"]
+          : [];
+
+      return (
+        <div className="space-y-4">
+          <p
+            className="font-semibold text-gray-800"
+            dangerouslySetInnerHTML={{ __html: question.question }}
+          />
+          {(question.subQuestions || []).map((subQ, index) => {
+            const fullQuestionNumber = questionNumberOffset + index + 1;
+            const answerKey = String(index);
+            const currentAnswer = userAnswersForGroup[answerKey] || "";
+
+            const onAnswer = (value: string) => {
+              const newAnswers = { ...userAnswersForGroup, [answerKey]: value };
+              handleAnswerChange(question.id, JSON.stringify(newAnswers));
+            };
+
+            return (
+              <div key={index} className="flex items-start gap-4">
+                <label
+                  htmlFor={`q${question.id}-sub${index}`}
+                  className="flex-shrink-0 w-max font-semibold text-gray-800 mt-1"
+                >
+                  Câu {fullQuestionNumber}:
+                </label>
+                <div className="flex-grow">
+                  <p
+                    className="text-gray-700"
+                    dangerouslySetInnerHTML={{ __html: subQ }}
+                  />
+                  {question.type === "IDENTIFYING_INFORMATION" ? (
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+                      {choices.map((option, optIndex) => (
+                        <div key={optIndex} className="flex items-center">
+                          <input
+                            id={`q${question.id}-sub${index}-opt${optIndex}`}
+                            name={`q${question.id}-sub${index}`}
+                            type="radio"
+                            value={option}
+                            checked={currentAnswer === option}
+                            onChange={(e) => onAnswer(e.target.value)}
+                            className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <label
+                            htmlFor={`q${question.id}-sub${index}-opt${optIndex}`}
+                            className="ml-2 block text-sm font-medium text-gray-700"
+                          >
+                            {option}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <input
+                      id={`q${question.id}-sub${index}`}
+                      type="text"
+                      value={currentAnswer}
+                      onChange={(e) => onAnswer(e.target.value)}
+                      placeholder="Nhập câu trả lời..."
+                      className="mt-1 block w-full max-w-lg rounded-lg border-gray-200 bg-gray-50 px-4 py-2 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm"
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    case "MATCHING": {
+      if (!hasSubQuestions) return null;
+      const options = question.options || [];
+
+      return (
+        <div className="space-y-4">
+          <p
+            className="font-semibold text-gray-800"
+            dangerouslySetInnerHTML={{ __html: question.question }}
+          />
+          {/* Options List */}
+          {options.length > 0 && (
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
+                {options.map((opt, optIndex) => (
+                  <li key={optIndex} className="text-sm text-gray-700">
+                    {opt}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {/* SubQuestions with Selectors */}
+          <div className="space-y-3">
+            {(question.subQuestions || []).map((subQ, index) => {
+              const fullQuestionNumber = questionNumberOffset + index + 1;
+              const answerKey = String(index);
+              const currentAnswer = userAnswersForGroup[answerKey] || "";
+
+              const handleMatchingChange = (value: string) => {
+                const newAnswers = {
+                  ...userAnswersForGroup,
+                  [answerKey]: value,
+                };
+                handleAnswerChange(question.id, JSON.stringify(newAnswers));
+              };
+
+              return (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-3 items-center gap-4"
+                >
+                  <label
+                    htmlFor={`q${question.id}-sub${index}`}
+                    className="md:col-span-2 text-sm text-gray-800"
+                  >
+                    <span className="font-semibold">
+                      Câu {fullQuestionNumber}:
+                    </span>{" "}
+                    <span dangerouslySetInnerHTML={{ __html: subQ }} />
+                  </label>
+                  <select
+                    id={`q${question.id}-sub${index}`}
+                    value={currentAnswer}
+                    onChange={(e) => handleMatchingChange(e.target.value)}
+                    className="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  >
+                    <option value="">Chọn...</option>
+                    {options.map((opt, optIndex) => (
+                      <option key={optIndex} value={opt}>
+                        {opt.split(":")[0]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
     default:
       return (
-        <input
-          type="text"
-          value={userAnswer || ""}
-          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-          placeholder="Nhập câu trả lời..."
-          className="mt-2 block w-full max-w-lg rounded-lg border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
+        <div>
+          <p className="font-semibold text-red-500">
+            Loại câu hỏi không được hỗ trợ.
+          </p>
+        </div>
       );
   }
 };
 
-export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
-  testId,
-  onBack,
-}) => {
+export const IeltsTestPlayer: React.FC = () => {
+  const { testId } = useParams<{ testId: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [test, setTest] = useState<IeltsTest | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  // Key for localStorage
+  const storageKey = useMemo(
+    () => `ielts-attempt-${user?.id}-${testId}`,
+    [user?.id, testId]
+  );
+
+  // State initialization from localStorage
+  const [answers, setAnswers] = useState<AnswerState>(() => {
+    const savedState = localStorage.getItem(storageKey);
+    return savedState ? JSON.parse(savedState).answers : {};
+  });
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    const savedState = localStorage.getItem(storageKey);
+    return savedState ? JSON.parse(savedState).timeLeft : 0;
+  });
+
+  // Persist state to localStorage on change
+  useEffect(() => {
+    if (test) {
+      // Only save if the test has loaded
+      const stateToSave = { answers, timeLeft };
+      localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    }
+  }, [answers, timeLeft, storageKey, test]);
+
+  // Clean up localStorage on unload (navigate away, close tab, etc.)
+  useBeforeUnload(
+    useCallback(() => {
+      localStorage.removeItem(storageKey);
+    }, [storageKey])
+  );
 
   const fetchTest = useCallback(async () => {
+    if (!testId) return;
     try {
       setLoading(true);
-      const testData = await ieltsService.getTest(testId);
+      const testData = await ieltsService.getTest(Number(testId));
       setTest(testData);
-      setTimeLeft(testData.timeLimit * 60);
+      const savedState = localStorage.getItem(storageKey);
+      if (savedState) {
+        setTimeLeft(JSON.parse(savedState).timeLeft);
+      } else {
+        setTimeLeft(testData.timeLimit * 60);
+      }
     } catch (err) {
       setError("Không thể tải bài test. Vui lòng thử lại.");
-      console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [testId]);
+  }, [testId, storageKey]);
 
   useEffect(() => {
     fetchTest();
   }, [fetchTest]);
 
-  useEffect(() => {
-    if (timeLeft <= 0 || !test) return;
+  const clearAttemptAndNavigate = useCallback(() => {
+    localStorage.removeItem(storageKey);
+    navigate("/ielts");
+  }, [storageKey, navigate]);
 
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => prevTime - 1);
-    }, 1000);
+  const handleSubmit = useCallback(
+    (isAutoSubmit = false) => {
+      if (
+        !isAutoSubmit &&
+        !window.confirm(
+          "Bạn có chắc chắn muốn nộp bài không? Bạn vẫn có thể làm lại sau."
+        )
+      ) {
+        return;
+      }
 
-    return () => clearInterval(timer);
-  }, [timeLeft, test]);
-
-  const handleAnswerChange = (questionId: number, answer: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: answer,
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (window.confirm("Bạn có chắc chắn muốn nộp bài không?")) {
-      setSubmitting(true);
       try {
         const submissionData = Object.entries(answers).map(
           ([questionId, answer]) => ({
@@ -145,18 +326,57 @@ export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
             answer,
           })
         );
-        await ieltsService.submitTest(testId, submissionData);
-        // TODO: Redirect to result page
+        ieltsService.submitTest(Number(testId), submissionData);
         alert("Nộp bài thành công!");
-        onBack();
+        clearAttemptAndNavigate();
       } catch (err) {
         setError("Có lỗi xảy ra khi nộp bài.");
-        console.error(err);
-      } finally {
-        setSubmitting(false);
+        // console.error(err);
+      }
+    },
+    [answers, testId, clearAttemptAndNavigate]
+  );
+
+  const handleExit = () => {
+    if (window.confirm("Bạn có chắc chắn muốn thoát? Tiến trình sẽ bị hủy.")) {
+      clearAttemptAndNavigate();
+      if (timeLeft === 1) {
+        // Auto-submit when time is up
+        handleSubmit(true);
       }
     }
   };
+
+  const questionNumberOffsets = useMemo(() => {
+    if (!test) return [];
+    const offsets = [0];
+    let total = 0;
+    for (let i = 0; i < test.sections.length - 1; i++) {
+      const section = test.sections[i];
+      let sectionQuestions = 0;
+      (section.questions || []).forEach((q) => {
+        sectionQuestions += Math.max(1, (q.subQuestions || []).length);
+      });
+      total += sectionQuestions;
+      offsets.push(total);
+    }
+    return offsets;
+  }, [test]);
+
+  const currentSection = useMemo(() => {
+    if (!test || !test.sections) return null;
+    return test.sections[currentSectionIndex];
+  }, [test, currentSectionIndex]);
+
+  const handleAnswerChange = useCallback(
+    (questionId: number, answer: Answer) => {
+      setAnswers((prev) => ({
+        ...prev,
+        [questionId]: answer,
+      }));
+    },
+    []
+  );
 
   if (loading) {
     return <div className="p-8 text-center">Đang tải bài thi...</div>;
@@ -166,7 +386,7 @@ export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
     return <div className="p-8 text-center text-red-600">{error}</div>;
   }
 
-  if (!test || !test.sections || test.sections.length === 0) {
+  if (!test || !currentSection) {
     return (
       <div className="p-8 text-center">
         Không tìm thấy bài thi hoặc bài thi không có nội dung.
@@ -174,7 +394,6 @@ export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
     );
   }
 
-  const currentSection = test.sections[currentSectionIndex];
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -187,24 +406,33 @@ export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="bg-white shadow-md rounded-lg p-4 mb-6 sticky top-0 z-10 flex justify-between items-center">
-        <div>
+        <div className="text-start">
           <h1 className="text-2xl font-bold text-gray-900">{test.title}</h1>
           <p className="mt-1 text-sm text-gray-600">
             Phần {currentSectionIndex + 1} / {test.sections.length}:{" "}
             {currentSection.title}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Thời gian còn lại</p>
-          <p className="text-2xl font-bold text-indigo-600">
-            {formatTime(timeLeft)}
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Thời gian còn lại</p>
+            <p className="text-2xl font-bold text-indigo-600">
+              {formatTime(timeLeft)}
+            </p>
+          </div>
+          <button
+            onClick={handleExit}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm"
+            aria-label="Thoát bài thi"
+          >
+            Thoát
+          </button>
         </div>
       </div>
 
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left side: Passage/Audio */}
+        {/* Left side: Passage/Audio/Image */}
         <div className="bg-white p-6 rounded-lg shadow-sm h-full max-h-[70vh] overflow-y-auto">
           <h2 className="text-lg font-semibold mb-4">{currentSection.title}</h2>
           {currentSection.audioUrl && (
@@ -214,8 +442,17 @@ export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
               </audio>
             </div>
           )}
+          {currentSection.imageUrl && (
+            <div className="mb-4 p-2 border rounded-md">
+              <img
+                src={currentSection.imageUrl}
+                alt="Illustration for the section"
+                className="w-full h-auto rounded-md"
+              />
+            </div>
+          )}
           <div
-            className="prose max-w-none"
+            className="prose max-w-none text-start"
             dangerouslySetInnerHTML={{
               __html: currentSection.passageText || "",
             }}
@@ -225,15 +462,34 @@ export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
         {/* Right side: Questions */}
         <div className="bg-white p-6 rounded-lg shadow-sm h-full max-h-[70vh] overflow-y-auto">
           <h2 className="text-lg font-semibold mb-4">Câu hỏi</h2>
-          <div className="space-y-6">
-            {(currentSection.questions || []).map((q) => (
-              <div key={q.id}>
-                <p className="font-semibold text-gray-800">
-                  Câu {q.order}: {q.question}
-                </p>
-                {renderQuestionInput(q, answers[q.id], handleAnswerChange)}
-              </div>
-            ))}
+          <div className="space-y-8">
+            {(currentSection.questions || []).map((q, groupIndex) => {
+              const offsetWithinSection = (currentSection.questions || [])
+                .slice(0, groupIndex)
+                .reduce(
+                  (acc, prevQ) =>
+                    acc + Math.max(1, (prevQ.subQuestions || []).length),
+                  0
+                );
+
+              const finalOffset =
+                (questionNumberOffsets[currentSectionIndex] || 0) +
+                offsetWithinSection;
+
+              return (
+                <div
+                  key={q.id}
+                  className="p-4 border-l-4 border-gray-100 rounded-r-lg"
+                >
+                  <QuestionRenderer
+                    question={q}
+                    userAnswer={answers[q.id]}
+                    handleAnswerChange={handleAnswerChange}
+                    questionNumberOffset={finalOffset}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -263,11 +519,10 @@ export const IeltsTestPlayer: React.FC<IeltsTestPlayerProps> = ({
           </button>
         </div>
         <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          onClick={() => handleSubmit(false)}
+          className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-          {submitting ? "Đang nộp..." : "Nộp bài"}
+          Nộp bài
         </button>
       </div>
     </div>

@@ -149,8 +149,10 @@ export class IeltsService {
                 id: true,
                 question: true,
                 type: true,
+                subQuestions: true,
                 options: true,
                 order: true,
+                points: true,
                 // Don't include correct answers for students
               },
               orderBy: { order: 'asc' },

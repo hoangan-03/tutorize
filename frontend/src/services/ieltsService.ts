@@ -38,6 +38,7 @@ export interface IeltsSection {
   order: number;
   passageText?: string;
   audioUrl?: string;
+  imageUrl?: string;
   questions: IeltsQuestion[];
 }
 
@@ -46,6 +47,7 @@ export interface IeltsQuestion {
   question: string;
   isCorrect?: boolean;
   type: IeltsQuestionType;
+  subQuestions?: string[];
   options?: string[];
   correctAnswers?: string[];
   points: number;

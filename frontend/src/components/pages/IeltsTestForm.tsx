@@ -10,6 +10,7 @@ import type {
 import { IeltsSectionManager } from "./IeltsSectionManager";
 import { IeltsSectionModal } from "./IeltsSectionModal";
 import { IeltsQuestionModal } from "./IeltsQuestionModal";
+import { ArrowLeft } from "lucide-react";
 
 interface IeltsTestFormProps {
   onBack: () => void;
@@ -187,170 +188,210 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
     return <div>Đang tải...</div>;
   }
 
+  const inputClass =
+    "mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm";
+
   return (
     <>
       <div className="bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <form id="test-form" onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="md:flex md:items-center md:justify-between pb-6 border-b border-gray-200">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold leading-tight text-gray-900">
-                {testId ? "Chỉnh sửa bài test IELTS" : "Tạo bài test IELTS mới"}
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Điền các thông tin chi tiết cho bài test.
-              </p>
-            </div>
-            <div className="mt-4 flex md:mt-0 md:ml-4">
-              <button
-                type="button"
-                onClick={onBack}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Quay lại
-              </button>
-              <button
-                type="submit"
-                form="test-form"
-                disabled={loading}
-                className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {loading ? "Đang lưu..." : testId ? "Cập nhật" : "Lưu bài test"}
-              </button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mt-4 rounded-md bg-red-50 p-4">
-              <p className="text-sm font-medium text-red-800">{error}</p>
-            </div>
-          )}
-
-          {/* Form Content */}
-          <div className="mt-8">
-            <form id="test-form" onSubmit={handleSubmit} className="space-y-8">
-              {/* Test Details Card */}
-              <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">
-                    Thông tin chung
-                  </h3>
-                  <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="title"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Tiêu đề
-                      </label>
-                      <input
-                        type="text"
-                        name="title"
-                        id="title"
-                        value={test.title || ""}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                        required
-                      />
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="description"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Mô tả
-                      </label>
-                      <textarea
-                        name="description"
-                        id="description"
-                        rows={3}
-                        value={test.description || ""}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label
-                        htmlFor="skill"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Kỹ năng
-                      </label>
-                      <select
-                        id="skill"
-                        name="skill"
-                        value={test.skill || "READING"}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                      >
-                        <option value="READING">Reading</option>
-                        <option value="LISTENING">Listening</option>
-                        <option value="WRITING">Writing</option>
-                        <option value="SPEAKING">Speaking</option>
-                      </select>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label
-                        htmlFor="level"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Cấp độ
-                      </label>
-                      <select
-                        id="level"
-                        name="level"
-                        value={test.level || "INTERMEDIATE"}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                      >
-                        <option value="BEGINNER">Beginner</option>
-                        <option value="INTERMEDIATE">Intermediate</option>
-                        <option value="ADVANCED">Advanced</option>
-                      </select>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label
-                        htmlFor="timeLimit"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Thời gian (phút)
-                      </label>
-                      <input
-                        type="number"
-                        name="timeLimit"
-                        id="timeLimit"
-                        value={test.timeLimit || 60}
-                        onChange={handleNumericInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                      />
-                    </div>
+          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-20">
+                <div className="flex items-center space-x-4">
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+                    aria-label="Quay lại"
+                  >
+                    <ArrowLeft className="h-5 w-5 text-gray-600" />
+                  </button>
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900">
+                      {testId
+                        ? "Chỉnh sửa bài test IELTS"
+                        : "Tạo bài test IELTS mới"}
+                    </h1>
                   </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    form="test-form"
+                    disabled={loading}
+                    className="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {loading ? "Đang lưu..." : "Lưu thay đổi"}
+                  </button>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Sections Manager */}
-              {testId && (
-                <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+          <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            {error && (
+              <div className="mb-6 rounded-md bg-red-50 p-4">
+                <p className="text-sm font-medium text-red-800">{error}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              {/* Left Column */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* Test Details Card */}
+                <div className="bg-white shadow-lg border border-gray-100 rounded-xl">
                   <div className="px-4 py-5 sm:p-6">
-                    <IeltsSectionManager
-                      sections={test.sections || []}
-                      onAddSection={handleAddSection}
-                      onEditSection={handleEditSection}
-                      onDeleteSection={handleDeleteSection}
-                      onAddQuestion={handleAddQuestion}
-                      onEditQuestion={handleEditQuestion}
-                      onDeleteQuestion={handleDeleteQuestion}
-                    />
+                    <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-6">
+                      Thông tin chung
+                    </h3>
+                    <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                      <div className="sm:col-span-6">
+                        <label
+                          htmlFor="title"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Tiêu đề
+                        </label>
+                        <input
+                          type="text"
+                          name="title"
+                          id="title"
+                          value={test.title || ""}
+                          onChange={handleInputChange}
+                          className={inputClass}
+                          required
+                        />
+                      </div>
+
+                      <div className="sm:col-span-6">
+                        <label
+                          htmlFor="description"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Mô tả
+                        </label>
+                        <textarea
+                          name="description"
+                          id="description"
+                          rows={4}
+                          value={test.description || ""}
+                          onChange={handleInputChange}
+                          className={inputClass}
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label
+                          htmlFor="skill"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Kỹ năng
+                        </label>
+                        <select
+                          id="skill"
+                          name="skill"
+                          value={test.skill || "READING"}
+                          onChange={handleInputChange}
+                          className={inputClass}
+                        >
+                          <option value="READING">Reading</option>
+                          <option value="LISTENING">Listening</option>
+                          <option value="WRITING">Writing</option>
+                          <option value="SPEAKING">Speaking</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label
+                          htmlFor="level"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Cấp độ
+                        </label>
+                        <select
+                          id="level"
+                          name="level"
+                          value={test.level || "INTERMEDIATE"}
+                          onChange={handleInputChange}
+                          className={inputClass}
+                        >
+                          <option value="BEGINNER">Beginner</option>
+                          <option value="INTERMEDIATE">Intermediate</option>
+                          <option value="ADVANCED">Advanced</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label
+                          htmlFor="timeLimit"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Thời gian (phút)
+                        </label>
+                        <input
+                          type="number"
+                          name="timeLimit"
+                          id="timeLimit"
+                          value={test.timeLimit || 60}
+                          onChange={handleNumericInputChange}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
-            </form>
+
+                {/* Sections Manager - only for edit mode */}
+                {testId && (
+                  <div className="bg-white shadow-lg border border-gray-100 rounded-xl">
+                    <div className="px-4 py-5 sm:p-6">
+                      <IeltsSectionManager
+                        sections={test.sections || []}
+                        onAddSection={handleAddSection}
+                        onEditSection={handleEditSection}
+                        onDeleteSection={handleDeleteSection}
+                        onAddQuestion={handleAddQuestion}
+                        onEditQuestion={handleEditQuestion}
+                        onDeleteQuestion={handleDeleteQuestion}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Instructions/Guide */}
+              <div className="lg:col-span-1 space-y-6">
+                <div className="bg-white shadow-lg border border-gray-100 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Hướng dẫn
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Điền đầy đủ thông tin cho bài test. Nếu là bài test mới, hãy
+                    lưu lại để có thể thêm các phần và câu hỏi.
+                  </p>
+                </div>
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-indigo-900 mb-3">
+                    Mẹo
+                  </h3>
+                  <p className="text-sm text-indigo-700">
+                    Sử dụng các loại câu hỏi đa dạng để bài test hấp dẫn hơn.
+                    Đừng quên đặt giới hạn thời gian hợp lý cho từng phần.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
 
       {isModalOpen && currentSection && (

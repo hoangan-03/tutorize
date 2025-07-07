@@ -31,6 +31,7 @@ import { OnlineQuizzes } from "./components/pages/OnlineQuizzes";
 import { WritingGrader } from "./components/pages/WritingGrader";
 import { ExerciseEditor } from "./components/pages/ExerciseEditor";
 import { QuizManagement } from "./components/pages/QuizManagement";
+import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
 
 // Custom component to redirect based on user role
 const RoleBasedRedirect = () => {
@@ -128,6 +129,17 @@ function AppContent() {
           }
         />
 
+        <Route
+          path="/quiz/:quizId/play"
+          element={
+            <ProtectedRoute>
+              <main>
+                <OnlineQuizzes />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
         {/* IELTS Routes */}
         <Route
           path="/ielts"
@@ -139,6 +151,17 @@ function AppContent() {
               />
               <main>
                 <IeltsCenter />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ielts-test/:testId/play"
+          element={
+            <ProtectedRoute>
+              <main>
+                <IeltsTestPlayer />
               </main>
             </ProtectedRoute>
           }
