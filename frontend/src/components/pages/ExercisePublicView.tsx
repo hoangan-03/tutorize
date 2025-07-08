@@ -99,13 +99,19 @@ export const ExercisePublicView: React.FC = () => {
             .replace(/style="[^"]*"/g, "")}>`;
         });
 
-      const exerciseTitle = (exercise.name || "Bài tập").toString();
-      const exerciseSubject = (exercise.subject || "Không xác định").toString();
-      const exerciseGrade = (exercise.grade || "Không xác định").toString();
+      const exerciseTitle = (
+        exercise.name || t("exercisePublicView.defaultTitle")
+      ).toString();
+      const exerciseSubject = (
+        exercise.subject || t("exercisePublicView.defaultSubject")
+      ).toString();
+      const exerciseGrade = (
+        exercise.grade || t("exercisePublicView.defaultGrade")
+      ).toString();
       const exerciseDeadline =
         exercise.deadline || exercise.createdAt || new Date().toISOString();
       const exerciseTeacher = (
-        exercise.creator?.name || "Không xác định"
+        exercise.creator?.name || t("exercisePublicView.defaultTeacher")
       ).toString();
       const exerciseNote = (exercise.note || "").toString();
 
@@ -117,25 +123,37 @@ export const ExercisePublicView: React.FC = () => {
            <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; background: #ffffff;">
              <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">${exerciseTitle}</h1>
              <div style="font-size: 14px; color: #6b7280; background: #ffffff;">
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Môn học:</strong> ${exerciseSubject}</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Lớp:</strong> ${exerciseGrade}</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Hạn nộp:</strong> ${new Date(
-                 exerciseDeadline
-               ).toLocaleDateString("vi-VN")}</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Giáo viên:</strong> ${exerciseTeacher}</p>
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
+                 "exercisePublicView.subject"
+               )}:</strong> ${exerciseSubject}</p>
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
+                 "exercisePublicView.grade"
+               )}:</strong> ${exerciseGrade}</p>
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
+                 "exercisePublicView.deadline"
+               )}:</strong> ${new Date(exerciseDeadline).toLocaleDateString(
+        "vi-VN"
+      )}</p>
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
+                 "exercisePublicView.teacher"
+               )}:</strong> ${exerciseTeacher}</p>
                ${
                  exerciseNote && exerciseNote.trim()
-                   ? `<p style="margin: 15px 0 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Ghi chú:</strong> ${exerciseNote}</p>`
+                   ? `<p style="margin: 15px 0 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
+                       "exercisePublicView.note"
+                     )}:</strong> ${exerciseNote}</p>`
                    : ""
                }
              </div>
            </div>
            <div style="font-size: 18px; line-height: 1.8; background: #ffffff;">
              <div style="margin-bottom: 20px; background: #ffffff;">
-               <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">Nội dung bài tập:</h2>
+               <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">${t(
+                 "exercisePublicView.content"
+               )}:</h2>
              </div>
              <div style="color: #374151; background: #ffffff; font-size: 18px; line-height: 1.8;">
-               ${cleanContent || "<p>Không có nội dung bài tập</p>"}
+               ${cleanContent || `<p>${t("exercisePublicView.noContent")}</p>`}
              </div>
            </div>
          </div>
@@ -289,26 +307,45 @@ export const ExercisePublicView: React.FC = () => {
         const pdf = new jsPDF();
 
         // Safely get title for fallback
-        const fallbackTitle = (exercise.name || "Bài tập").toString();
-        const fallbackSubject = (exercise.subject || "N/A").toString();
-        const fallbackGrade = (exercise.grade || "N/A").toString();
-        const fallbackTeacher = (exercise.creator?.name || "N/A").toString();
+        const fallbackTitle = (
+          exercise.name || t("exercisePublicView.defaultTitle")
+        ).toString();
+        const fallbackSubject = (
+          exercise.subject || t("exercisePublicView.defaultSubject")
+        ).toString();
+        const fallbackGrade = (
+          exercise.grade || t("exercisePublicView.defaultGrade")
+        ).toString();
+        const fallbackTeacher = (
+          exercise.creator?.name || t("exercisePublicView.defaultTeacher")
+        ).toString();
         const fallbackDeadline =
           exercise.deadline || exercise.createdAt || new Date().toISOString();
-        const fallbackContent = exercise.content || "Không có nội dung";
+        const fallbackContent =
+          exercise.content || t("exercisePublicView.noContent");
 
         pdf.setFontSize(16);
         pdf.text(fallbackTitle, 20, 30);
 
         pdf.setFontSize(12);
-        pdf.text(`Mon hoc: ${fallbackSubject}`, 20, 50);
-        pdf.text(`Lop: ${fallbackGrade}`, 20, 65);
         pdf.text(
-          `Han nop: ${new Date(fallbackDeadline).toLocaleDateString()}`,
+          `${t("exercisePublicView.subject")}: ${fallbackSubject}`,
+          20,
+          50
+        );
+        pdf.text(`${t("exercisePublicView.grade")}: ${fallbackGrade}`, 20, 65);
+        pdf.text(
+          `${t("exercisePublicView.deadline")}: ${new Date(
+            fallbackDeadline
+          ).toLocaleDateString()}`,
           20,
           80
         );
-        pdf.text(`Giao vien: ${fallbackTeacher}`, 20, 95);
+        pdf.text(
+          `${t("exercisePublicView.teacher")}: ${fallbackTeacher}`,
+          20,
+          95
+        );
 
         // Simple content without Vietnamese chars
         const simpleContent = fallbackContent
@@ -334,9 +371,7 @@ export const ExercisePublicView: React.FC = () => {
       } catch (fallbackError) {
         console.error("Fallback PDF Error:", fallbackError);
         // Final fallback to browser print
-        alert(
-          "Không thể tạo PDF. Bạn có thể sử dụng Print của trình duyệt (Ctrl+P) để in/lưu PDF."
-        );
+        alert(t("exercisePublicView.printFallback"));
       }
     }
   };
@@ -484,7 +519,8 @@ export const ExercisePublicView: React.FC = () => {
                       {t("exercises.teacher")}
                     </p>
                     <p className="text-white font-semibold">
-                      {selectedExercise.creator?.name || "Không xác định"}
+                      {selectedExercise.creator?.name ||
+                        t("exercisePublicView.defaultTeacher")}
                     </p>
                   </div>
                 </div>
@@ -502,7 +538,7 @@ export const ExercisePublicView: React.FC = () => {
                     <BookOpen className="h-6 w-6 text-amber-600" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900">
-                    Ghi chú quan trọng
+                    {t("exercisePublicView.note")}
                   </h3>
                 </div>
                 <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 rounded-lg p-6">
@@ -522,7 +558,7 @@ export const ExercisePublicView: React.FC = () => {
                     <FileText className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900">
-                    Nội dung bài tập
+                    {t("exercisePublicView.content")}
                   </h3>
                 </div>
 
@@ -538,7 +574,7 @@ export const ExercisePublicView: React.FC = () => {
                       }`}
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      Chế độ đọc
+                      {t("exercisePublicView.readingMode")}
                     </button>
                     <button
                       onClick={() => setPreviewMode("content")}
@@ -548,7 +584,7 @@ export const ExercisePublicView: React.FC = () => {
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
-                      Rich Text
+                      {t("exercisePublicView.richText")}
                     </button>
                     {selectedExercise.latexContent && (
                       <button
@@ -559,7 +595,7 @@ export const ExercisePublicView: React.FC = () => {
                             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                         }`}
                       >
-                        LaTeX
+                        {t("exercisePublicView.latex")}
                       </button>
                     )}
                   </div>
@@ -693,7 +729,7 @@ export const ExercisePublicView: React.FC = () => {
                   !selectedExercise.latexContent && (
                     <div className="text-center py-12 text-gray-500">
                       <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>Bài tập chưa có nội dung</p>
+                      <p>{t("exercisePublicView.noContent")}</p>
                     </div>
                   )}
               </div>
@@ -719,17 +755,17 @@ export const ExercisePublicView: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   {!isTeacher && (
                     <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
-                      Nộp bài tập
+                      {t("exercisePublicView.submitExercise")}
                     </button>
                   )}
                   {isTeacher && (
                     <div className="flex space-x-4">
                       <button className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center">
                         <Users className="h-5 w-5 mr-2" />
-                        Xem bài nộp
+                        {t("exercisePublicView.viewSubmissions")}
                       </button>
                       <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
-                        Chấm điểm
+                        {t("exercisePublicView.gradeExercise")}
                       </button>
                     </div>
                   )}
@@ -894,7 +930,10 @@ export const ExercisePublicView: React.FC = () => {
                     </div>
                     <div className="text-sm text-gray-500 text-start flex items-center">
                       <Users className="h-4 w-4 mr-1" />
-                      <span>{exercise.creator?.name || "Không xác định"}</span>
+                      <span>
+                        {exercise.creator?.name ||
+                          t("exercisePublicView.defaultTeacher")}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -915,12 +954,12 @@ export const ExercisePublicView: React.FC = () => {
 
         {exercises.length === 0 && !loading && (
           <div className="text-center py-12">
-            <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Chưa có bài tập nào
+              {t("exercisePublicView.noExercises")}
             </h3>
             <p className="text-gray-600">
-              Các bài tập sẽ hiển thị ở đây khi giáo viên tạo.
+              {t("exercisePublicView.noExercisesDescription")}
             </p>
           </div>
         )}

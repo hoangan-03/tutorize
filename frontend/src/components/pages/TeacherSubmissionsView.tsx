@@ -14,6 +14,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Exercise,
   ExerciseSubmission,
@@ -30,6 +31,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
   exercise,
   onBack,
 }) => {
+  const { t } = useTranslation();
   const [submissions, setSubmissions] = useState<ExerciseSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [gradingSubmission, setGradingSubmission] = useState<number | null>(
@@ -70,7 +72,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
       await loadSubmissions();
     } catch (error) {
       console.error("Error grading submission:", error);
-      alert("Có lỗi khi chấm điểm. Vui lòng thử lại.");
+      alert(t("teacherSubmissionsView.errorGrading"));
     }
   };
 
@@ -92,21 +94,21 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             <Clock className="h-3 w-3 mr-1" />
-            Chờ chấm
+            {t("teacherSubmissionsView.waitingForGrading")}
           </span>
         );
       case "GRADED":
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
-            Đã chấm
+            {t("teacherSubmissionsView.graded")}
           </span>
         );
       case "LATE":
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
             <AlertTriangle className="h-3 w-3 mr-1" />
-            Nộp muộn
+            {t("teacherSubmissionsView.lateSubmission")}
           </span>
         );
       default:
@@ -145,13 +147,13 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                 onClick={onBack}
                 className="mb-4 text-white/80 hover:text-white flex items-center"
               >
-                ← Quay lại
+                ← {t("teacherSubmissionsView.back")}
               </button>
               <h1 className="text-3xl font-bold text-white mb-2">
-                Bài nộp: {exercise.name}
+                {t("teacherSubmissionsView.submissionsFor")} {exercise.name}
               </h1>
               <p className="text-white/90 text-lg">
-                Quản lý và chấm điểm bài nộp của học sinh
+                {t("teacherSubmissionsView.manageAndGrade")}
               </p>
             </div>
           </div>
@@ -166,7 +168,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">
-                  Tổng bài nộp
+                  {t("teacherSubmissionsView.totalSubmissions")}
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.total}
@@ -181,7 +183,9 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Đã chấm</p>
+                <p className="text-sm font-medium text-gray-600">
+                  {t("teacherSubmissionsView.graded")}
+                </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.graded}
                 </p>
@@ -195,7 +199,9 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                 <Clock className="h-6 w-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Chờ chấm</p>
+                <p className="text-sm font-medium text-gray-600">
+                  {t("teacherSubmissionsView.pending")}
+                </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.pending}
                 </p>
@@ -209,7 +215,9 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                 <AlertTriangle className="h-6 w-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Nộp muộn</p>
+                <p className="text-sm font-medium text-gray-600">
+                  {t("teacherSubmissionsView.late")}
+                </p>
                 <p className="text-2xl font-bold text-gray-900">{stats.late}</p>
               </div>
             </div>
@@ -221,7 +229,9 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                 <Star className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Điểm TB</p>
+                <p className="text-sm font-medium text-gray-600">
+                  {t("teacherSubmissionsView.averageScore")}
+                </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.averageScore.toFixed(1)}
                 </p>
@@ -234,7 +244,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
           <div className="flex items-center space-x-4">
             <label className="text-sm font-medium text-gray-700">
-              Lọc theo trạng thái:
+              {t("teacherSubmissionsView.filterByStatus")}
             </label>
             <select
               value={filterStatus}
@@ -243,10 +253,14 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
               }
               className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="ALL">Tất cả</option>
-              <option value="SUBMITTED">Chờ chấm</option>
-              <option value="GRADED">Đã chấm</option>
-              <option value="LATE">Nộp muộn</option>
+              <option value="ALL">{t("teacherSubmissionsView.all")}</option>
+              <option value="SUBMITTED">
+                {t("teacherSubmissionsView.pending")}
+              </option>
+              <option value="GRADED">
+                {t("teacherSubmissionsView.graded")}
+              </option>
+              <option value="LATE">{t("teacherSubmissionsView.late")}</option>
             </select>
           </div>
         </div>
@@ -254,196 +268,176 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
         {/* Submissions List */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {loading ? (
-            <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             </div>
           ) : filteredSubmissions.length === 0 ? (
-            <div className="text-center py-16">
-              <FileText className="h-20 w-20 text-gray-300 mx-auto mb-6" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                Chưa có bài nộp nào
+            <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-gray-100">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {t("teacherSubmissionsView.noSubmissions")}
               </h3>
               <p className="text-gray-600">
-                {filterStatus === "ALL"
-                  ? "Chưa có học sinh nào nộp bài."
-                  : `Không có bài nộp nào với trạng thái "${filterStatus}".`}
+                {t("teacherSubmissionsView.noSubmissionsForFilter")}
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {filteredSubmissions.map((submission) => (
-                <div key={submission.id} className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-5 w-5 text-gray-500" />
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {submission.user?.name ||
-                              `User ${submission.userId}`}
-                          </h3>
-                        </div>
-                        {getStatusBadge(submission.status)}
-                        {submission.score !== null && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                            <Star className="h-4 w-4 mr-1" />
-                            {submission.score}/{exercise.maxScore} điểm
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">
-                          Nội dung bài làm:
-                        </h4>
-                        <p className="text-gray-900 whitespace-pre-wrap">
-                          {submission.content}
-                        </p>
-                      </div>
-
-                      {submission.attachments &&
-                        submission.attachments.length > 0 && (
-                          <div className="mb-4">
-                            <h4 className="text-sm font-medium text-gray-700 mb-2">
-                              File đính kèm:
-                            </h4>
-                            <div className="space-y-2">
-                              {submission.attachments.map((attachment) => (
-                                <div
-                                  key={attachment.id}
-                                  className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200"
-                                >
-                                  <FileText className="h-5 w-5 text-blue-600" />
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium text-blue-900">
-                                      {attachment.originalName}
-                                    </p>
-                                    <p className="text-xs text-blue-700">
-                                      {(attachment.size / 1024 / 1024).toFixed(
-                                        2
-                                      )}{" "}
-                                      MB
-                                    </p>
-                                  </div>
-                                  <button className="p-2 text-blue-600 hover:bg-blue-100 rounded">
-                                    <Download className="h-4 w-4" />
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {t("teacherSubmissionsView.student")}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {t("teacherSubmissionsView.submittedAt")}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {t("teacherSubmissionsView.status")}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {t("teacherSubmissionsView.score")}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {t("teacherSubmissionsView.actions")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredSubmissions.map((submission) => (
+                    <React.Fragment key={submission.id}>
+                      <tr>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              {/* Placeholder for avatar */}
+                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <User className="h-6 w-6 text-gray-500" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {submission.student?.name || "Unknown Student"}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {new Date(
+                              submission.submittedAt
+                            ).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(submission.status)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {submission.score === null
+                            ? "N/A"
+                            : `${submission.score}/10`}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              className="flex items-center text-blue-600 hover:text-blue-800"
+                              onClick={() => {
+                                /* TODO: Implement view details modal */
+                              }}
+                              title={t("teacherSubmissionsView.viewSubmission")}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              {t("teacherSubmissionsView.viewSubmission")}
+                            </button>
+                            {gradingSubmission === submission.id ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="flex items-center">
+                                  <input
+                                    type="number"
+                                    value={gradeScore}
+                                    onChange={(e) =>
+                                      setGradeScore(parseFloat(e.target.value))
+                                    }
+                                    className="w-20 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      handleGradeSubmission(submission.id)
+                                    }
+                                    className="p-2 text-green-600 hover:text-green-800"
+                                    title={t(
+                                      "teacherSubmissionsView.saveGrade"
+                                    )}
+                                  >
+                                    <Save className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={cancelGrading}
+                                    className="p-2 text-red-600 hover:text-red-800"
+                                    title={t("teacherSubmissionsView.cancel")}
+                                  >
+                                    <X className="h-4 w-4" />
                                   </button>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                      {submission.feedback && (
-                        <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
-                          <h4 className="text-sm font-medium text-green-800 mb-2 flex items-center">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            Phản hồi từ giáo viên:
-                          </h4>
-                          <p className="text-green-900">
-                            {submission.feedback}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex items-center space-x-6 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Nộp lúc:{" "}
-                          {new Date(submission.submittedAt).toLocaleString(
-                            "vi-VN"
-                          )}
-                        </div>
-                        {submission.gradedAt && (
-                          <div className="flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Chấm lúc:{" "}
-                            {new Date(submission.gradedAt).toLocaleString(
-                              "vi-VN"
+                              </div>
+                            ) : (
+                              <button
+                                className="flex items-center text-green-600 hover:text-green-800"
+                                onClick={() => startGrading(submission)}
+                                title={
+                                  submission.score === null
+                                    ? t("teacherSubmissionsView.grade")
+                                    : t("teacherSubmissionsView.editGrade")
+                                }
+                              >
+                                <Edit3 className="h-4 w-4 mr-1" />
+                                {submission.score === null
+                                  ? t("teacherSubmissionsView.grade")
+                                  : t("teacherSubmissionsView.editGrade")}
+                              </button>
                             )}
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      {gradingSubmission === submission.id ? (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 ml-4">
-                          <h4 className="text-sm font-medium text-yellow-800 mb-3">
-                            Chấm điểm
-                          </h4>
-                          <div className="space-y-3">
+                        </td>
+                      </tr>
+                      {gradingSubmission === submission.id && (
+                        <tr className="bg-gray-50">
+                          <td colSpan={5} className="px-6 py-4">
                             <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Điểm số (/{exercise.maxScore})
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                max={exercise.maxScore}
-                                step="0.1"
-                                value={gradeScore}
-                                onChange={(e) =>
-                                  setGradeScore(parseFloat(e.target.value))
-                                }
-                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Phản hồi
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                {t("teacherSubmissionsView.feedback")}
                               </label>
                               <textarea
                                 value={gradeFeedback}
                                 onChange={(e) =>
                                   setGradeFeedback(e.target.value)
                                 }
-                                placeholder="Nhập phản hồi cho học sinh..."
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder={t(
+                                  "teacherSubmissionsView.feedbackPlaceholder"
+                                )}
+                                className="w-full h-24 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                               />
                             </div>
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() =>
-                                  handleGradeSubmission(submission.id)
-                                }
-                                className="flex items-center px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                              >
-                                <Save className="h-4 w-4 mr-1" />
-                                Lưu
-                              </button>
-                              <button
-                                onClick={cancelGrading}
-                                className="flex items-center px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                              >
-                                <X className="h-4 w-4 mr-1" />
-                                Hủy
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => startGrading(submission)}
-                            className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
-                            title="Chấm điểm"
-                          >
-                            <Edit3 className="h-5 w-5" />
-                          </button>
-                          <button
-                            className="p-3 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
-                            title="Xem chi tiết"
-                          >
-                            <Eye className="h-5 w-5" />
-                          </button>
-                        </div>
+                          </td>
+                        </tr>
                       )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

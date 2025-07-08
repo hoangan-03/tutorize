@@ -16,10 +16,12 @@ import {
 } from "lucide-react";
 import { quizService } from "../../services/quizService";
 import { exerciseService } from "../../services/exerciseService";
+import { useNavigate } from "react-router-dom";
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [continueLearningData, setContinueLearningData] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [stats, setStats] = useState({
@@ -251,188 +253,157 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+            <div className="p-4 text-center border-t border-gray-200">
+              <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                {t("dashboard.viewAll")}
+              </button>
+            </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {t("dashboard.quickActions")}
-              </h2>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              {t("dashboard.quickActions")}
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => navigate("/documents")}
+                className="flex flex-col items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg"
+              >
+                <FileText className="h-8 w-8 text-blue-600 mb-2" />
+                <span className="text-sm font-medium text-gray-800">
+                  {t("dashboard.documents")}
+                </span>
+              </button>
+              <button
+                onClick={() => navigate("/quizzes")}
+                className="flex flex-col items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg"
+              >
+                <BookOpen className="h-8 w-8 text-green-600 mb-2" />
+                <span className="text-sm font-medium text-gray-800">
+                  {t("dashboard.onlineQuizzes")}
+                </span>
+              </button>
+              <button
+                onClick={() => navigate("/ielts")}
+                className="flex flex-col items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg"
+              >
+                <Award className="h-8 w-8 text-purple-600 mb-2" />
+                <span className="text-sm font-medium text-gray-800">
+                  {t("dashboard.ieltsCenter")}
+                </span>
+              </button>
+              <button
+                onClick={() => navigate("/writing-grader")}
+                className="flex flex-col items-center justify-center p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg"
+              >
+                <PenTool className="h-8 w-8 text-yellow-600 mb-2" />
+                <span className="text-sm font-medium text-gray-800">
+                  {t("dashboard.writingGrader")}
+                </span>
+              </button>
             </div>
-            <div className="p-6 space-y-4">
-              <button className="w-full text-left p-8 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-                <div className="flex items-center">
-                  <BookOpen className="h-6 w-6 text-blue-600" />
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">
-                      {t("dashboard.takeNewQuiz")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {t("dashboard.challengeYourself")}
-                    </p>
-                  </div>
-                </div>
-              </button>
+          </div>
+        </div>
 
-              <button className="w-full text-left p-8 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-                <div className="flex items-center">
-                  <Award className="h-6 w-6 text-green-600" />
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">
-                      {t("dashboard.practiceIelts")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {t("dashboard.improveEnglish")}
-                    </p>
+        {/* Continue Learning */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {t("dashboard.continueLearning")}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {continueLearningData.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col justify-between"
+              >
+                <div>
+                  <p className="text-xs font-semibold uppercase text-blue-600">
+                    {item.type === "quiz"
+                      ? t("navigation.onlineQuizzes")
+                      : t("navigation.exercises")}
+                  </p>
+                  <h3 className="text-lg font-bold text-gray-900 mt-2">
+                    {item.title}
+                  </h3>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                    <div
+                      className="bg-blue-600 h-2.5 rounded-full"
+                      style={{ width: `${item.progress}%` }}
+                    ></div>
                   </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {item.progress}% {t("dashboard.completed")}
+                  </p>
                 </div>
-              </button>
+                <button className="mt-4 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  <PlayCircle className="h-5 w-5 mr-2" />
+                  {t("dashboard.continue")}
+                </button>
+              </div>
+            ))}
 
-              <button className="w-full text-left p-8 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors">
-                <div className="flex items-center">
-                  <Users className="h-6 w-6 text-yellow-600" />
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">
-                      {t("dashboard.joinClass")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {t("dashboard.learnWithFriends")}
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              <button className="w-full text-left p-8 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-                <div className="flex items-center">
-                  <Target className="h-6 w-6 text-purple-600" />
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">
-                      {t("dashboard.viewResults")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {t("dashboard.analyzeProgress")}
-                    </p>
-                  </div>
-                </div>
+            <div className="bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 p-6 flex flex-col items-center justify-center">
+              <h3 className="text-lg font-semibold text-gray-800">
+                {t("dashboard.exploreNew")}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1 text-center">
+                {t("dashboard.exploreDescription")}
+              </p>
+              <button className="mt-4 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50">
+                {t("dashboard.browseCourses")}
               </button>
             </div>
           </div>
         </div>
 
         {/* Upcoming Deadlines */}
-        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {t("dashboard.upcomingDeadlines")}
-            </h2>
-          </div>
-          <div className="divide-y divide-gray-200">
-            <div className="p-6 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {t("dashboard.upcomingDeadlines")}
+          </h2>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="divide-y divide-gray-200">
+              {/* Deadline Item 1 */}
+              <div className="p-4 flex justify-between items-center">
                 <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-orange-500" />
+                  <Calendar className="h-6 w-6 text-red-500" />
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900">
                       {t("dashboard.mathExercise")}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600">
                       {t("dashboard.class12A1")}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-orange-600">
-                    {t("common.remaining")} 2 {t("dashboard.daysLeft")}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {t("dashboard.dueDate")}: 15/03/2024
+                  <p className="text-sm font-bold text-red-600">
+                    {t("dashboard.dueDate")}: 31/12/2024
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="p-6 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
+              {/* Deadline Item 2 */}
+              <div className="p-4 flex justify-between items-center">
                 <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-red-500" />
+                  <Calendar className="h-6 w-6 text-yellow-500" />
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900">
                       {t("dashboard.ieltsSpeak")}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600">
                       {t("dashboard.ieltsPrep")}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-red-600">
-                    {t("dashboard.today")}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {t("dashboard.dueDate")}: 13/03/2024
+                  <p className="text-sm font-bold text-yellow-600">
+                    {t("dashboard.dueDate")}: 15/01/2025
                   </p>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Continue Learning Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {t("dashboard.continueLearning")}
-            </h2>
-            <button className="text-blue-600 hover:text-blue-700 font-medium">
-              {t("dashboard.viewAll")}
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {continueLearningData.map((item, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-8 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center mb-3">
-                  <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                    {item.type === "quiz" && (
-                      <FileText className="h-5 w-5 text-blue-600" />
-                    )}
-                    {item.type === "writing" && (
-                      <PenTool className="h-5 w-5 text-blue-600" />
-                    )}
-                    {item.type === "document" && (
-                      <BookOpen className="h-5 w-5 text-blue-600" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 text-sm">
-                      {item.title}
-                    </h3>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>{t("dashboard.progress")}</span>
-                    <span>{item.progress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${item.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <button className="w-full flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors">
-                  <PlayCircle className="h-4 w-4 mr-2" />
-                  {t("dashboard.continue")}
-                </button>
-              </div>
-            ))}
           </div>
         </div>
       </div>

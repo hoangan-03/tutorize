@@ -81,7 +81,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
           <div className="flex items-center">
             <BookOpen className="h-12 w-12 text-blue-600" />
             <span className="ml-3 text-3xl font-bold text-gray-900">
-              Tutorize
+              {t("common.appName")}
             </span>
           </div>
         </div>
@@ -155,7 +155,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700"
               >
-                Email
+                {t("auth.email")}
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

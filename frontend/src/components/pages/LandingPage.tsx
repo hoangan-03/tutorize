@@ -1,13 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  BookOpen,
-  FileText,
-  Award,
-  PenTool,
-  ChevronRight,
-} from "lucide-react";
+import { BookOpen, FileText, Award, PenTool, ChevronRight } from "lucide-react";
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -65,7 +59,9 @@ export const LandingPage: React.FC = () => {
           <div className="h-56 w-full bg-gradient-to-r from-blue-500 to-purple-600 sm:h-72 md:h-96 lg:w-full lg:h-full flex items-center justify-center">
             <div className="text-white text-center">
               <BookOpen className="h-32 w-32 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold">Học mọi lúc, mọi nơi</h3>
+              <h3 className="text-2xl font-bold">
+                {t("landing.learnAnywhere")}
+              </h3>
             </div>
           </div>
         </div>
@@ -76,14 +72,13 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">
-              Tính năng
+              {t("landing.featuresTitle")}
             </h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Tất cả những gì bạn cần để thành công
+              {t("landing.allYouNeed")}
             </p>
             <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Từ tài liệu học tập đến AI chấm bài, chúng tôi cung cấp công cụ
-              toàn diện cho hành trình học tập của bạn.
+              {t("landing.featuresDescription")}
             </p>
           </div>
 
@@ -94,12 +89,10 @@ export const LandingPage: React.FC = () => {
                   <BookOpen className="h-6 w-6" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
-                  Thư viện tài liệu
+                  {t("landing.docLibraryTitle")}
                 </p>
                 <p className="mt-2 ml-16 text-base text-gray-500">
-                  Hàng nghìn tài liệu học tập được phân loại theo môn học và lớp
-                  từ 6-12, cập nhật liên tục theo chương trình giáo dục mới
-                  nhất.
+                  {t("landing.docLibraryDescription")}
                 </p>
               </div>
 
@@ -108,11 +101,10 @@ export const LandingPage: React.FC = () => {
                   <FileText className="h-6 w-6" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
-                  Bài kiểm tra tương tác
+                  {t("landing.interactiveQuizzesTitle")}
                 </p>
                 <p className="mt-2 ml-16 text-base text-gray-500">
-                  Bài kiểm tra trắc nghiệm thông minh với nhiều mức độ khó, kết
-                  quả chi tiết và gợi ý cải thiện cá nhân hóa.
+                  {t("landing.interactiveQuizzesDescription")}
                 </p>
               </div>
 
@@ -121,11 +113,10 @@ export const LandingPage: React.FC = () => {
                   <Award className="h-6 w-6" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
-                  Luyện thi IELTS
+                  {t("landing.ieltsPrepTitle")}
                 </p>
                 <p className="mt-2 ml-16 text-base text-gray-500">
-                  Trung tâm IELTS chuyên nghiệp với tài liệu 4 kỹ năng: Reading,
-                  Writing, Listening, Speaking. Mô phỏng đề thi thật.
+                  {t("landing.ieltsPrepDescription")}
                 </p>
               </div>
 
@@ -134,11 +125,10 @@ export const LandingPage: React.FC = () => {
                   <PenTool className="h-6 w-6" />
                 </div>
                 <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
-                  AI chấm bài viết
+                  {t("landing.aiGraderTitle")}
                 </p>
                 <p className="mt-2 ml-16 text-base text-gray-500">
-                  Công nghệ AI tiên tiến phân tích và chấm điểm bài viết IELTS,
-                  đưa ra nhận xét chi tiết và hướng dẫn cải thiện cụ thể.
+                  {t("landing.aiGraderDescription")}
                 </p>
               </div>
             </div>
@@ -151,16 +141,16 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-8xl mx-auto py-12 px-4 sm:py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-              Được tin tưởng bởi hàng nghìn học sinh
+              {t("landing.statsTitle")}
             </h2>
             <p className="mt-3 text-xl text-blue-200 sm:mt-4">
-              Kết quả ấn tượng từ cộng đồng học tập của chúng tôi
+              {t("landing.statsSubtitle")}
             </p>
           </div>
           <dl className="mt-10 text-center sm:max-w-3xl sm:mx-auto sm:grid sm:grid-cols-3 sm:gap-8">
             <div className="flex flex-col">
               <dt className="order-2 mt-2 text-lg leading-6 font-medium text-blue-200">
-                Học sinh
+                {t("landing.students")}
               </dt>
               <dd className="order-1 text-5xl font-extrabold text-white">
                 10,000+
@@ -168,7 +158,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div className="flex flex-col mt-10 sm:mt-0">
               <dt className="order-2 mt-2 text-lg leading-6 font-medium text-blue-200">
-                Tài liệu
+                {t("landing.documents")}
               </dt>
               <dd className="order-1 text-5xl font-extrabold text-white">
                 5,000+
@@ -176,7 +166,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div className="flex flex-col mt-10 sm:mt-0">
               <dt className="order-2 mt-2 text-lg leading-6 font-medium text-blue-200">
-                Điểm IELTS trung bình
+                {t("landing.avgIeltsScore")}
               </dt>
               <dd className="order-1 text-5xl font-extrabold text-white">
                 7.5
@@ -192,11 +182,7 @@ export const LandingPage: React.FC = () => {
           <div className="relative">
             <blockquote className="mt-10">
               <div className="max-w-3xl mx-auto text-center text-2xl leading-9 font-medium text-gray-900">
-                <p>
-                  "Tutorize đã thay đổi cách tôi học tập. AI chấm bài viết rất
-                  chính xác và thư viện tài liệu phong phú giúp tôi chuẩn bị tốt
-                  cho kỳ thi IELTS."
-                </p>
+                <p>{t("landing.testimonial")}</p>
               </div>
               <footer className="mt-8">
                 <div className="md:flex md:items-center md:justify-center">
@@ -207,7 +193,7 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <div className="mt-3 text-center md:mt-0 md:ml-4 md:flex md:items-center">
                     <div className="text-base font-medium text-gray-900">
-                      Lê Hoàng
+                      {t("landing.testimonialAuthor")}
                     </div>
                     <svg
                       className="hidden md:block mx-1 h-5 w-5 text-blue-600"
@@ -217,7 +203,7 @@ export const LandingPage: React.FC = () => {
                       <path d="M11 0h3L9 20H6l5-20z" />
                     </svg>
                     <div className="text-base font-medium text-gray-500">
-                      Học sinh lớp 12, IELTS 8.0
+                      {t("landing.testimonialAuthorInfo")}
                     </div>
                   </div>
                 </div>
@@ -231,9 +217,9 @@ export const LandingPage: React.FC = () => {
       <div className="bg-gray-50">
         <div className="max-w-8xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
           <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-            <span className="block">Sẵn sàng bắt đầu?</span>
+            <span className="block">{t("landing.ctaTitle")}</span>
             <span className="block text-blue-600">
-              Đăng ký miễn phí ngay hôm nay.
+              {t("landing.ctaSubtitle")}
             </span>
           </h2>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
@@ -242,7 +228,7 @@ export const LandingPage: React.FC = () => {
                 onClick={() => navigate("/signup")}
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
-                Bắt đầu ngay
+                {t("landing.startNow")}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </button>
             </div>
@@ -251,7 +237,7 @@ export const LandingPage: React.FC = () => {
                 onClick={() => navigate("/login")}
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50"
               >
-                Tìm hiểu thêm
+                {t("landing.learnMore")}
               </button>
             </div>
           </div>

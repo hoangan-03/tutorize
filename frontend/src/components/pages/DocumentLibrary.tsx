@@ -82,11 +82,13 @@ export const DocumentLibrary: React.FC = () => {
                 value={selectedSubject}
                 onChange={(e) => setSelectedSubject(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                aria-label="Chọn môn học"
+                aria-label={t("documents.allSubjects")}
               >
                 {subjects.map((subject) => (
                   <option key={subject} value={subject}>
-                    {subject === "All" ? t("documents.allSubjects") : subject}
+                    {subject === "All"
+                      ? t("documents.allSubjects")
+                      : t(`subject.${subject.toLowerCase()}`)}
                   </option>
                 ))}
               </select>
@@ -157,7 +159,7 @@ export const DocumentLibrary: React.FC = () => {
                         {t("documents.grade")} {doc.grade}
                       </Badge>
                       <Badge variant="subject" className="px-2 py-1 text-sm">
-                        {doc.subject}
+                        {t(`subject.${doc.subject.toLowerCase()}`)}
                       </Badge>
                     </div>
                   </div>

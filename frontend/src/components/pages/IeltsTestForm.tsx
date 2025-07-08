@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ieltsService } from "../../services/ieltsService";
 import type {
   IeltsTest,
-  IeltsSkill,
-  IeltsLevel,
   IeltsSection,
   IeltsQuestion,
 } from "../../services/ieltsService";
@@ -21,6 +20,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   onBack,
   testId,
 }) => {
+  const { t } = useTranslation();
   const [test, setTest] = useState<Partial<IeltsTest>>({
     title: "",
     description: "",
@@ -51,11 +51,11 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
       setTest(data);
     } catch (err) {
       console.error(err);
-      setError("Không thể tải dữ liệu bài test.");
+      setError(t("ielts.form.error.load"));
     } finally {
       setLoading(false);
     }
-  }, [testId]);
+  }, [testId, t]);
 
   useEffect(() => {
     fetchTest();
@@ -81,6 +81,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
     setError(null);
     try {
       if (testId) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { sections, ...updateData } = test;
         await ieltsService.updateTest(testId, updateData);
       } else {
@@ -89,7 +90,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
       onBack();
     } catch (err) {
       console.error(err);
-      setError("Không thể lưu bài test.");
+      setError(t("ielts.form.error.save"));
     } finally {
       setLoading(false);
     }
@@ -107,13 +108,13 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   };
 
   const handleDeleteSection = async (sectionId: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa phần này không?")) {
+    if (window.confirm(t("ielts.form.confirmDeleteSection"))) {
       try {
         await ieltsService.removeSection(sectionId);
         fetchTest(); // Refresh
       } catch (err) {
         console.error("Failed to delete section", err);
-        setError("Không thể xóa phần thi.");
+        setError(t("ielts.form.error.deleteSection"));
       }
     }
   };
@@ -130,7 +131,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
       setIsModalOpen(false);
     } catch (err) {
       console.error("Failed to save section", err);
-      setError("Không thể lưu phần thi.");
+      setError(t("ielts.form.error.saveSection"));
     }
   };
 
@@ -155,13 +156,13 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   };
 
   const handleDeleteQuestion = async (questionId: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa câu hỏi này không?")) {
+    if (window.confirm(t("ielts.form.confirmDeleteQuestion"))) {
       try {
         await ieltsService.removeQuestion(questionId);
         fetchTest(); // Refresh
       } catch (err) {
         console.error("Failed to delete question", err);
-        setError("Không thể xóa câu hỏi.");
+        setError(t("ielts.form.error.deleteQuestion"));
       }
     }
   };
@@ -180,12 +181,12 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
       setIsQuestionModalOpen(false);
     } catch (err) {
       console.error("Failed to save question", err);
-      setError("Không thể lưu câu hỏi.");
+      setError(t("ielts.form.error.saveQuestion"));
     }
   };
 
   if (loading && testId) {
-    return <div>Đang tải...</div>;
+    return <div>{t("ielts.form.loading")}</div>;
   }
 
   const inputClass =
@@ -204,15 +205,15 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                     type="button"
                     onClick={onBack}
                     className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-                    aria-label="Quay lại"
+                    aria-label={t("ielts.form.backLabel")}
                   >
                     <ArrowLeft className="h-5 w-5 text-gray-600" />
                   </button>
                   <div>
                     <h1 className="text-xl font-bold text-gray-900">
                       {testId
-                        ? "Chỉnh sửa bài test IELTS"
-                        : "Tạo bài test IELTS mới"}
+                        ? t("ielts.form.editTitle")
+                        : t("ielts.form.createTitle")}
                     </h1>
                   </div>
                 </div>
@@ -222,7 +223,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                     onClick={onBack}
                     className="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                   >
-                    Hủy
+                    {t("ielts.form.cancel")}
                   </button>
                   <button
                     type="submit"
@@ -230,7 +231,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                     disabled={loading}
                     className="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                   >
-                    {loading ? "Đang lưu..." : "Lưu thay đổi"}
+                    {loading ? t("ielts.form.saving") : t("ielts.form.save")}
                   </button>
                 </div>
               </div>
@@ -251,7 +252,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                 <div className="bg-white shadow-lg border border-gray-100 rounded-xl">
                   <div className="px-4 py-5 sm:p-6">
                     <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-6">
-                      Thông tin chung
+                      {t("ielts.form.generalInfo")}
                     </h3>
                     <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                       <div className="sm:col-span-6">
@@ -259,7 +260,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                           htmlFor="title"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Tiêu đề
+                          {t("ielts.form.title")}
                         </label>
                         <input
                           type="text"
@@ -277,7 +278,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                           htmlFor="description"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Mô tả
+                          {t("ielts.form.description")}
                         </label>
                         <textarea
                           name="description"
@@ -294,7 +295,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                           htmlFor="skill"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Kỹ năng
+                          {t("ielts.form.skill")}
                         </label>
                         <select
                           id="skill"
@@ -303,10 +304,14 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                           onChange={handleInputChange}
                           className={inputClass}
                         >
-                          <option value="READING">Reading</option>
-                          <option value="LISTENING">Listening</option>
-                          <option value="WRITING">Writing</option>
-                          <option value="SPEAKING">Speaking</option>
+                          <option value="READING">{t("ielts.reading")}</option>
+                          <option value="LISTENING">
+                            {t("ielts.listening")}
+                          </option>
+                          <option value="WRITING">{t("ielts.writing")}</option>
+                          <option value="SPEAKING">
+                            {t("ielts.speaking")}
+                          </option>
                         </select>
                       </div>
 
@@ -315,7 +320,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                           htmlFor="level"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Cấp độ
+                          {t("ielts.form.level")}
                         </label>
                         <select
                           id="level"
@@ -324,9 +329,15 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                           onChange={handleInputChange}
                           className={inputClass}
                         >
-                          <option value="BEGINNER">Beginner</option>
-                          <option value="INTERMEDIATE">Intermediate</option>
-                          <option value="ADVANCED">Advanced</option>
+                          <option value="BEGINNER">
+                            {t("ielts.level.beginner")}
+                          </option>
+                          <option value="INTERMEDIATE">
+                            {t("ielts.level.intermediate")}
+                          </option>
+                          <option value="ADVANCED">
+                            {t("ielts.level.advanced")}
+                          </option>
                         </select>
                       </div>
 
@@ -335,7 +346,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                           htmlFor="timeLimit"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Thời gian (phút)
+                          {t("ielts.form.timeLimit")}
                         </label>
                         <input
                           type="number"
@@ -372,20 +383,18 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
               <div className="lg:col-span-1 space-y-6">
                 <div className="bg-white shadow-lg border border-gray-100 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Hướng dẫn
+                    {t("ielts.form.guidanceTitle")}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Điền đầy đủ thông tin cho bài test. Nếu là bài test mới, hãy
-                    lưu lại để có thể thêm các phần và câu hỏi.
+                    {t("ielts.form.guidanceText")}
                   </p>
                 </div>
                 <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-indigo-900 mb-3">
-                    Mẹo
+                    {t("ielts.form.tipTitle")}
                   </h3>
                   <p className="text-sm text-indigo-700">
-                    Sử dụng các loại câu hỏi đa dạng để bài test hấp dẫn hơn.
-                    Đừng quên đặt giới hạn thời gian hợp lý cho từng phần.
+                    {t("ielts.form.tipText")}
                   </p>
                 </div>
               </div>
@@ -409,7 +418,6 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
           onClose={() => setIsQuestionModalOpen(false)}
           onSave={handleSaveQuestion}
           question={currentQuestion}
-          sectionId={currentSectionIdForNewQuestion}
         />
       )}
     </>

@@ -127,7 +127,7 @@ export const ieltsService = {
     id: number,
     testData: Partial<IeltsTest>
   ): Promise<IeltsTest> {
-    const response = await api.patch<IeltsTest>(`/ielts/tests/${id}`, testData);
+    const response = await api.put<IeltsTest>(`/ielts/tests/${id}`, testData);
     return response.data;
   },
 
@@ -147,6 +147,21 @@ export const ieltsService = {
     return response.data;
   },
 
+  async updateSection(
+    sectionId: number,
+    sectionData: Partial<IeltsSection>
+  ): Promise<IeltsSection> {
+    const response = await api.put<IeltsSection>(
+      `/ielts/sections/${sectionId}`,
+      sectionData
+    );
+    return response.data;
+  },
+
+  async removeSection(sectionId: number): Promise<void> {
+    await api.delete(`/ielts/sections/${sectionId}`);
+  },
+
   // Question Management
   async createQuestion(
     sectionId: number,
@@ -157,6 +172,21 @@ export const ieltsService = {
       questionData
     );
     return response.data;
+  },
+
+  async updateQuestion(
+    questionId: number,
+    questionData: Partial<IeltsQuestion>
+  ): Promise<IeltsQuestion> {
+    const response = await api.put<IeltsQuestion>(
+      `/ielts/questions/${questionId}`,
+      questionData
+    );
+    return response.data;
+  },
+
+  async removeQuestion(questionId: number): Promise<void> {
+    await api.delete(`/ielts/questions/${questionId}`);
   },
 
   // Test Taking

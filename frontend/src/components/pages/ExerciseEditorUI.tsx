@@ -1,5 +1,6 @@
 import React from "react";
 import { Plus, Eye, Edit, Trash2, Calendar, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/Badge";
 import { Subject } from "../../types/api";
 
@@ -33,6 +34,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   onDelete,
   onCreateNew,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="max-w-8xl mx-auto">
       {/* Enhanced Header Section */}
@@ -45,23 +47,28 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Quản lý bài tập
+                  {t("exerciseEditorUI.title")}
                 </h1>
               </div>
             </div>
             <p className="text-gray-600 text-lg leading-relaxed max-w-2xl">
-              Tạo, chỉnh sửa và quản lý bài tập cho học sinh. Hỗ trợ định dạng
-              văn bản phong phú và LaTeX.
+              {t("exerciseEditorUI.description")}
             </p>
             <div className="flex items-center space-x-6 mt-4 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <Users className="h-4 w-4" />
-                <span>{exercises.length} bài tập</span>
+                <span>
+                  {t("exerciseEditorUI.exerciseCount", {
+                    count: exercises.length,
+                  })}
+                </span>
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  Cập nhật gần nhất: {new Date().toLocaleDateString("vi-VN")}
+                  {t("exerciseEditorUI.lastUpdated", {
+                    date: new Date().toLocaleDateString("vi-VN"),
+                  })}
                 </span>
               </div>
             </div>
@@ -73,12 +80,12 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
               className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg transform hover:scale-105"
             >
               <Plus className="h-5 w-5 mr-2" />
-              <span className="font-medium">Tạo bài tập mới</span>
+              <span className="font-medium">
+                {t("exerciseEditorUI.createNew")}
+              </span>
             </button>
             <p className="text-xs text-gray-500 text-right">
-              Nhấn để tạo bài tập
-              <br />
-              với trình soạn thảo nâng cao
+              {t("exerciseEditorUI.createButtonHint")}
             </p>
           </div>
         </div>
@@ -97,7 +104,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                 </h3>
                 <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
                   <Badge variant="grade" className="px-2 py-1 text-sm">
-                    Lớp {exercise.grade}
+                    {t("exerciseEditorUI.grade", { grade: exercise.grade })}
                   </Badge>
                   <Badge variant="subject" className="px-2 py-1 text-sm">
                     {exercise.subject}
@@ -106,13 +113,20 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                 <div className="flex items-center text-sm text-gray-500 mb-2">
                   <Calendar className="h-4 w-4 mr-1" />
                   <span>
-                    Hạn:{" "}
-                    {new Date(exercise.deadline).toLocaleDateString("vi-VN")}
+                    {t("exerciseEditorUI.deadline", {
+                      date: new Date(exercise.deadline).toLocaleDateString(
+                        "vi-VN"
+                      ),
+                    })}
                   </span>
                 </div>
                 <div className="flex items-center text-sm text-gray-500">
                   <Users className="h-4 w-4 mr-1" />
-                  <span>{exercise.submissions} bài nộp</span>
+                  <span>
+                    {t("exerciseEditorUI.submissions", {
+                      count: exercise.submissions,
+                    })}
+                  </span>
                 </div>
               </div>
               <Badge
@@ -123,7 +137,9 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                     : "bg-gray-100 text-gray-800"
                 }`}
               >
-                {exercise.status === "active" ? "Đang mở" : "Đã đóng"}
+                {exercise.status === "active"
+                  ? t("exerciseEditorUI.statusActive")
+                  : t("exerciseEditorUI.statusClosed")}
               </Badge>
             </div>
 
@@ -137,19 +153,19 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                 className="flex-1 flex items-center justify-center px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
                 <Eye className="h-4 w-4 mr-1" />
-                Xem
+                {t("exerciseEditorUI.preview")}
               </button>
               <button
                 onClick={() => onEdit(exercise)}
                 className="flex-1 flex items-center justify-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 <Edit className="h-4 w-4 mr-1" />
-                Sửa
+                {t("exerciseEditorUI.edit")}
               </button>
               <button
                 onClick={() => onDelete(exercise.id!)}
                 className="flex items-center justify-center px-3 py-2 text-sm border border-red-300 text-red-600 rounded-md hover:bg-red-50"
-                title="Xóa bài tập"
+                title={t("exerciseEditorUI.deleteTitle")}
               >
                 <Trash2 className="h-4 w-4" />
               </button>

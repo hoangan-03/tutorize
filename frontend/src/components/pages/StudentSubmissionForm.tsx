@@ -7,6 +7,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Exercise, ExerciseSubmission } from "../../types/api";
 import { exerciseService } from "../../services/exerciseService";
 
@@ -23,6 +24,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
   onSubmissionSuccess,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [content, setContent] = useState(existingSubmission?.content || "");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -98,7 +100,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim() && files.length === 0) {
-      alert("Vui lòng nhập nội dung hoặc đính kèm file");
+      alert(t("studentSubmissionForm.validationMessage"));
       return;
     }
 
@@ -115,7 +117,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
       onSubmissionSuccess(submission);
     } catch (error) {
       console.error("Error submitting exercise:", error);
-      alert("Có lỗi khi nộp bài. Vui lòng thử lại.");
+      alert(t("studentSubmissionForm.errorSubmitting"));
     } finally {
       setUploading(false);
     }
@@ -133,11 +135,11 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
             <div>
               <h2 className="text-2xl font-bold">{exercise.name}</h2>
               <p className="text-blue-100 mt-1">
-                Hạn nộp:{" "}
+                {t("studentSubmissionForm.deadline")}:{" "}
                 {new Date(exercise.deadline).toLocaleDateString("vi-VN")}
                 {isOverdue && (
                   <span className="ml-2 bg-red-500 px-2 py-1 rounded text-xs">
-                    Quá hạn
+                    {t("studentSubmissionForm.overdue")}
                   </span>
                 )}
               </p>
@@ -145,7 +147,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              title="Đóng"
+              title={t("studentSubmissionForm.close")}
             >
               <X className="h-6 w-6" />
             </button>
@@ -157,7 +159,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
               <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
               <span className="text-red-700">
-                Bài tập đã quá hạn nộp và không cho phép nộp muộn
+                {t("studentSubmissionForm.overdueAndNoLateSubmission")}
               </span>
             </div>
           )}
@@ -166,12 +168,12 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
             {/* Content Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nội dung bài làm
+                {t("studentSubmissionForm.submissionContent")}
               </label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Nhập nội dung bài làm của bạn..."
+                placeholder={t("studentSubmissionForm.submissionPlaceholder")}
                 className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 disabled={!canSubmit}
               />
@@ -180,7 +182,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
             {/* File Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Đính kèm file (tuỳ chọn)
+                {t("studentSubmissionForm.attachFiles")}
               </label>
 
               {canSubmit && (
@@ -197,12 +199,14 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
                 >
                   <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-gray-900 mb-2">
-                    Kéo thả file vào đây
+                    {t("studentSubmissionForm.dragAndDrop")}
                   </p>
-                  <p className="text-gray-600 mb-4">hoặc</p>
+                  <p className="text-gray-600 mb-4">
+                    {t("studentSubmissionForm.or")}
+                  </p>
                   <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors">
                     <FileIcon className="h-5 w-5 mr-2" />
-                    Chọn file
+                    {t("studentSubmissionForm.selectFiles")}
                     <input
                       type="file"
                       multiple
@@ -212,7 +216,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
                     />
                   </label>
                   <p className="text-sm text-gray-500 mt-2">
-                    Hỗ trợ tất cả định dạng file
+                    {t("studentSubmissionForm.allFileTypesSupported")}
                   </p>
                 </div>
               )}
@@ -221,7 +225,9 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
               {files.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-medium text-gray-700">
-                    File đã chọn ({files.length})
+                    {t("studentSubmissionForm.selectedFiles", {
+                      count: files.length,
+                    })}
                   </h4>
                   {files.map((file, index) => (
                     <div
@@ -246,7 +252,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
                           type="button"
                           onClick={() => removeFile(index)}
                           className="p-1 text-red-500 hover:bg-red-50 rounded"
-                          title="Xóa file"
+                          title={t("studentSubmissionForm.removeFile")}
                         >
                           <X className="h-4 w-4" />
                         </button>

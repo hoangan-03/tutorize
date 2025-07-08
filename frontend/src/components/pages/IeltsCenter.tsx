@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ieltsService,
   IeltsTest,
@@ -10,7 +11,6 @@ import {
 } from "../../services/ieltsService";
 import { useAuth } from "../../hooks/useAuth";
 import { IeltsTestForm } from "./IeltsTestForm";
-import { IeltsTestPlayer } from "./IeltsTestPlayer";
 import { IeltsTestResult } from "./IeltsTestResult";
 import {
   BookOpen,
@@ -25,14 +25,7 @@ import {
   PenSquare,
   Headphones,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-
-const SKILLS: { name: IeltsSkill; label: string }[] = [
-  { name: "READING", label: "Reading" },
-  { name: "LISTENING", label: "Listening" },
-  { name: "WRITING", label: "Writing" },
-  { name: "SPEAKING", label: "Speaking" },
-];
+import { useNavigate } from "react-router-dom";
 
 const StudentIeltsView: React.FC<{
   tests: IeltsTest[];
@@ -41,7 +34,15 @@ const StudentIeltsView: React.FC<{
   onStartTest: (id: number) => void;
   onViewResult: (id: number) => void;
 }> = ({ tests, submissions, loading, onStartTest, onViewResult }) => {
+  const { t } = useTranslation();
   const [activeSkill, setActiveSkill] = useState<IeltsSkill>("READING");
+
+  const SKILLS: { name: IeltsSkill; label: string }[] = [
+    { name: "READING", label: t("ielts.reading") },
+    { name: "LISTENING", label: t("ielts.listening") },
+    { name: "WRITING", label: t("ielts.writing") },
+    { name: "SPEAKING", label: t("ielts.speaking") },
+  ];
 
   const filteredTests = useMemo(() => {
     return tests.filter((resource) => resource.skill === activeSkill);
@@ -67,10 +68,10 @@ const StudentIeltsView: React.FC<{
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          Trung tâm IELTS
+          {t("ielts.centerTitle")}
         </h1>
         <p className="text-lg text-gray-600 mb-8">
-          Luyện tập các kỹ năng và làm bài thi thử để chuẩn bị cho kỳ thi IELTS.
+          {t("ielts.centerDescription")}
         </p>
 
         {/* Skill Tabs */}
@@ -97,19 +98,17 @@ const StudentIeltsView: React.FC<{
         {/* Available Tests */}
         <div>
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-            Bài test có sẵn
+            {t("ielts.availableTests")}
           </h2>
           {loading ? (
-            <p>Loading...</p>
+            <p>{t("ielts.loading")}</p>
           ) : filteredTests.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
               <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-800">
-                Không có bài test nào
+                {t("ielts.noTests")}
               </h3>
-              <p className="text-gray-500 mt-1">
-                Chưa có bài test nào cho kỹ năng này.
-              </p>
+              <p className="text-gray-500 mt-1">{t("ielts.noTestsForSkill")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -133,14 +132,18 @@ const StudentIeltsView: React.FC<{
                     <div>
                       {highestSubmission ? (
                         <div className="mb-4">
-                          <p className="text-sm text-gray-500">Điểm cao nhất</p>
+                          <p className="text-sm text-gray-500">
+                            {t("ielts.highestScore")}
+                          </p>
                           <p className="text-2xl font-bold text-indigo-600">
                             {highestSubmission.score.toFixed(1)}
                           </p>
                         </div>
                       ) : (
                         <div className="mb-4">
-                          <p className="text-sm text-gray-500">Chưa làm</p>
+                          <p className="text-sm text-gray-500">
+                            {t("ielts.notTaken")}
+                          </p>
                           <p className="text-2xl font-bold text-gray-400">-</p>
                         </div>
                       )}
@@ -149,14 +152,16 @@ const StudentIeltsView: React.FC<{
                           onClick={() => onStartTest(resource.id)}
                           className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
                         >
-                          {highestSubmission ? "Làm lại" : "Bắt đầu"}
+                          {highestSubmission
+                            ? t("ielts.retake")
+                            : t("ielts.start")}
                         </button>
                         {highestSubmission && (
                           <button
                             onClick={() => onViewResult(highestSubmission.id)}
                             className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
                           >
-                            Xem kết quả
+                            {t("ielts.viewResult")}
                           </button>
                         )}
                       </div>
@@ -171,11 +176,11 @@ const StudentIeltsView: React.FC<{
         {/* Submission History */}
         <div className="mt-16">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-            Lịch sử làm bài
+            {t("ielts.submissionHistory")}
           </h2>
           {submissions.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <p>Bạn chưa làm bài test nào.</p>
+              <p>{t("ielts.noSubmissions")}</p>
             </div>
           ) : (
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -197,12 +202,14 @@ const StudentIeltsView: React.FC<{
                             `Test ID: ${submission.testId}`}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          Nộp lúc:{" "}
+                          {t("ielts.submittedAt")}:{" "}
                           {new Date(submission.submittedAt).toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-500">Điểm</p>
+                        <p className="text-sm text-gray-500">
+                          {t("ielts.score")}
+                        </p>
                         <p className="text-xl font-bold text-indigo-600">
                           {submission.score.toFixed(1)}
                         </p>
@@ -211,7 +218,7 @@ const StudentIeltsView: React.FC<{
                         onClick={() => onViewResult(submission.id)}
                         className="ml-4 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700"
                       >
-                        Xem lại
+                        {t("ielts.review")}
                       </button>
                     </li>
                   ))}
@@ -231,6 +238,7 @@ const TeacherIeltsView: React.FC<{
   onDelete: (id: number) => void;
   onCreate: () => void;
 }> = ({ resources, loading, onEdit, onDelete, onCreate }) => {
+  const { t } = useTranslation();
   const stats = {
     total: resources.length,
     reading: resources.filter((r) => r.skill === "READING").length,
@@ -242,13 +250,25 @@ const TeacherIeltsView: React.FC<{
   const getSkillInfo = (skill: IeltsSkill) => {
     switch (skill) {
       case "READING":
-        return { label: "Reading", color: "bg-blue-100 text-blue-800" };
+        return {
+          label: t("ielts.reading"),
+          color: "bg-blue-100 text-blue-800",
+        };
       case "LISTENING":
-        return { label: "Listening", color: "bg-purple-100 text-purple-800" };
+        return {
+          label: t("ielts.listening"),
+          color: "bg-purple-100 text-purple-800",
+        };
       case "WRITING":
-        return { label: "Writing", color: "bg-orange-100 text-orange-800" };
+        return {
+          label: t("ielts.writing"),
+          color: "bg-orange-100 text-orange-800",
+        };
       case "SPEAKING":
-        return { label: "Speaking", color: "bg-teal-100 text-teal-800" };
+        return {
+          label: t("ielts.speaking"),
+          color: "bg-teal-100 text-teal-800",
+        };
       default:
         return { label: skill, color: "bg-gray-100 text-gray-800" };
     }
@@ -257,14 +277,20 @@ const TeacherIeltsView: React.FC<{
   const getLevelInfo = (level: IeltsLevel) => {
     switch (level) {
       case "BEGINNER":
-        return { label: "Beginner", color: "bg-green-100 text-green-800" };
+        return {
+          label: t("ielts.level.beginner"),
+          color: "bg-green-100 text-green-800",
+        };
       case "INTERMEDIATE":
         return {
-          label: "Intermediate",
+          label: t("ielts.level.intermediate"),
           color: "bg-yellow-100 text-yellow-800",
         };
       case "ADVANCED":
-        return { label: "Advanced", color: "bg-red-100 text-red-800" };
+        return {
+          label: t("ielts.level.advanced"),
+          color: "bg-red-100 text-red-800",
+        };
       default:
         return { label: level, color: "bg-gray-100 text-gray-800" };
     }
@@ -283,13 +309,12 @@ const TeacherIeltsView: React.FC<{
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-white">
-                    Quản lý Bài test IELTS
+                    {t("ielts.teacher.manageTitle")}
                   </h1>
                 </div>
               </div>
               <p className="text-white/90 text-lg leading-relaxed max-w-2xl text-start">
-                Tạo và quản lý các bài test IELTS cho bốn kỹ năng: Nghe, Nói,
-                Đọc, Viết.
+                {t("ielts.teacher.manageDescription")}
               </p>
             </div>
             <div className="flex flex-col items-end space-y-3">
@@ -299,7 +324,7 @@ const TeacherIeltsView: React.FC<{
                   className="flex items-center px-6 py-3 bg-white text-indigo-600 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  <span>Tạo Test mới</span>
+                  <span>{t("ielts.teacher.createNewTest")}</span>
                 </button>
               </div>
             </div>
@@ -311,31 +336,31 @@ const TeacherIeltsView: React.FC<{
           <StatCard
             icon={<BookOpen className="h-6 w-6 text-indigo-600" />}
             bgColor="bg-indigo-100"
-            label="Tổng số Test"
+            label={t("ielts.teacher.totalTests")}
             value={stats.total}
           />
           <StatCard
             icon={<Book className="h-6 w-6 text-blue-600" />}
             bgColor="bg-blue-100"
-            label="Tests Đọc"
+            label={t("ielts.teacher.readingTests")}
             value={stats.reading}
           />
           <StatCard
             icon={<Headphones className="h-6 w-6 text-purple-600" />}
             bgColor="bg-purple-100"
-            label="Tests Nghe"
+            label={t("ielts.teacher.listeningTests")}
             value={stats.listening}
           />
           <StatCard
             icon={<PenSquare className="h-6 w-6 text-orange-600" />}
             bgColor="bg-orange-100"
-            label="Tests Viết"
+            label={t("ielts.teacher.writingTests")}
             value={stats.writing}
           />
           <StatCard
             icon={<Mic className="h-6 w-6 text-teal-600" />}
             bgColor="bg-teal-100"
-            label="Tests Nói"
+            label={t("ielts.teacher.speakingTests")}
             value={stats.speaking}
           />
         </div>
@@ -350,16 +375,16 @@ const TeacherIeltsView: React.FC<{
             <div className="text-center py-16">
               <BookOpen className="h-20 w-20 text-gray-300 mx-auto mb-6" />
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                Chưa có bài test nào
+                {t("ielts.teacher.noTestsYet")}
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Tạo bài test IELTS đầu tiên để bắt đầu.
+                {t("ielts.teacher.createFirstTest")}
               </p>
               <button
                 onClick={onCreate}
                 className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-semibold"
               >
-                Tạo Test mới
+                {t("ielts.teacher.createNewTest")}
               </button>
             </div>
           ) : (
@@ -399,12 +424,14 @@ const TeacherIeltsView: React.FC<{
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 mr-2" />
                           {test.timeLimit
-                            ? `${test.timeLimit} phút`
-                            : "Không giới hạn"}
+                            ? t("ielts.teacher.minutes", {
+                                count: test.timeLimit,
+                              })
+                            : t("ielts.teacher.unlimitedTime")}
                         </div>
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-2" />
-                          Tạo ngày:{" "}
+                          {t("ielts.teacher.createdAt")}:{" "}
                           {new Date(test.createdAt).toLocaleDateString("vi-VN")}
                         </div>
                       </div>
@@ -416,21 +443,21 @@ const TeacherIeltsView: React.FC<{
                           /* handleViewSubmissions(test) */
                         }}
                         className="p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
-                        title="Xem kết quả"
+                        title={t("ielts.teacher.viewSubmissions")}
                       >
                         <BarChart3 className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => onEdit(test.id)}
                         className="p-3 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
-                        title="Chỉnh sửa"
+                        title={t("ielts.teacher.edit")}
                       >
                         <Edit className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => onDelete(test.id)}
                         className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                        title="Xóa"
+                        title={t("ielts.teacher.delete")}
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -464,10 +491,9 @@ const StatCard: React.FC<{
 );
 
 export const IeltsCenter: React.FC = () => {
-  const { user, isTeacher } = useAuth();
-  const [view, setView] = useState<"list" | "form" | "player" | "result">(
-    "list"
-  );
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [view, setView] = useState<"list" | "form" | "result">("list");
   const [resources, setResources] = useState<IeltsTest[]>([]);
   const [submissions, setSubmissions] = useState<IeltsSubmission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -526,12 +552,13 @@ export const IeltsCenter: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài test này không?")) {
+    if (window.confirm(t("ielts.teacher.confirmDelete"))) {
       try {
         await ieltsService.deleteTest(id);
         loadIeltsResources();
       } catch (error) {
         console.error("Failed to delete IELTS test:", error);
+        // You might want to show a toast notification here
       }
     }
   };
@@ -545,10 +572,6 @@ export const IeltsCenter: React.FC = () => {
 
   if (view === "form") {
     return <IeltsTestForm testId={currentTestId} onBack={handleBack} />;
-  }
-
-  if (view === "player" && currentTestId) {
-    return <IeltsTestPlayer testId={currentTestId} onBack={handleBack} />;
   }
 
   if (view === "result" && currentSubmissionId) {

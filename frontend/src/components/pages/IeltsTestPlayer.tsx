@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -18,6 +19,7 @@ const QuestionRenderer: React.FC<{
   handleAnswerChange: (questionId: number, answer: Answer) => void;
   questionNumberOffset: number;
 }> = ({ question, userAnswer, handleAnswerChange, questionNumberOffset }) => {
+  const { t } = useTranslation();
   const userAnswersForGroup = useMemo(() => {
     try {
       return userAnswer ? JSON.parse(userAnswer) : {};
@@ -34,7 +36,9 @@ const QuestionRenderer: React.FC<{
       return (
         <div className="space-y-2 mt-2">
           <p className="font-semibold text-gray-800 text-start">
-            <span className="font-bold">Câu {questionNumberOffset + 1}:</span>{" "}
+            <span className="font-bold">
+              {t("ielts.player.question")} {questionNumberOffset + 1}:
+            </span>{" "}
             <span dangerouslySetInnerHTML={{ __html: question.question }} />
           </p>
           {(question.options || []).map((option, index) => (
@@ -69,14 +73,16 @@ const QuestionRenderer: React.FC<{
         return (
           <div>
             <p className="font-semibold text-gray-800 text-start">
-              <span className="font-bold">Câu {questionNumberOffset + 1}:</span>{" "}
+              <span className="font-bold">
+                {t("ielts.player.question")} {questionNumberOffset + 1}:
+              </span>{" "}
               <span dangerouslySetInnerHTML={{ __html: question.question }} />
             </p>
             <input
               type="text"
               value={userAnswer || ""}
               onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-              placeholder="Nhập câu trả lời..."
+              placeholder={t("ielts.player.enterAnswer")}
               className="mt-2 block w-full max-w-lg rounded-lg border-gray-200 bg-gray-50 px-4 py-2 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -112,7 +118,7 @@ const QuestionRenderer: React.FC<{
                   htmlFor={`q${question.id}-sub${index}`}
                   className="flex-shrink-0 w-max font-semibold text-gray-800 text-start"
                 >
-                  Câu {fullQuestionNumber}:
+                  {t("ielts.player.question")} {fullQuestionNumber}:
                 </label>
                 <div className="flex-grow text-start">
                   <p
@@ -147,7 +153,7 @@ const QuestionRenderer: React.FC<{
                       type="text"
                       value={currentAnswer}
                       onChange={(e) => onAnswer(e.target.value)}
-                      placeholder="Nhập câu trả lời..."
+                      placeholder={t("ielts.player.enterAnswer")}
                       className="mt-1 block w-full max-w-lg rounded-lg border-gray-200 bg-gray-50 px-4 py-2 text-gray-800 shadow-sm transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm"
                     />
                   )}
@@ -208,7 +214,7 @@ const QuestionRenderer: React.FC<{
                     className="md:col-span-2 text-gray-800 text-start"
                   >
                     <span className="font-semibold">
-                      Câu {fullQuestionNumber}:
+                      {t("ielts.player.question")} {fullQuestionNumber}:
                     </span>{" "}
                     <span dangerouslySetInnerHTML={{ __html: subQ }} />
                   </label>
@@ -218,7 +224,7 @@ const QuestionRenderer: React.FC<{
                     onChange={(e) => handleMatchingChange(e.target.value)}
                     className="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base py-2 px-4"
                   >
-                    <option value="">Chọn...</option>
+                    <option value="">{t("ielts.player.selectOption")}</option>
                     {options.map((opt, optIndex) => (
                       <option key={optIndex} value={opt}>
                         {opt.split(":")[0]}
@@ -236,7 +242,7 @@ const QuestionRenderer: React.FC<{
       return (
         <div>
           <p className="font-semibold text-red-500">
-            Loại câu hỏi không được hỗ trợ.
+            {t("ielts.player.unsupportedQuestionType")}
           </p>
         </div>
       );
@@ -244,6 +250,7 @@ const QuestionRenderer: React.FC<{
 };
 
 export const IeltsTestPlayer: React.FC = () => {
+  const { t } = useTranslation();
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -297,11 +304,11 @@ export const IeltsTestPlayer: React.FC = () => {
         setTimeLeft(testData.timeLimit * 60);
       }
     } catch (err) {
-      setError("Không thể tải bài test. Vui lòng thử lại.");
+      setError(t("ielts.player.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [testId, storageKey]);
+  }, [testId, storageKey, t]);
 
   useEffect(() => {
     fetchTest();
@@ -314,12 +321,7 @@ export const IeltsTestPlayer: React.FC = () => {
 
   const handleSubmit = useCallback(
     (isAutoSubmit = false) => {
-      if (
-        !isAutoSubmit &&
-        !window.confirm(
-          "Bạn có chắc chắn muốn nộp bài không? Bạn vẫn có thể làm lại sau."
-        )
-      ) {
+      if (!isAutoSubmit && !window.confirm(t("ielts.player.submitConfirm"))) {
         return;
       }
 
@@ -331,14 +333,14 @@ export const IeltsTestPlayer: React.FC = () => {
           })
         );
         ieltsService.submitTest(Number(testId), submissionData);
-        alert("Nộp bài thành công!");
+        alert(t("ielts.player.submitSuccess"));
         clearAttemptAndNavigate();
       } catch (err) {
-        setError("Có lỗi xảy ra khi nộp bài.");
+        setError(t("ielts.player.submitError"));
         // console.error(err);
       }
     },
-    [answers, testId, clearAttemptAndNavigate]
+    [answers, testId, clearAttemptAndNavigate, t]
   );
 
   // Timer countdown effect
@@ -361,7 +363,7 @@ export const IeltsTestPlayer: React.FC = () => {
   }, [timeLeft, test, handleSubmit]);
 
   const handleExit = () => {
-    if (window.confirm("Bạn có chắc chắn muốn thoát? Tiến trình sẽ bị hủy.")) {
+    if (window.confirm(t("ielts.player.exitConfirm"))) {
       clearAttemptAndNavigate();
       if (timeLeft === 1) {
         // Auto-submit when time is up
@@ -402,7 +404,9 @@ export const IeltsTestPlayer: React.FC = () => {
   );
 
   if (loading) {
-    return <div className="p-8 text-center">Đang tải bài thi...</div>;
+    return (
+      <div className="p-8 text-center">{t("ielts.player.loadingTest")}</div>
+    );
   }
 
   if (error) {
@@ -410,11 +414,7 @@ export const IeltsTestPlayer: React.FC = () => {
   }
 
   if (!test || !currentSection) {
-    return (
-      <div className="p-8 text-center">
-        Không tìm thấy bài thi hoặc bài thi không có nội dung.
-      </div>
-    );
+    return <div className="p-8 text-center">{t("ielts.player.notFound")}</div>;
   }
 
   const formatTime = (seconds: number) => {
@@ -432,13 +432,15 @@ export const IeltsTestPlayer: React.FC = () => {
         <div className="text-start">
           <h1 className="text-2xl font-bold text-gray-900">{test.title}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Phần {currentSectionIndex + 1} / {test.sections.length}:{" "}
-            {currentSection.title}
+            {t("ielts.player.section")} {currentSectionIndex + 1} /{" "}
+            {test.sections.length}: {currentSection.title}
           </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-sm text-gray-500">Thời gian còn lại</p>
+            <p className="text-sm text-gray-500">
+              {t("ielts.player.remainingTime")}
+            </p>
             <p className="text-2xl font-bold text-indigo-600">
               {formatTime(timeLeft)}
             </p>
@@ -446,9 +448,9 @@ export const IeltsTestPlayer: React.FC = () => {
           <button
             onClick={handleExit}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm"
-            aria-label="Thoát bài thi"
+            aria-label={t("ielts.player.exit")}
           >
-            Thoát
+            {t("ielts.player.exit")}
           </button>
         </div>
       </div>
@@ -526,7 +528,7 @@ export const IeltsTestPlayer: React.FC = () => {
             disabled={currentSectionIndex === 0}
             className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            Phần trước
+            {t("ielts.player.previousSection")}
           </button>
           <button
             onClick={() =>
@@ -537,14 +539,14 @@ export const IeltsTestPlayer: React.FC = () => {
             disabled={currentSectionIndex === test.sections.length - 1}
             className="ml-3 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            Phần sau
+            {t("ielts.player.nextSection")}
           </button>
         </div>
         <button
           onClick={() => handleSubmit(false)}
           className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-          Nộp bài
+          {t("ielts.player.submit")}
         </button>
       </div>
     </div>

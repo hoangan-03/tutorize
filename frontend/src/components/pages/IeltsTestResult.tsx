@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ieltsService,
   IeltsSubmissionResult,
@@ -17,7 +18,8 @@ interface IeltsTestResultProps {
 }
 
 const getAnswerDisplay = (
-  question: IeltsQuestion & { userAnswer?: string; isCorrect?: boolean }
+  question: IeltsQuestion & { userAnswer?: string; isCorrect?: boolean },
+  t: (key: string) => string
 ) => {
   const userAnswer = question.userAnswer || "N/A";
   const correctAnswers = (question.correctAnswers || []).join(", ");
@@ -25,7 +27,9 @@ const getAnswerDisplay = (
   return (
     <div className="mt-4 space-y-2 text-sm">
       <div className="flex items-start">
-        <strong className="w-32 text-gray-600">Câu trả lời của bạn: </strong>
+        <strong className="w-32 text-gray-600">
+          {t("ielts.result.userAnswer")}
+        </strong>
         <span
           className={`font-medium text-start ${
             question.isCorrect ? "text-green-700" : "text-red-700"
@@ -36,7 +40,9 @@ const getAnswerDisplay = (
       </div>
       {!question.isCorrect && (
         <div className="flex items-start text-start">
-          <strong className="w-32 text-gray-600">Đáp án đúng: </strong>
+          <strong className="w-32 text-gray-600">
+            {t("ielts.result.correctAnswer")}
+          </strong>
           <span className="font-medium text-blue-700">{correctAnswers}</span>
         </div>
       )}
@@ -54,6 +60,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
   submissionId,
   onBack,
 }) => {
+  const { t } = useTranslation();
   const [submission, setSubmission] = useState<IeltsSubmissionResult | null>(
     null
   );
@@ -96,7 +103,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-lg">Loading results...</p>
+        <p className="text-lg">{t("ielts.result.loading")}</p>
       </div>
     );
   }
@@ -104,13 +111,13 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
   if (error) {
     return (
       <div className="text-center p-8">
-        <h2 className="text-xl text-red-600">Error</h2>
+        <h2 className="text-xl text-red-600">{t("ielts.result.errorTitle")}</h2>
         <p>{error}</p>
         <button
           onClick={onBack}
           className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
         >
-          Back
+          {t("ielts.result.back")}
         </button>
       </div>
     );
@@ -119,12 +126,12 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
   if (!submission) {
     return (
       <div className="text-center p-8">
-        <p>No submission data found.</p>
+        <p>{t("ielts.result.noSubmission")}</p>
         <button
           onClick={onBack}
           className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
         >
-          Back
+          {t("ielts.result.back")}
         </button>
       </div>
     );
@@ -148,8 +155,8 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
             (subQ: string, index: number) => {
               const fullQuestionNumber = questionNumberOffset + index + 1;
               const userAnswer = hasSubQuestions
-                ? userAnswers[index] || "Chưa trả lời"
-                : questionGroup.userAnswer || "Chưa trả lời";
+                ? userAnswers[index] || t("ielts.result.notAnswered")
+                : questionGroup.userAnswer || t("ielts.result.notAnswered");
               const correctAnswer = (questionGroup.correctAnswers || [])[index];
               const isCorrect = userAnswer === correctAnswer;
 
@@ -164,14 +171,14 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
                   </div>
                   <div className="flex-grow text-sm text-start">
                     <p className="font-semibold text-gray-700">
-                      Câu {fullQuestionNumber}:{" "}
+                      {t("ielts.result.question")} {fullQuestionNumber}:{" "}
                       {hasSubQuestions && (
                         <span dangerouslySetInnerHTML={{ __html: subQ }} />
                       )}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       <strong className="text-gray-600 w-28 text-right">
-                        Bạn trả lời:
+                        {t("ielts.result.userAnswer")}
                       </strong>
                       <span
                         className={`font-medium ${
@@ -184,7 +191,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
                     {!isCorrect && (
                       <div className="flex items-center gap-2 mt-1">
                         <strong className="text-gray-600 w-28 text-right">
-                          Đáp án đúng:
+                          {t("ielts.result.correctAnswer")}
                         </strong>
                         <span className="font-medium text-blue-700">
                           {correctAnswer}
@@ -212,7 +219,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
             <div className="flex flex-col text-start">
               <h1 className="text-3xl font-bold text-gray-900">{test.title}</h1>
               <p className="mt-1 text-sm text-gray-500">
-                Kết quả bài làm ngày:{" "}
+                {t("ielts.result.submittedOn")}{" "}
                 {new Date(submission.submittedAt).toLocaleDateString("vi-VN", {
                   day: "2-digit",
                   month: "2-digit",
@@ -225,18 +232,22 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
               onClick={onBack}
               className="block rounded-md bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
             >
-              Quay lại
+              {t("ielts.result.back")}
             </button>
           </div>
           <div className="mt-6 flex flex-row gap-4 text-center">
             <div className="bg-blue-100 p-4 rounded-lg flex-shrink-0">
-              <p className="text-sm font-medium text-blue-800">Band Score</p>
+              <p className="text-sm font-medium text-blue-800">
+                {t("ielts.result.bandScore")}
+              </p>
               <p className="mt-1 text-3xl font-bold text-blue-900">
                 {submission.score.toFixed(1)}
               </p>
             </div>
             <div className="bg-green-100 p-4 rounded-lg text-start flex-grow">
-              <p className="text-sm font-medium text-green-800">Feedback</p>
+              <p className="text-sm font-medium text-green-800">
+                {t("ielts.result.feedback")}
+              </p>
               <p className="mt-1 text-md text-green-900">
                 {submission.feedback}
               </p>
@@ -249,14 +260,14 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
           {test.sections.map((section, sectionIndex) => (
             <div key={section.id} className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                Section {sectionIndex + 1}: {section.title}
+                {t("ielts.result.section")} {sectionIndex + 1}: {section.title}
               </h2>
 
               {section.passageText && (
                 <div className="prose max-w-none p-4 bg-gray-50 rounded-md mb-6 text-start flex flex-col gap-2">
                   <h3 className="flex items-center text-lg font-semibold">
                     <BookOpenIcon className="h-6 w-6 mr-2 text-gray-600" />
-                    Reading Passage
+                    {t("ielts.result.readingPassage")}
                   </h3>
                   <div
                     dangerouslySetInnerHTML={{ __html: section.passageText }}
@@ -267,7 +278,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
               {section.audioUrl && (
                 <div className="my-4">
                   <h3 className="text-lg font-semibold mb-2">
-                    Listening Audio
+                    {t("ielts.result.listeningAudio")}
                   </h3>
                   <audio controls src={section.audioUrl} className="w-full">
                     Your browser does not support the audio element.
