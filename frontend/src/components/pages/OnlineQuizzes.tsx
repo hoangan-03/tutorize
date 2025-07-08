@@ -26,7 +26,8 @@ import { QuizManagement } from "./QuizManagement";
 
 // Student Quiz Component
 const StudentQuizView: React.FC = () => {
-  const { user, isTeacher } = useAuth();
+  const { user } = useAuth();
+  const isTeacher = user?.role === "TEACHER";
   const { t } = useTranslation();
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
@@ -58,25 +59,56 @@ const StudentQuizView: React.FC = () => {
     return `quiz-attempt-${user.id}-${quizId}`;
   }, [user, quizId]);
 
-  // Load state from localStorage
+  // Load state from localStorage on refresh
   useEffect(() => {
     if (storageKey) {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
-        const state = JSON.parse(saved);
-        setSelectedAnswers(state.answers);
-        setTimeLeft(state.timeLeft);
+        try {
+          const state = JSON.parse(saved);
+          // Check if saved state is not too old (max 6 hours)
+          const maxAge = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+          if (state.timestamp && Date.now() - state.timestamp < maxAge) {
+            setSelectedAnswers(state.answers || []);
+            setTimeLeft(state.timeLeft || 0);
+            setCurrentQuestionIndex(state.currentQuestionIndex || 0);
+            setQuizStartTime(state.quizStartTime || Date.now());
+            console.log("Restored quiz state from localStorage:", state);
+          } else {
+            // State is too old, remove it
+            localStorage.removeItem(storageKey);
+            console.log("Removed old quiz state from localStorage");
+          }
+        } catch (error) {
+          console.error("Error parsing saved quiz state:", error);
+          localStorage.removeItem(storageKey);
+        }
       }
     }
   }, [storageKey]);
 
   // Persist state to localStorage
   useEffect(() => {
-    if (storageKey && currentView === "quiz") {
-      const stateToSave = { answers: selectedAnswers, timeLeft };
+    if (storageKey && currentView === "quiz" && currentQuiz) {
+      const stateToSave = {
+        answers: selectedAnswers,
+        timeLeft,
+        currentQuestionIndex,
+        quizStartTime,
+        quizId: currentQuiz.id,
+        timestamp: Date.now(),
+      };
       localStorage.setItem(storageKey, JSON.stringify(stateToSave));
     }
-  }, [selectedAnswers, timeLeft, storageKey, currentView]);
+  }, [
+    selectedAnswers,
+    timeLeft,
+    currentQuestionIndex,
+    quizStartTime,
+    storageKey,
+    currentView,
+    currentQuiz,
+  ]);
 
   useEffect(() => {
     // If there is a quizId in the URL, start the quiz directly
@@ -92,27 +124,112 @@ const StudentQuizView: React.FC = () => {
   }, [quizId, isTeacher]);
 
   const clearAttemptAndNavigate = useCallback(() => {
+    console.log("clearAttemptAndNavigate called", { storageKey });
     if (storageKey) {
       localStorage.removeItem(storageKey);
+      console.log("Removed localStorage item:", storageKey);
     }
+
+    // Reset all quiz state
+    setCurrentView("list");
+    setCurrentQuiz(null);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers([]);
+    setQuizResults(null);
+    setTimeLeft(0);
+
+    // Navigate to quiz list
     navigate("/quizzes");
+    console.log("Navigated to /quizzes");
   }, [storageKey, navigate]);
 
-  // Updated to handle submission for unload
+  // Timer effect for countdown
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (currentView === "quiz" && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Auto submit when time runs out
+            finishQuiz(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentView, timeLeft]);
+
+  // Auto-submit with score 0 when closing/navigating away
+  const autoSubmitWithZeroScore = async () => {
+    if (!currentQuiz || !currentQuiz.questions || isTeacher) return;
+
+    try {
+      const submitData = {
+        answers: [], // Submit empty answers for score 0
+        timeSpent: Math.floor((Date.now() - quizStartTime) / 1000),
+      };
+
+      await quizService.submitQuiz(currentQuiz.id, submitData);
+      console.log("Auto-submitted quiz with score 0 due to page unload");
+
+      // Clear storage
+      if (storageKey) {
+        localStorage.removeItem(storageKey);
+      }
+    } catch (error) {
+      console.error("Error auto-submitting quiz:", error);
+    }
+  };
+
+  // Handle page unload/refresh/close
   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-    if (currentView === "quiz" && quizId) {
+    if (currentView === "quiz" && currentQuiz && !isTeacher) {
+      // Show confirmation dialog
       event.preventDefault();
-      // This will trigger the submission
-      finishQuiz(true);
+      event.returnValue =
+        "Bạn có chắc muốn rời khỏi trang? Bài làm sẽ được tự động nộp với điểm 0.";
+
+      // Auto-submit with score 0 (this may not work reliably in all browsers due to timing)
+      autoSubmitWithZeroScore();
+
+      return event.returnValue;
+    }
+  };
+
+  // Handle visibility change (tab switch)
+  const handleVisibilityChange = () => {
+    if (
+      document.hidden &&
+      currentView === "quiz" &&
+      currentQuiz &&
+      !isTeacher
+    ) {
+      console.log("Tab switched while in quiz - auto-submitting with score 0");
+      autoSubmitWithZeroScore();
     }
   };
 
   useEffect(() => {
     window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [currentView, quizId]);
+  }, [
+    currentView,
+    currentQuiz,
+    isTeacher,
+    handleBeforeUnload,
+    handleVisibilityChange,
+  ]);
 
   const loadQuizzes = async () => {
     try {
@@ -187,11 +304,19 @@ const StudentQuizView: React.FC = () => {
 
   const beginQuizAttempt = async (id: number) => {
     try {
+      // Validation
+      if (!id || id <= 0) {
+        console.error("Invalid quiz ID:", id);
+        alert("ID quiz không hợp lệ.");
+        return;
+      }
+
+      console.log("Beginning quiz attempt for ID:", id);
       const detailedQuiz = await quizService.getQuiz(id);
 
       if (!detailedQuiz.questions || detailedQuiz.questions.length === 0) {
         alert("Quiz này hiện không có câu hỏi nào để làm.");
-        resetQuiz();
+        clearAttemptAndNavigate();
         return;
       }
 
@@ -202,9 +327,20 @@ const StudentQuizView: React.FC = () => {
       setCurrentQuestionIndex(0);
       setSelectedAnswers([]);
       setQuizResults(null);
-    } catch (error) {
+
+      console.log("Quiz attempt started successfully for:", detailedQuiz.title);
+    } catch (error: any) {
       console.error("Lỗi khi bắt đầu lượt làm bài mới:", error);
-      alert("Có lỗi khi bắt đầu lượt làm bài mới. Vui lòng thử lại.");
+
+      if (error.response?.status === 404) {
+        alert("Không tìm thấy quiz này.");
+      } else if (error.response?.status === 403) {
+        alert("Bạn không có quyền truy cập quiz này.");
+      } else if (error.response?.status === 400) {
+        alert("Quiz này đã hết hạn hoặc không còn hoạt động.");
+      } else {
+        alert("Có lỗi khi bắt đầu lượt làm bài mới. Vui lòng thử lại.");
+      }
     }
   };
 
@@ -281,14 +417,26 @@ const StudentQuizView: React.FC = () => {
       try {
         // Filter out unanswered questions
         const validAnswers = selectedAnswers
-          .map((answer, index) => ({
-            questionId: questions[index].id,
-            userAnswer:
+          .map((answer, index) => {
+            const questionType = questions[index].type;
+            const userAnswer =
               answer !== undefined && answer !== ""
                 ? answer.toString().trim()
-                : "",
-            timeTaken: 0, // You can track time per question if needed
-          }))
+                : "";
+
+            console.log(`Question ${index + 1} (${questionType}):`, {
+              questionId: questions[index].id,
+              userAnswer: userAnswer,
+              originalAnswer: answer,
+              correctAnswer: questions[index].correctAnswer,
+            });
+
+            return {
+              questionId: questions[index].id,
+              userAnswer: userAnswer,
+              timeTaken: 0, // You can track time per question if needed
+            };
+          })
           .filter(
             (_answer: any, index: number) =>
               selectedAnswers[index] !== undefined &&
@@ -534,7 +682,7 @@ const StudentQuizView: React.FC = () => {
 
             <div className="flex justify-between mt-8">
               <button
-                onClick={resetQuiz}
+                onClick={clearAttemptAndNavigate}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
                 {t("quizzes.backToList")}
@@ -571,7 +719,7 @@ const StudentQuizView: React.FC = () => {
                 Quiz này chưa được thiết lập câu hỏi.
               </p>
               <button
-                onClick={resetQuiz}
+                onClick={clearAttemptAndNavigate}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 {t("quizzes.back")}
@@ -1002,7 +1150,7 @@ const StudentQuizView: React.FC = () => {
               {/* Action buttons */}
               <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-200">
                 <button
-                  onClick={resetQuiz}
+                  onClick={clearAttemptAndNavigate}
                   className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -1011,7 +1159,7 @@ const StudentQuizView: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   {quizResults.currentAttempt > 0 ? (
                     <button
-                      onClick={() => beginQuizAttempt(Number(quizId))}
+                      onClick={() => beginQuizAttempt(currentQuiz?.id || 0)}
                       className="inline-flex items-center gap-2 px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                       <RotateCw className="h-4 w-4" />
@@ -1121,13 +1269,13 @@ const StudentQuizView: React.FC = () => {
 
             <div className="flex justify-center space-x-4">
               <button
-                onClick={resetQuiz}
+                onClick={clearAttemptAndNavigate}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
                 {t("quizzes.backToList")}
               </button>
               <button
-                onClick={() => beginQuizAttempt(Number(quizId))}
+                onClick={() => beginQuizAttempt(currentQuiz?.id || 0)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 {t("quizzes.retake")}
@@ -1425,7 +1573,8 @@ const StudentQuizView: React.FC = () => {
 
 // Main OnlineQuizzes component
 export const OnlineQuizzes: React.FC = () => {
-  const { isTeacher } = useAuth();
+  const { user } = useAuth();
+  const isTeacher = user?.role === "TEACHER";
 
   // If user is a teacher, show QuizManagement
   if (isTeacher) {

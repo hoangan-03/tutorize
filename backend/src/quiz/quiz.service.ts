@@ -46,6 +46,15 @@ export class QuizService {
               }
             }
 
+            // For True/False questions, normalize to lowercase
+            if (question.type === 'TRUE_FALSE') {
+              if (question.correctAnswer?.toLowerCase() === 'true') {
+                processedCorrectAnswer = 'true';
+              } else if (question.correctAnswer?.toLowerCase() === 'false') {
+                processedCorrectAnswer = 'false';
+              }
+            }
+
             return {
               ...question,
               options: question.options || [],
@@ -330,6 +339,15 @@ export class QuizService {
               );
               if (optionIndex !== -1) {
                 processedCorrectAnswer = optionIndex.toString();
+              }
+            }
+
+            // For True/False questions, normalize to lowercase
+            if (question.type === 'TRUE_FALSE') {
+              if (question.correctAnswer?.toLowerCase() === 'true') {
+                processedCorrectAnswer = 'true';
+              } else if (question.correctAnswer?.toLowerCase() === 'false') {
+                processedCorrectAnswer = 'false';
               }
             }
 
@@ -718,27 +736,85 @@ export class QuizService {
 
   private checkAnswer(question: any, userAnswer: string): boolean {
     if (!question.correctAnswer || question.correctAnswer.length === 0) {
+      console.log(`Question ${question.id} - No correct answer provided`);
       return false;
     }
 
+    console.log(
+      `Checking answer for Question ${question.id} (${question.type}):`,
+      {
+        correctAnswer: question.correctAnswer,
+        userAnswer: userAnswer,
+        correctAnswerType: typeof question.correctAnswer,
+        userAnswerType: typeof userAnswer,
+        options: question.options,
+      },
+    );
+
     switch (question.type) {
       case 'MULTIPLE_CHOICE':
+        // Handle both cases: correctAnswer as index or as text
+        const userAnswerIndex = parseInt(userAnswer);
+        let isMultipleCorrect = false;
+
+        // Case 1: correctAnswer is stored as index (string)
+        if (/^\d+$/.test(question.correctAnswer)) {
+          const correctIndex = parseInt(question.correctAnswer);
+          isMultipleCorrect = userAnswerIndex === correctIndex;
+          console.log(`  Index comparison:`, {
+            userAnswerIndex,
+            correctIndex,
+            isMultipleCorrect,
+          });
+        }
+        // Case 2: correctAnswer is stored as text of the option
+        else {
+          const correctIndex = question.options?.findIndex(
+            (option: string) => option === question.correctAnswer,
+          );
+          isMultipleCorrect = userAnswerIndex === correctIndex;
+          console.log(`  Text-to-index comparison:`, {
+            userAnswerIndex,
+            correctAnswerText: question.correctAnswer,
+            correctIndex,
+            isMultipleCorrect,
+          });
+        }
+
+        return isMultipleCorrect;
+
       case 'TRUE_FALSE':
-        // For multiple choice, correctAnswer stores the index of correct option
-        // Convert both to string for comparison to handle type mismatches
-        const correctAnswerStr = question.correctAnswer.toString();
-        const userAnswerStr = userAnswer.toString();
-        return correctAnswerStr === userAnswerStr;
+        // Handle both "true"/"false" and "True"/"False"
+        const userBool = userAnswer.toLowerCase();
+        const correctBool = question.correctAnswer.toLowerCase();
+        const isTrueFalseCorrect = userBool === correctBool;
+
+        console.log(`  True/False comparison:`, {
+          userBool,
+          correctBool,
+          isTrueFalseCorrect,
+        });
+
+        return isTrueFalseCorrect;
       case 'FILL_BLANK':
         // For fill in the blank, do case-insensitive comparison
-        return (
-          question.correctAnswer.toLowerCase().trim() ===
-          userAnswer.toLowerCase().trim()
-        );
+        const correctFillAnswer = question.correctAnswer.toLowerCase().trim();
+        const userFillAnswer = userAnswer.toLowerCase().trim();
+        const isFillCorrect = correctFillAnswer === userFillAnswer;
+
+        console.log(`  Fill blank comparison:`, {
+          correctFillAnswer,
+          userFillAnswer,
+          isFillCorrect,
+        });
+
+        return isFillCorrect;
       case 'ESSAY':
         // Essay questions need manual grading
+        console.log(`  Essay question - manual grading required`);
         return false;
       default:
+        console.log(`  Unknown question type: ${question.type}`);
         return false;
     }
   }

@@ -1,132 +1,272 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import useSWR, { mutate } from "swr";
+import { useState, useEffect } from "react";
 import { authService } from "../services/authService";
 import {
-  User,
   LoginRequest,
   RegisterRequest,
+  User,
   UpdateProfileRequest,
+  AuthResponse,
 } from "../types/api";
-import { toast } from "react-toastify";
 
-// Auth state hook
-export const useAuth = () => {
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useSWR<User | null>(
-    authService.isAuthenticated() ? "/auth/me" : null,
-    () => authService.getProfile(),
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-      onError: (error) => {
-        if (error?.response?.status === 401) {
+interface UseAuthReturn {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  login: (credentials: LoginRequest) => Promise<AuthResponse>;
+  register: (userData: RegisterRequest) => Promise<AuthResponse>;
+  logout: () => Promise<void>;
+  updateProfile: (
+    data: UpdateProfileRequest
+  ) => Promise<{ message: string; profile: any }>;
+  changePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+  }) => Promise<{ message: string }>;
+  forgotPassword: (
+    email: string
+  ) => Promise<{ message: string; tempPassword?: string }>;
+  resetPassword: (data: {
+    token: string;
+    password: string;
+  }) => Promise<{ message: string }>;
+  refreshUser: () => Promise<void>;
+  clearError: () => void;
+}
+
+export const useAuth = (): UseAuthReturn => {
+  const [user, setUser] = useState<User | null>(authService.getUser());
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(authService.getToken());
+
+  const isAuthenticated = !!user && !!token;
+
+  // Debug logging for authentication state changes
+  useEffect(() => {
+    console.log("🔍 Auth state changed:", {
+      user: user ? { id: user.id, email: user.email, role: user.role } : null,
+      token: token ? "present" : "absent",
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+  }, [user, token, isAuthenticated]);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = authService.getToken();
+      const savedUser = authService.getUser();
+
+      if (token && savedUser) {
+        try {
+          // Verify token is still valid by fetching current user
+          const currentUser = await authService.getProfile();
+          setUser(currentUser);
+          setToken(token);
+          authService.saveUser(currentUser);
+        } catch (err) {
+          // Token is invalid, clear auth
           authService.clearAuth();
+          setUser(null);
+          setToken(null);
         }
-      },
-    }
-  );
+      }
+    };
 
-  const login = async (credentials: LoginRequest) => {
+    initAuth();
+  }, []);
+
+  const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
+      setIsLoading(true);
+      setError(null);
+
+      console.log("useAuth: Starting login...");
       const response = await authService.login(credentials);
+      console.log("useAuth: Login response:", response);
+
       authService.saveToken(response.accessToken);
       authService.saveUser(response.user);
+      setUser(response.user);
+      setToken(response.accessToken);
 
-      // Revalidate user data
-      mutate("/auth/me", response.user, false);
+      console.log("useAuth: User state updated:", response.user);
+      console.log("useAuth: Token state updated:", response.accessToken);
+      console.log(
+        "useAuth: Is authenticated:",
+        !!response.user && !!response.accessToken
+      );
 
-      toast.success("Đăng nhập thành công!");
       return response;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Đăng nhập thất bại";
-      toast.error(message);
-      throw error;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || "Đăng nhập thất bại";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const register = async (userData: RegisterRequest) => {
+  const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
     try {
+      setIsLoading(true);
+      setError(null);
+
       const response = await authService.register(userData);
+
       authService.saveToken(response.accessToken);
       authService.saveUser(response.user);
+      setUser(response.user);
+      setToken(response.accessToken);
 
-      // Revalidate user data
-      mutate("/auth/me", response.user, false);
-
-      toast.success("Đăng ký thành công!");
       return response;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Đăng ký thất bại";
-      toast.error(message);
-      throw error;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || "Đăng ký thất bại";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
+      setIsLoading(true);
       await authService.logout();
-
-      // Clear all SWR cache
-      mutate(() => true, undefined, { revalidate: false });
-
-      toast.success("Đăng xuất thành công!");
-    } catch (error) {
-      // Still logout locally even if API call fails
+    } catch (err: any) {
+      console.error("Logout error:", err);
+    } finally {
       authService.clearAuth();
-      mutate(() => true, undefined, { revalidate: false });
+      setUser(null);
+      setToken(null);
+      setError(null);
+      setIsLoading(false);
     }
   };
 
-  const updateProfile = async (data: UpdateProfileRequest) => {
+  const updateProfile = async (
+    data: UpdateProfileRequest
+  ): Promise<{ message: string; profile: any }> => {
     try {
+      setIsLoading(true);
+      setError(null);
+
       const response = await authService.updateProfile(data);
 
-      // Revalidate user data
-      mutate("/auth/me");
+      // Refresh user data
+      const updatedUser = await authService.getProfile();
+      setUser(updatedUser);
+      authService.saveUser(updatedUser);
 
-      toast.success(response.message);
       return response;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Cập nhật thất bại";
-      toast.error(message);
-      throw error;
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || "Cập nhật thông tin thất bại";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const changePassword = async (data: {
     currentPassword: string;
     newPassword: string;
-  }) => {
+  }): Promise<{ message: string }> => {
     try {
+      setIsLoading(true);
+      setError(null);
+
       const response = await authService.changePassword(data);
-      toast.success(response.message);
+
       return response;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Đổi mật khẩu thất bại";
-      toast.error(message);
-      throw error;
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || "Đổi mật khẩu thất bại";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const forgotPassword = async (
+    email: string
+  ): Promise<{ message: string; tempPassword?: string }> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await authService.forgotPassword(email);
+
+      return response;
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || "Quên mật khẩu thất bại";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (data: {
+    token: string;
+    password: string;
+  }): Promise<{ message: string }> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await authService.resetPassword(data);
+
+      return response;
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || "Reset mật khẩu thất bại";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshUser = async (): Promise<void> => {
+    try {
+      const currentUser = await authService.getProfile();
+      setUser(currentUser);
+      setToken(authService.getToken());
+      authService.saveUser(currentUser);
+    } catch (err: any) {
+      console.error("Failed to refresh user:", err);
+      // If refresh fails, user might need to re-login
+      if (err.response?.status === 401) {
+        authService.clearAuth();
+        setUser(null);
+        setToken(null);
+      }
+    }
+  };
+
+  const clearError = (): void => {
+    setError(null);
+  };
+
   return {
-    user: user || authService.getUser(),
+    user,
+    isAuthenticated,
     isLoading,
     error,
-    isAuthenticated: !!user || authService.isAuthenticated(),
-    isTeacher:
-      user?.role === "TEACHER" || authService.getUser()?.role === "TEACHER",
     login,
     register,
     logout,
     updateProfile,
     changePassword,
+    forgotPassword,
+    resetPassword,
+    refreshUser,
+    clearError,
   };
 };

@@ -24,18 +24,26 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 // Pages
 import { LandingPage } from "./components/pages/LandingPage";
 import { AuthForm } from "./components/pages/AuthForm";
-import { Dashboard } from "./components/pages/Dashboard";
 import { DocumentLibrary } from "./components/pages/DocumentLibrary";
 import { IeltsCenter } from "./components/pages/IeltsCenter";
 import { OnlineQuizzes } from "./components/pages/OnlineQuizzes";
 import { WritingGrader } from "./components/pages/WritingGrader";
 import { ExerciseEditor } from "./components/pages/ExerciseEditor";
-import { QuizManagement } from "./components/pages/QuizManagement";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
+import { Role } from "./types/api";
 
-// Custom component to redirect based on user role
+// Component tùy chỉnh để chuyển hướng dựa trên vai trò người dùng
 const RoleBasedRedirect = () => {
-  const { isTeacher } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const isTeacher = user?.role === Role.TEACHER;
+
+  console.log("RoleBasedRedirect:", {
+    isAuthenticated,
+    isTeacher,
+    user,
+    redirectTo: isTeacher ? "/exercises" : "/quizzes",
+  });
+
   return <Navigate to={isTeacher ? "/exercises" : "/quizzes"} replace />;
 };
 
@@ -84,6 +92,46 @@ function AppContent() {
             <>
               <AuthForm mode="signup" />
             </>
+          }
+        />
+
+        <Route
+          path="/forgot-password"
+          element={
+            <>
+              <AuthForm mode="forgot-password" />
+            </>
+          }
+        />
+
+        {/* Protected Profile Routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <AuthForm mode="profile" />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <AuthForm mode="change-password" />
+              </main>
+            </ProtectedRoute>
           }
         />
 

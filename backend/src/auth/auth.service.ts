@@ -166,21 +166,33 @@ export class AuthService {
     });
 
     if (!user) {
-      // Don't reveal if email exists or not
-      return { message: 'Nếu email tồn tại, link reset mật khẩu đã được gửi' };
+      // Don't reveal if email exists or not for security
+      return {
+        message:
+          'Nếu email tồn tại, mật khẩu tạm thời đã được gửi đến email của bạn',
+        success: true,
+      };
     }
 
-    // Generate reset token (in real app, store this in database with expiration)
-    const resetToken = this.jwtService.sign(
-      { sub: user.id, type: 'reset' },
-      { expiresIn: '1h' },
-    );
+    // Generate a random temporary password
+    const tempPassword = this.generateRandomPassword();
+    const hashedTempPassword = await bcrypt.hash(tempPassword, 12);
 
-    // TODO: Send email with reset link
-    // For now, just return the token (remove this in production)
+    // Update user password to temporary password
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedTempPassword },
+    });
+
+    // In a real application, you would send this via email service
+    // For demo purposes, we'll return it (remove this in production)
+    await this.sendPasswordEmail(email, tempPassword);
+
     return {
-      message: 'Link reset mật khẩu đã được gửi đến email của bạn',
-      resetToken, // Remove this in production
+      message: 'Mật khẩu tạm thời đã được gửi đến email của bạn',
+      success: true,
+      // For demo only - remove in production
+      tempPassword: tempPassword,
     };
   }
 
@@ -243,10 +255,10 @@ export class AuthService {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
 
-    // Parse dateOfBirth from YYYY-MM-DD string to Date
+    // Parse dateOfBirth from DD-MM-YYYY string to Date
     let parsedDateOfBirth: Date | undefined;
     if (updateProfileDto.dateOfBirth) {
-      const [year, month, day] = updateProfileDto.dateOfBirth
+      const [day, month, year] = updateProfileDto.dateOfBirth
         .split('-')
         .map(Number);
       parsedDateOfBirth = new Date(Date.UTC(year, month - 1, day)); // month is 0-indexed
@@ -277,7 +289,14 @@ export class AuthService {
     const formattedProfile = {
       ...updatedProfile,
       dateOfBirth: updatedProfile.dateOfBirth
-        ? updatedProfile.dateOfBirth.toISOString().split('T')[0]
+        ? updatedProfile.dateOfBirth
+            .toLocaleDateString('vi-VN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            })
+            .split('/')
+            .join('-')
         : null,
     };
 
@@ -313,5 +332,46 @@ export class AuthService {
       return result;
     }
     return null;
+  }
+
+  private generateRandomPassword(): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  private async sendPasswordEmail(
+    email: string,
+    tempPassword: string,
+  ): Promise<void> {
+    // In a real application, implement email service here
+    // This is a placeholder for email functionality
+    console.log(`Sending temporary password to ${email}: ${tempPassword}`);
+
+    // You would integrate with services like:
+    // - NodeMailer with SMTP
+    // - AWS SES
+    // - SendGrid
+    // - MailGun
+    // etc.
+
+    // Example implementation would be:
+    /*
+    const mailOptions = {
+      from: this.configService.get('SMTP_FROM'),
+      to: email,
+      subject: 'Mật khẩu tạm thời - Tutorize',
+      html: `
+        <h2>Mật khẩu tạm thời của bạn</h2>
+        <p>Mật khẩu tạm thời: <strong>${tempPassword}</strong></p>
+        <p>Vui lòng đăng nhập và đổi mật khẩu ngay lập tức.</p>
+        <p>Mật khẩu này sẽ hết hiệu lực sau 24 giờ.</p>
+      `
+    };
+    await this.emailService.sendMail(mailOptions);
+    */
   }
 }

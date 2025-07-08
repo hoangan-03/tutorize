@@ -5,12 +5,72 @@ import {
   MaxLength,
   IsEnum,
   IsOptional,
-  IsNumberString,
+  IsNumber,
   Matches,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  Validate,
+  ValidationArguments,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { $Enums } from '@prisma/client';
+
+@ValidatorConstraint({ name: 'passwordStrength', async: false })
+export class PasswordStrengthValidator implements ValidatorConstraintInterface {
+  validate(password: string) {
+    if (!password) return false;
+
+    // Kiểm tra từng yêu cầu
+    const hasMinLength = password.length >= 8;
+    const hasMaxLength = password.length <= 50;
+    const hasLowercase = /[a-z]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasValidChars = /^[a-zA-Z\d@$!%*?&]+$/.test(password);
+
+    return (
+      hasMinLength &&
+      hasMaxLength &&
+      hasLowercase &&
+      hasUppercase &&
+      hasNumber &&
+      hasValidChars
+    );
+  }
+
+  defaultMessage(args: ValidationArguments) {
+    const password = args.value as string;
+    if (!password) return 'Mật khẩu không được để trống';
+
+    const errors: string[] = [];
+
+    if (password.length < 8) {
+      errors.push('ít nhất 8 ký tự');
+    }
+    if (password.length > 50) {
+      errors.push('không quá 50 ký tự');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('ít nhất 1 chữ thường (a-z)');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('ít nhất 1 chữ hoa (A-Z)');
+    }
+    if (!/\d/.test(password)) {
+      errors.push('ít nhất 1 số (0-9)');
+    }
+    if (!/^[a-zA-Z\d@$!%*?&]+$/.test(password)) {
+      errors.push('chỉ chứa chữ cái, số và ký tự đặc biệt (@$!%*?&)');
+    }
+
+    if (errors.length > 0) {
+      return `Mật khẩu phải có: ${errors.join(', ')}`;
+    }
+
+    return 'Mật khẩu không hợp lệ';
+  }
+}
 
 export class RegisterDto {
   @ApiProperty({ example: 'user@example.com', description: 'Email đăng ký' })
@@ -18,12 +78,8 @@ export class RegisterDto {
   email: string;
 
   @ApiProperty({ example: 'Password123!', description: 'Mật khẩu' })
-  @IsString()
-  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
-  @MaxLength(50, { message: 'Mật khẩu không được quá 50 ký tự' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/, {
-    message: 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số',
-  })
+  @IsString({ message: 'Mật khẩu phải là chuỗi ký tự' })
+  @Validate(PasswordStrengthValidator)
   password: string;
 
   @ApiProperty({ example: 'Nguyễn Văn A', description: 'Họ và tên' })
@@ -41,8 +97,13 @@ export class RegisterDto {
     description: 'Khối lớp (dành cho học sinh)',
   })
   @IsOptional()
-  @IsNumberString()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return parseInt(value, 10);
+    }
+    return value;
+  })
+  @IsNumber({}, { message: 'Khối lớp phải là số' })
   grade?: number;
 
   @ApiPropertyOptional({
@@ -74,12 +135,8 @@ export class ChangePasswordDto {
   currentPassword: string;
 
   @ApiProperty({ description: 'Mật khẩu mới' })
-  @IsString()
-  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
-  @MaxLength(50, { message: 'Mật khẩu không được quá 50 ký tự' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/, {
-    message: 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số',
-  })
+  @IsString({ message: 'Mật khẩu phải là chuỗi ký tự' })
+  @Validate(PasswordStrengthValidator)
   newPassword: string;
 }
 
@@ -98,12 +155,8 @@ export class ResetPasswordDto {
   token: string;
 
   @ApiProperty({ description: 'Mật khẩu mới' })
-  @IsString()
-  @MinLength(8, { message: 'Mật khẩu phải có ít nhất 8 ký tự' })
-  @MaxLength(50, { message: 'Mật khẩu không được quá 50 ký tự' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/, {
-    message: 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số',
-  })
+  @IsString({ message: 'Mật khẩu phải là chuỗi ký tự' })
+  @Validate(PasswordStrengthValidator)
   password: string;
 }
 

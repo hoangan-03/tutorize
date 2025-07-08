@@ -9,10 +9,15 @@ import {
   Award,
   Library,
   Edit,
+  User,
+  Lock,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { LanguageSwitcher } from "../ui/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import { Role } from "@/types/api";
 
 interface HeaderProps {
   mobileMenuOpen: boolean;
@@ -23,7 +28,8 @@ export const Header: React.FC<HeaderProps> = ({
   mobileMenuOpen,
   setMobileMenuOpen,
 }) => {
-  const { user, logout, isTeacher } = useAuth();
+  const { user, logout } = useAuth();
+  const isTeacher = user?.role === Role.TEACHER;
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,11 +46,6 @@ export const Header: React.FC<HeaderProps> = ({
   const handleLogout = () => {
     logout();
     navigate("/");
-  };
-
-  const handleDemoLogin = () => {
-    // Demo functionality would be implemented here
-    navigate("/login");
   };
 
   // Teacher Navigation - 4 tabs: Exercise, Quiz, IELTS, Document
@@ -280,20 +281,48 @@ export const Header: React.FC<HeaderProps> = ({
 
                 {user ? (
                   <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-600">
-                      {user.name}{" "}
-                      {isTeacher && (
-                        <span className="text-blue-600 font-medium">
-                          (Teacher)
+                    <div className="relative group">
+                      <button className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        <User className="h-4 w-4" />
+                        <span>
+                          {user.name}{" "}
+                          {isTeacher && (
+                            <span className="text-blue-600 font-medium">
+                              (Teacher)
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                    <button
-                      onClick={handleLogout}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      {t("navigation.logout")}
-                    </button>
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleNavigation("/profile")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                          >
+                            <User className="h-4 w-4 mr-3" />
+                            {t("navigation.profile")}
+                          </button>
+                          <button
+                            onClick={() => handleNavigation("/change-password")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                          >
+                            <Lock className="h-4 w-4 mr-3" />
+                            {t("auth.changePassword")}
+                          </button>
+                          <hr className="my-1" />
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                          >
+                            <LogOut className="h-4 w-4 mr-3" />
+                            {t("navigation.logout")}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-3">
@@ -308,12 +337,6 @@ export const Header: React.FC<HeaderProps> = ({
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     >
                       {t("navigation.register")}
-                    </button>
-                    <button
-                      onClick={handleDemoLogin}
-                      className="px-4 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                      Demo
                     </button>
                   </div>
                 )}
@@ -374,12 +397,37 @@ export const Header: React.FC<HeaderProps> = ({
                   <hr className="my-3" />
 
                   {user ? (
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
-                    >
-                      {t("navigation.logout")}
-                    </button>
+                    <>
+                      <div className="px-3 py-2 text-sm text-gray-500 border-b border-gray-100">
+                        {user.name}{" "}
+                        {isTeacher && (
+                          <span className="text-blue-600 font-medium">
+                            (Teacher)
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleNavigation("/profile")}
+                        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                      >
+                        <User className="h-5 w-5 mr-3" />
+                        {t("navigation.profile")}
+                      </button>
+                      <button
+                        onClick={() => handleNavigation("/change-password")}
+                        className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                      >
+                        <Lock className="h-5 w-5 mr-3" />
+                        {t("auth.changePassword")}
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                      >
+                        <LogOut className="h-5 w-5 mr-3" />
+                        {t("navigation.logout")}
+                      </button>
+                    </>
                   ) : (
                     <div className="space-y-2">
                       <button
@@ -394,12 +442,12 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         {t("navigation.register")}
                       </button>
-                      <button
+                      {/* <button
                         onClick={handleDemoLogin}
                         className="w-full px-3 py-2 text-base font-medium text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50"
                       >
                         Demo Login
-                      </button>
+                      </button> */}
                     </div>
                   )}
                 </div>

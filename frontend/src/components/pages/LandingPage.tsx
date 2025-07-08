@@ -232,14 +232,14 @@ export const LandingPage: React.FC = () => {
                 <ChevronRight className="ml-2 h-5 w-5" />
               </button>
             </div>
-            <div className="ml-3 inline-flex rounded-md shadow">
+            {/* <div className="ml-3 inline-flex rounded-md shadow">
               <button
                 onClick={() => navigate("/login")}
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50"
               >
                 {t("landing.learnMore")}
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
