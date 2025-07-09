@@ -70,7 +70,7 @@
   "status": {
     "active": "Active",
     "draft": "Draft",
-    "inactive": "Inactive",
+    "closed": "Closed",
     "overdue": "Overdue"
   },
   "subject": {
@@ -237,6 +237,10 @@
     "writingGrader": "AI Writing Grader"
   },
   "exercises": {
+    "teacher_title": "Exercise Management",
+    "teacher_description": "Create, view, and manage all student exercises and submissions.",
+    "student_title": "My Exercises",
+    "student_description": "View and complete all exercises assigned by your teacher.",
     "title": "Exercises",
     "createExercise": "Create Exercise",
     "exerciseName": "Exercise Name",
@@ -269,7 +273,6 @@
     "completeAndSubmit": "Complete the exercise and submit before deadline",
     "fromTeachers": "Exercises from Teachers",
     "viewAndComplete": "View and complete exercises assigned by teachers",
-    "total": "Total",
     "open": "Open",
     "nearDeadline": "Near Deadline",
     "completed": "Completed",
@@ -405,6 +408,7 @@
     "viewStatistics": "View Statistics",
     "viewSubmissions": "View Submissions",
     "exit": "Exit",
+    "previousQuestion": "Previous Question",
     "nextQuestion": "Next Question",
     "finish": "Finish",
     "congratulations": "Congratulations!",
@@ -431,6 +435,10 @@
     "finalScore": "Your final score in this test is",
     "totalQuizzes": "Total",
     "overdue": "Overdue",
+    "timeRunningOut": "Time running out! Please complete the remaining questions and submit before the deadline.",
+    "lessThan1Minute": "Less than 1 minute!",
+    "lessThan3Minutes": "Less than 3 minutes!",
+    "lessThan5Minutes": "Less than 5 minutes!",
     "dashboard": {
       "title": "Quiz Dashboard",
       "exportResults": "Export Results",

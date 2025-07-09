@@ -34,6 +34,7 @@ interface UseAuthReturn {
   }) => Promise<{ message: string }>;
   refreshUser: () => Promise<void>;
   clearError: () => void;
+  isTeacher: boolean;
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -268,5 +269,6 @@ export const useAuth = (): UseAuthReturn => {
     resetPassword,
     refreshUser,
     clearError,
+    isTeacher: user?.role === "TEACHER",
   };
 };

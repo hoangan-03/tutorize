@@ -67,12 +67,55 @@ const StudentIeltsView: React.FC<{
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          {t("ielts.centerTitle")}
-        </h1>
-        <p className="text-lg text-gray-600 mb-8">
-          {t("ielts.centerDescription")}
-        </p>
+        {/* Page Header */}
+        <div className="relative bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
+          <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                {t("ielts.centerTitle")}
+              </h1>
+            </div>
+
+            {/* Decorative IELTS Book/Test Element */}
+            <div className="hidden md:block relative">
+              <div className="relative">
+                {/* Main book/document structure */}
+                <div className="flex flex-col space-y-1 transform rotate-12">
+                  {/* Book pages stack */}
+                  <div className="w-12 h-16 bg-white rounded-r-md border-l-4 border-yellow-400 relative">
+                    <div className="absolute top-2 left-2 w-6 h-1 bg-purple-200 rounded"></div>
+                    <div className="absolute top-4 left-2 w-4 h-1 bg-purple-200 rounded"></div>
+                    <div className="absolute top-6 left-2 w-5 h-1 bg-purple-200 rounded"></div>
+                  </div>
+                  <div className="w-12 h-16 bg-white/90 rounded-r-md border-l-4 border-blue-400 absolute top-1 left-1 -z-10"></div>
+                  <div className="w-12 h-16 bg-white/80 rounded-r-md border-l-4 border-green-400 absolute top-2 left-2 -z-20"></div>
+                </div>
+
+                {/* Speaking bubble */}
+                <div className="absolute -top-2 -right-3 w-6 h-4 bg-blue-400 rounded-full opacity-80"></div>
+                <div className="absolute -top-1 -right-2 w-2 h-2 bg-blue-400 rounded-full opacity-60"></div>
+
+                {/* Listening waves */}
+                <div className="absolute -bottom-2 -left-2 flex space-x-1">
+                  <div className="w-1 h-3 bg-green-400 rounded-full"></div>
+                  <div className="w-1 h-5 bg-green-400 rounded-full"></div>
+                  <div className="w-1 h-4 bg-green-400 rounded-full"></div>
+                  <div className="w-1 h-6 bg-green-400 rounded-full"></div>
+                </div>
+
+                {/* Additional decorative elements */}
+                <div className="absolute -top-4 -right-6 w-3 h-3 bg-white/30 rounded-full"></div>
+                <div className="absolute -bottom-3 right-4 w-2 h-2 bg-white/20 rounded-full"></div>
+                <div className="absolute top-8 right-8 w-1 h-1 bg-white/40 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
+        </div>
 
         {/* Skill Tabs */}
         <div className="mb-8">
@@ -97,9 +140,6 @@ const StudentIeltsView: React.FC<{
 
         {/* Available Tests */}
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-            {t("ielts.availableTests")}
-          </h2>
           {loading ? (
             <p>{t("ielts.loading")}</p>
           ) : filteredTests.length === 0 ? (

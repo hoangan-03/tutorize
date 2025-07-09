@@ -48,8 +48,8 @@
   },
   "status": {
     "active": "Đang mở",
-    "draft": "Nháp",
-    "inactive": "Đã đóng",
+    "draft": "Bản nháp",
+    "closed": "Đã đóng",
     "overdue": "Quá hạn"
   },
   "subject": {
@@ -331,7 +331,11 @@
       "status": "Trạng thái",
       "score": "Điểm",
       "viewSubmission": "Xem"
-    }
+    },
+    "teacher_title": "Quản lý Bài tập",
+    "teacher_description": "Tạo, xem, và quản lý tất cả bài tập và bài nộp của học sinh.",
+    "student_title": "Bài tập của tôi",
+    "student_description": "Xem và hoàn thành các bài tập được giao bởi giáo viên."
   },
   "quizzes": {
     "title": "Quiz",
@@ -384,6 +388,7 @@
     "viewStatistics": "Xem thống kê",
     "viewSubmissions": "Xem bài nộp",
     "exit": "Thoát",
+    "previousQuestion": "Câu trước",
     "nextQuestion": "Câu tiếp theo",
     "finish": "Hoàn thành",
     "congratulations": "Chúc mừng!",
@@ -410,6 +415,10 @@
     "finalScore": "Điểm cuối cùng của bạn trong bài kiểm tra này là",
     "totalQuizzes": "Tổng",
     "overdue": "Quá hạn",
+    "timeRunningOut": "Thời gian sắp hết! Vui lòng hoàn thành các câu hỏi còn lại và nộp bài trước khi hết giờ.",
+    "lessThan1Minute": "Chỉ còn ít hơn 1 phút!",
+    "lessThan3Minutes": "Chỉ còn ít hơn 3 phút!",
+    "lessThan5Minutes": "Chỉ còn ít hơn 5 phút!",
     "dashboard": {
       "title": "Bảng điều khiển Quiz",
       "exportResults": "Xuất kết quả",

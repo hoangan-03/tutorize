@@ -394,10 +394,10 @@ export const ExercisePublicView: React.FC = () => {
     const exerciseTitle = selectedExercise.name;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header Section with Gradient */}
-          <div className="bg-gradient-to-r from-sky-700 to-sky-900 rounded-2xl shadow-xl text-white p-8 mb-8">
+          <div className="bg-gradient-to-r from-sky-700 to-sky-900 rounded-2xl shadow-xl text-white p-4 md:p-8 mb-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-4">
@@ -456,7 +456,7 @@ export const ExercisePublicView: React.FC = () => {
 
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-4 md:p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <Calendar className="h-6 w-6 text-white mr-3" />
                   <div>
@@ -476,7 +476,7 @@ export const ExercisePublicView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-4 md:p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <Users className="h-6 w-6 text-white mr-3" />
                   <div>
@@ -490,7 +490,7 @@ export const ExercisePublicView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-4 md:p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <Clock className="h-6 w-6 text-white mr-3" />
                   <div>
@@ -511,7 +511,7 @@ export const ExercisePublicView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white/15 rounded-xl p-8 backdrop-blur-sm border border-white/20">
+              <div className="bg-white/15 rounded-xl p-4 md:p-8 backdrop-blur-sm border border-white/20">
                 <div className="flex items-center">
                   <GraduationCap className="h-6 w-6 text-white mr-3" />
                   <div>
@@ -529,10 +529,10 @@ export const ExercisePublicView: React.FC = () => {
           </div>
 
           {/* Content Section */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Exercise Note */}
             {selectedExercise.note && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-8">
                 <div className="flex items-center mb-6">
                   <div className="p-3 bg-amber-100 rounded-xl mr-4">
                     <BookOpen className="h-6 w-6 text-amber-600" />
@@ -541,7 +541,7 @@ export const ExercisePublicView: React.FC = () => {
                     {t("exercisePublicView.note")}
                   </h3>
                 </div>
-                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 rounded-lg p-4 md:p-6">
                   <p className="text-amber-800 text-lg leading-relaxed">
                     {selectedExercise.note}
                   </p>
@@ -550,7 +550,7 @@ export const ExercisePublicView: React.FC = () => {
             )}
 
             {/* Exercise Content */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-8">
               {/* Content Header with Controls */}
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 space-y-4 lg:space-y-0">
                 <div className="flex items-center">
@@ -625,8 +625,8 @@ export const ExercisePublicView: React.FC = () => {
                 {previewMode === "reading" ? (
                   // Reading Mode - Optimized for easy reading
                   <div className="max-w-none">
-                    <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 border border-blue-100">
-                      <div className="bg-white rounded-lg p-8 shadow-sm">
+                    <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 md:p-8 border border-blue-100">
+                      <div className="bg-white rounded-lg p-4 md:p-8 shadow-sm">
                         <div
                           className="prose prose-lg max-w-none prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900 content-text text-lg leading-loose"
                           style={{
@@ -736,7 +736,7 @@ export const ExercisePublicView: React.FC = () => {
             </div>
 
             {/* Action Section */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-8">
               <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-6">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 bg-green-100 rounded-xl">
@@ -755,17 +755,17 @@ export const ExercisePublicView: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   {!isTeacher && (
                     <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
-                      {t("exercisePublicView.submitExercise")}
+                      {t("exercises.submitExercise")}
                     </button>
                   )}
                   {isTeacher && (
                     <div className="flex space-x-4">
                       <button className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center">
                         <Users className="h-5 w-5 mr-2" />
-                        {t("exercisePublicView.viewSubmissions")}
+                        {t("exercises.viewSubmissions")}
                       </button>
                       <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
-                        {t("exercisePublicView.gradeExercise")}
+                        {t("exercises.gradeExercise")}
                       </button>
                     </div>
                   )}
@@ -780,53 +780,115 @@ export const ExercisePublicView: React.FC = () => {
 
   // Exercise List View
   return (
-    <div className="p-18">
+    <div className="p-4 md:p-8">
       <div className="max-w-8xl mx-auto">
-        {/* Stats Cards */}
-        <div className="flex flex-row gap-6 mb-8">
-          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
-            <div className="w-10 flex-shrink-0 flex items-center justify-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <BookOpen className="h-6 w-6 text-purple-600" />
+        {/* Page Header */}
+        <div className="relative bg-gradient-to-r from-teal-500 to-blue-600 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
+          <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                {isTeacher
+                  ? t("exercises.teacher_title")
+                  : t("exercises.student_title")}
+              </h1>
+            </div>
+
+            {/* Decorative Rubik's Cube-like Element */}
+            <div className="hidden md:block relative">
+              <div className="relative">
+                {/* Main cube structure */}
+                <div className="grid grid-cols-3 gap-1 transform rotate-12">
+                  {/* Top row */}
+                  <div className="w-6 h-6 bg-white/20 rounded-sm backdrop-blur-sm"></div>
+                  <div className="w-6 h-6 bg-orange-400 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-white/20 rounded-sm backdrop-blur-sm"></div>
+
+                  {/* Middle row */}
+                  <div className="w-6 h-6 bg-yellow-400 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-white rounded-sm"></div>
+                  <div className="w-6 h-6 bg-blue-400 rounded-sm"></div>
+
+                  {/* Bottom row */}
+                  <div className="w-6 h-6 bg-white/20 rounded-sm backdrop-blur-sm"></div>
+                  <div className="w-6 h-6 bg-green-400 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-white/20 rounded-sm backdrop-blur-sm"></div>
+                </div>
+
+                {/* Side face of cube */}
+                <div className="absolute top-1 left-1 grid grid-cols-3 gap-1 transform translate-x-6 -translate-y-6 rotate-12 opacity-60">
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                  <div className="w-6 h-6 bg-orange-300 rounded-sm"></div>
+                </div>
+
+                {/* Additional decorative elements */}
+                <div className="absolute -top-4 -right-4 w-3 h-3 bg-white/30 rounded-full"></div>
+                <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-white/20 rounded-full"></div>
+                <div className="absolute top-8 right-8 w-1 h-1 bg-white/40 rounded-full"></div>
               </div>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <p className="text-xl font-semibold text-gray-900">
+          </div>
+
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="flex flex-wrap gap-3 md:gap-6 mb-8">
+          <div className="relative overflow-hidden bg-white px-3 py-3 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0">
+            <div className="absolute top-0 left-0 h-1 w-full bg-purple-500"></div>
+            <div className="w-8 md:w-10 flex-shrink-0 flex items-center justify-center">
+              <div className="p-1.5 md:p-2 bg-purple-100 rounded-lg">
+                <BookOpen className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center ml-2 md:ml-0">
+              <p className="text-lg md:text-xl font-semibold text-gray-900">
                 {exercises.length}
               </p>
-              <p className="text-base font-medium text-gray-600">
+              <p className="text-sm md:text-base font-medium text-gray-600 text-center">
                 {t("exercises.total")}
               </p>
             </div>
           </div>
 
-          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
-            <div className="w-10 flex-shrink-0 flex items-center justify-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-green-600" />
+          <div className="relative overflow-hidden bg-white px-3 py-3 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0">
+            <div className="absolute top-0 left-0 h-1 w-full bg-green-500"></div>
+            <div className="w-8 md:w-10 flex-shrink-0 flex items-center justify-center">
+              <div className="p-1.5 md:p-2 bg-green-100 rounded-lg">
+                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
               </div>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <p className="text-xl font-semibold text-gray-900">
+            <div className="flex-1 flex flex-col items-center justify-center ml-2 md:ml-0">
+              <p className="text-lg md:text-xl font-semibold text-gray-900">
                 {
                   exercises.filter((ex: Exercise) => ex.status === "ACTIVE")
                     .length
                 }
               </p>
-              <p className="text-base font-medium text-gray-600">
+              <p className="text-sm md:text-base font-medium text-gray-600 text-center">
                 {t("status.active")}
               </p>
             </div>
           </div>
 
-          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
-            <div className="w-10 flex-shrink-0 flex items-center justify-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <CalendarClock className="h-6 w-6 text-red-600" />
+          <div className="relative overflow-hidden bg-white px-3 py-3 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0">
+            <div className="absolute top-0 left-0 h-1 w-full bg-red-500"></div>
+            <div className="w-8 md:w-10 flex-shrink-0 flex items-center justify-center">
+              <div className="p-1.5 md:p-2 bg-red-100 rounded-lg">
+                <CalendarClock className="h-5 w-5 md:h-6 md:w-6 text-red-600" />
               </div>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <p className="text-xl font-semibold text-gray-900">
+            <div className="flex-1 flex flex-col items-center justify-center ml-2 md:ml-0">
+              <p className="text-lg md:text-xl font-semibold text-gray-900">
                 {
                   exercises.filter(
                     (ex: Exercise) =>
@@ -836,21 +898,24 @@ export const ExercisePublicView: React.FC = () => {
                   ).length
                 }
               </p>
-              <p className="text-base font-medium text-gray-600">
+              <p className="text-sm md:text-base font-medium text-gray-600 text-center">
                 {t("exercises.overdue")}
               </p>
             </div>
           </div>
 
-          <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
-            <div className="w-10 flex-shrink-0 flex items-center justify-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <GraduationCap className="h-6 w-6 text-orange-600" />
+          <div className="relative overflow-hidden bg-white px-3 py-3 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0">
+            <div className="absolute top-0 left-0 h-1 w-full bg-orange-500"></div>
+            <div className="w-8 md:w-10 flex-shrink-0 flex items-center justify-center">
+              <div className="p-1.5 md:p-2 bg-orange-100 rounded-lg">
+                <GraduationCap className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
               </div>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <p className="text-xl font-semibold text-gray-900">7</p>
-              <p className="text-base font-medium text-gray-600">
+            <div className="flex-1 flex flex-col items-center justify-center ml-2 md:ml-0">
+              <p className="text-lg md:text-xl font-semibold text-gray-900">
+                7
+              </p>
+              <p className="text-sm md:text-base font-medium text-gray-600 text-center">
                 {t("exercises.completed")}
               </p>
             </div>

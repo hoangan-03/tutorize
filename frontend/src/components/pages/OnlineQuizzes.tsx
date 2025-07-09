@@ -22,6 +22,8 @@ import { quizService } from "../../services/quizService";
 import { Question, Quiz } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { Badge } from "../ui/Badge";
+import Modal from "../ui/Modal";
+import { useModal } from "../../hooks/useModal";
 import { QuizManagement } from "./QuizManagement";
 
 // Student Quiz Component
@@ -31,6 +33,7 @@ const StudentQuizView: React.FC = () => {
   const { t } = useTranslation();
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
+  const { modal, closeModal, showError, showSuccess, showConfirm } = useModal();
   const [currentView, setCurrentView] = useState<
     "list" | "quiz" | "result" | "teacher-view"
   >("list");
@@ -53,6 +56,18 @@ const StudentQuizView: React.FC = () => {
   });
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0); // seconds remaining
+
+  // Debug modal state
+  useEffect(() => {
+    console.log("Modal state changed:", {
+      isOpen: modal.isOpen,
+      type: modal.type,
+      title: modal.title,
+      message: modal.message,
+      onConfirm: !!modal.onConfirm,
+      fullModalObject: modal,
+    });
+  }, [modal]);
 
   const storageKey = useMemo(() => {
     if (!user || !quizId) return null;
@@ -151,8 +166,35 @@ const StudentQuizView: React.FC = () => {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            // Auto submit when time runs out
-            finishQuiz(true);
+            // Auto submit when time runs out - use setTimeout to avoid blocking the state update
+            setTimeout(async () => {
+              try {
+                console.log("Time's up! Showing auto-submit message...");
+                console.log("About to show auto-submit modal...");
+                console.log("Current modal state before showSuccess:", modal);
+                showSuccess(
+                  "Hết giờ làm bài! Hệ thống đang tự động nộp bài...",
+                  {
+                    title: "Hết thời gian",
+                    autoClose: true,
+                    autoCloseDelay: 5000,
+                  }
+                );
+                console.log("Auto-submit modal showSuccess called");
+                // Check modal state right after call
+                setTimeout(() => {
+                  console.log("Modal state after showSuccess:", modal);
+                }, 100);
+                console.log(
+                  "Auto-submit message shown, now calling finishQuiz..."
+                );
+                await finishQuiz(true);
+              } catch (error) {
+                console.error("Error during auto-submit:", error);
+                // Force navigation back on error - no alert needed as finishQuiz already handles it
+                clearAttemptAndNavigate();
+              }
+            }, 100);
             return 0;
           }
           return prev - 1;
@@ -187,49 +229,41 @@ const StudentQuizView: React.FC = () => {
     }
   };
 
-  // Handle page unload/refresh/close
-  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-    if (currentView === "quiz" && currentQuiz && !isTeacher) {
-      // Show confirmation dialog
-      event.preventDefault();
-      event.returnValue =
-        "Bạn có chắc muốn rời khỏi trang? Bài làm sẽ được tự động nộp với điểm 0.";
-
-      // Auto-submit with score 0 (this may not work reliably in all browsers due to timing)
-      autoSubmitWithZeroScore();
-
-      return event.returnValue;
-    }
-  };
-
-  // Handle visibility change (tab switch)
-  const handleVisibilityChange = () => {
-    if (
-      document.hidden &&
-      currentView === "quiz" &&
-      currentQuiz &&
-      !isTeacher
-    ) {
-      console.log("Tab switched while in quiz - auto-submitting with score 0");
-      autoSubmitWithZeroScore();
-    }
-  };
-
   useEffect(() => {
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    const handleBeforeUnloadFixed = (event: BeforeUnloadEvent) => {
+      if (currentView === "quiz" && currentQuiz && !isTeacher) {
+        event.preventDefault();
+        event.returnValue =
+          "Bạn có chắc muốn rời khỏi trang? Bài làm sẽ được tự động nộp với điểm 0.";
+        return event.returnValue;
+      }
+    };
+
+    const handleVisibilityChangeFixed = () => {
+      if (
+        document.hidden &&
+        currentView === "quiz" &&
+        currentQuiz &&
+        !isTeacher
+      ) {
+        console.log(
+          "Tab switched while in quiz - auto-submitting with score 0"
+        );
+        autoSubmitWithZeroScore();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnloadFixed);
+    document.addEventListener("visibilitychange", handleVisibilityChangeFixed);
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnloadFixed);
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChangeFixed
+      );
     };
-  }, [
-    currentView,
-    currentQuiz,
-    isTeacher,
-    handleBeforeUnload,
-    handleVisibilityChange,
-  ]);
+  }, [currentView, currentQuiz, isTeacher]);
 
   const loadQuizzes = async () => {
     try {
@@ -277,37 +311,12 @@ const StudentQuizView: React.FC = () => {
     }
   };
 
-  const resetQuiz = () => {
-    setCurrentView("list");
-    setCurrentQuiz(null);
-    setCurrentQuestionIndex(0);
-    setSelectedAnswers([]);
-    setQuizResults(null);
-    setTimeLeft(0);
-  };
-
-  const handleExitQuiz = async () => {
-    if (currentView === "quiz" && currentQuiz && !isTeacher) {
-      const confirmExit = window.confirm(
-        "Bạn có chắc muốn thoát? Bài làm sẽ được tự động nộp với kết quả hiện tại."
-      );
-
-      if (confirmExit) {
-        await finishQuiz(true); // Auto-submit on exit
-        clearAttemptAndNavigate(); // Clear state and navigate away
-      }
-    } else {
-      // For other views or for teachers, just go back
-      clearAttemptAndNavigate();
-    }
-  };
-
   const beginQuizAttempt = async (id: number) => {
     try {
       // Validation
       if (!id || id <= 0) {
         console.error("Invalid quiz ID:", id);
-        alert("ID quiz không hợp lệ.");
+        showError("ID quiz không hợp lệ.");
         return;
       }
 
@@ -315,7 +324,7 @@ const StudentQuizView: React.FC = () => {
       const detailedQuiz = await quizService.getQuiz(id);
 
       if (!detailedQuiz.questions || detailedQuiz.questions.length === 0) {
-        alert("Quiz này hiện không có câu hỏi nào để làm.");
+        showError("Quiz này hiện không có câu hỏi nào để làm.");
         clearAttemptAndNavigate();
         return;
       }
@@ -452,10 +461,7 @@ const StudentQuizView: React.FC = () => {
         };
 
         if (isAutoSubmit) {
-          // Show auto-submit notification
-          alert(
-            `Hết giờ làm bài! Hệ thống đã tự động nộp bài với ${validAnswers.length}/${questions.length} câu đã trả lời.`
-          );
+          console.log("Quiz auto-submitted due to timeout");
         }
 
         const submission = await quizService.submitQuiz(
@@ -488,12 +494,31 @@ const StudentQuizView: React.FC = () => {
           currentAttempt: submissionHistory.currentAttempt,
           maxScore: submissionHistory.maxScore,
           isSubmissionHistory: true,
+          quiz: submissionHistory.quiz || currentQuiz, // Ensure quiz info is preserved
         };
 
-        setQuizResults(results);
-        setCurrentView("result");
-        setTimeLeft(0); // Stop the timer
+        if (isAutoSubmit) {
+          // For auto-submit, show message and navigate back to quiz list
+          showSuccess(
+            `Hết giờ làm bài! Quiz đã được nộp với ${validAnswers.length}/${
+              questions.length
+            } câu trả lời. Điểm: ${(
+              (submission.score / submission.totalPoints) *
+              10
+            ).toFixed(1)}`,
+            { autoClose: true, autoCloseDelay: 8000 }
+          );
 
+          setTimeout(() => {
+            clearAttemptAndNavigate();
+          }, 8500);
+        } else {
+          // For manual submit, show results page
+          setQuizResults(results);
+          setCurrentView("result");
+        }
+
+        setTimeLeft(0); // Stop the timer
         // Reload stats after submission
         loadStudentStats();
       } catch (error: any) {
@@ -506,16 +531,22 @@ const StudentQuizView: React.FC = () => {
             alert(
               "Bạn đã hoàn thành quiz này trước đó rồi. Bạn sẽ được chuyển về danh sách quiz."
             );
-            resetQuiz();
+            clearAttemptAndNavigate();
             return;
           } else if (errorMessage.includes("hết hạn")) {
             alert("Quiz này đã hết hạn nộp bài.");
-            resetQuiz();
+            clearAttemptAndNavigate();
             return;
           }
         }
 
-        alert("Có lỗi khi nộp bài quiz. Vui lòng thử lại.");
+        // For auto-submit, don't show error - just navigate back
+        if (isAutoSubmit) {
+          console.error("Auto-submit failed, navigating back to quiz list");
+          clearAttemptAndNavigate();
+        } else {
+          alert("Có lỗi khi nộp bài quiz. Vui lòng thử lại.");
+        }
       }
     }
   };
@@ -733,11 +764,11 @@ const StudentQuizView: React.FC = () => {
     const question = questions[currentQuestionIndex];
 
     return (
-      <div className="p-8">
+      <div className="p-2 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                 {currentQuiz.title}
               </h1>
               <div className="flex items-center space-x-4">
@@ -751,7 +782,7 @@ const StudentQuizView: React.FC = () => {
                   }`}
                 >
                   <Clock className="h-5 w-5 mr-2" />
-                  <span className="font-mono text-lg">
+                  <span className="font-mono text-base md:text-lg">
                     {Math.floor(timeLeft / 60)
                       .toString()
                       .padStart(2, "0")}
@@ -763,7 +794,7 @@ const StudentQuizView: React.FC = () => {
                     </span>
                   )} */}
                 </div>
-                <div className="text-gray-600">
+                <div className="text-gray-600 text-sm md:text-base">
                   {t("quizzes.question")} {currentQuestionIndex + 1}/
                   {questions.length}
                 </div>
@@ -786,14 +817,13 @@ const StudentQuizView: React.FC = () => {
                   <div className="text-start">
                     <h3 className="font-medium">
                       {timeLeft <= 60
-                        ? "Chỉ còn ít hơn 1 phút!"
+                        ? t("quizzes.lessThan1Minute")
                         : timeLeft <= 180
-                        ? "Chỉ còn ít hơn 3 phút!"
-                        : "Chỉ còn ít hơn 5 phút!"}
+                        ? t("quizzes.lessThan3Minutes")
+                        : t("quizzes.lessThan5Minutes")}
                     </h3>
                     <p className="text-sm opacity-80">
-                      Hãy hoàn thành các câu hỏi còn lại và nộp bài trước khi
-                      hết giờ.
+                      {t("quizzes.timeRunningOut")}
                     </p>
                   </div>
                 </div>
@@ -834,7 +864,7 @@ const StudentQuizView: React.FC = () => {
 
               {/* Question Navigation */}
               <div className="flex flex-wrap gap-2 mb-6 p-4 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700 mr-2">
+                <span className="text-sm font-medium text-gray-700 mr-2 items-center justify-center">
                   {t("quizzes.questions")}:
                 </span>
                 {questions.map((_, index) => (
@@ -870,7 +900,7 @@ const StudentQuizView: React.FC = () => {
                     <button
                       key={index}
                       onClick={() => selectAnswer(index)}
-                      className={`w-full text-left p-8 border-2 rounded-lg transition-colors ${
+                      className={`w-full text-left p-4 md:p-8 border-2 rounded-lg transition-colors ${
                         selectedAnswers[currentQuestionIndex] === index
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -901,7 +931,7 @@ const StudentQuizView: React.FC = () => {
                   <div className="space-y-4">
                     <button
                       onClick={() => selectAnswer("true")}
-                      className={`w-full text-left p-8 border-2 rounded-lg transition-colors ${
+                      className={`w-full text-left p-4 md:p-8 border-2 rounded-lg transition-colors ${
                         selectedAnswers[currentQuestionIndex] === "true"
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -919,12 +949,14 @@ const StudentQuizView: React.FC = () => {
                             <div className="w-3 h-3 rounded-full bg-white"></div>
                           )}
                         </div>
-                        <span className="font-medium text-lg">Đúng</span>
+                        <span className="font-medium text-base md:text-lg">
+                          Đúng
+                        </span>
                       </div>
                     </button>
                     <button
                       onClick={() => selectAnswer("false")}
-                      className={`w-full text-left p-8 border-2 rounded-lg transition-colors ${
+                      className={`w-full text-left p-4 md:p-8 border-2 rounded-lg transition-colors ${
                         selectedAnswers[currentQuestionIndex] === "false"
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -943,7 +975,9 @@ const StudentQuizView: React.FC = () => {
                             <div className="w-3 h-3 rounded-full bg-white"></div>
                           )}
                         </div>
-                        <span className="font-medium text-lg">Sai</span>
+                        <span className="font-medium text-base md:text-lg">
+                          Sai
+                        </span>
                       </div>
                     </button>
                   </div>
@@ -998,18 +1032,47 @@ const StudentQuizView: React.FC = () => {
 
             <div className="flex justify-between">
               <button
-                onClick={handleExitQuiz}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                onClick={() => {
+                  console.log(
+                    "Exit button clicked, current view:",
+                    currentView
+                  );
+                  if (currentView === "quiz" && currentQuiz && !isTeacher) {
+                    console.log("About to show exit confirm modal...");
+                    console.log(
+                      "Current modal state before showConfirm:",
+                      modal
+                    );
+                    showConfirm(
+                      "Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được tính là 0 điểm.",
+                      clearAttemptAndNavigate,
+                      {
+                        title: "Xác nhận thoát",
+                        confirmText: "Thoát",
+                        cancelText: "Tiếp tục làm bài",
+                      }
+                    );
+                    console.log("Exit confirm modal showConfirm called");
+                    // Check modal state right after call
+                    setTimeout(() => {
+                      console.log("Modal state after showConfirm:", modal);
+                    }, 100);
+                  } else {
+                    console.log("Direct navigation");
+                    clearAttemptAndNavigate();
+                  }
+                }}
+                className="px-4 py-2 md:px-6 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm md:text-base"
               >
                 {t("quizzes.exit")}
               </button>
-              <div className="flex space-x-4">
+              <div className="flex space-x-2 md:space-x-4">
                 <button
                   onClick={prevQuestion}
                   disabled={currentQuestionIndex === 0}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 md:px-6 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm md:text-base"
                 >
-                  <ChevronRight className="h-4 w-4 mr-2 rotate-180" />
+                  <ChevronRight className="h-4 w-4 mr-1 md:mr-2 rotate-180" />
                   {t("quizzes.previousQuestion")}
                 </button>
                 <button
@@ -1023,12 +1086,12 @@ const StudentQuizView: React.FC = () => {
                         selectedAnswers[currentQuestionIndex] as string
                       ).trim() === "")
                   }
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 md:px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm md:text-base"
                 >
                   {currentQuestionIndex < questions.length - 1
                     ? t("quizzes.nextQuestion")
                     : t("quizzes.finish")}
-                  <ChevronRight className="h-4 w-4 ml-2" />
+                  <ChevronRight className="h-4 w-4 ml-1 md:ml-2" />
                 </button>
               </div>
             </div>
@@ -1148,19 +1211,36 @@ const StudentQuizView: React.FC = () => {
                 )}
 
               {/* Action buttons */}
-              <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-200">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-10 pt-6 border-t border-gray-200">
                 <button
                   onClick={clearAttemptAndNavigate}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span>{t("quizzes.back")}</span>
                 </button>
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4 w-full md:w-auto">
                   {quizResults.currentAttempt > 0 ? (
                     <button
-                      onClick={() => beginQuizAttempt(currentQuiz?.id || 0)}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                      onClick={() => {
+                        console.log(
+                          "Retake clicked, currentQuiz:",
+                          currentQuiz
+                        );
+                        const quizIdToRetake =
+                          currentQuiz?.id ||
+                          quizResults.quiz?.id ||
+                          Number(quizId);
+                        console.log("Quiz ID for retake:", quizIdToRetake);
+                        if (quizIdToRetake) {
+                          navigate(`/quiz/${quizIdToRetake}/play`);
+                        } else {
+                          showError(
+                            "Không thể làm lại quiz. Vui lòng thử lại."
+                          );
+                        }
+                      }}
+                      className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                       <RotateCw className="h-4 w-4" />
                       <span>
@@ -1169,7 +1249,7 @@ const StudentQuizView: React.FC = () => {
                       </span>
                     </button>
                   ) : (
-                    <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg italic text-sm font-medium">
+                    <div className="w-full md:w-auto text-center px-4 py-2 bg-gray-100 text-gray-600 rounded-lg italic text-sm font-medium">
                       {t("quizzes.outOfAttempts")}
                     </div>
                   )}
@@ -1275,7 +1355,22 @@ const StudentQuizView: React.FC = () => {
                 {t("quizzes.backToList")}
               </button>
               <button
-                onClick={() => beginQuizAttempt(currentQuiz?.id || 0)}
+                onClick={() => {
+                  console.log(
+                    "Retake clicked (single result), currentQuiz:",
+                    currentQuiz
+                  );
+                  const quizIdToRetake = currentQuiz?.id || Number(quizId);
+                  console.log(
+                    "Quiz ID for retake (single result):",
+                    quizIdToRetake
+                  );
+                  if (quizIdToRetake) {
+                    navigate(`/quiz/${quizIdToRetake}/play`);
+                  } else {
+                    showError("Không thể làm lại quiz. Vui lòng thử lại.");
+                  }
+                }}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 {t("quizzes.retake")}
@@ -1288,8 +1383,67 @@ const StudentQuizView: React.FC = () => {
   }
 
   return (
-    <div className="p-18">
+    <div className="p-4 md:p-8">
       <div className="max-w-8xl mx-auto">
+        {/* Page Header */}
+        <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
+          <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                {isTeacher
+                  ? t("quizzes.quizManagement")
+                  : t("quizzes.onlineQuizzes")}
+              </h1>
+            </div>
+
+            {/* Decorative Quiz Elements */}
+            <div className="hidden md:block relative">
+              <div className="relative">
+                {/* Quiz answer bubbles */}
+                <div className="grid grid-cols-2 gap-2 transform rotate-12">
+                  {/* Multiple choice bubbles */}
+                  <div className="w-6 h-6 rounded-full border-2 border-white bg-white/20 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                  </div>
+                  <div className="w-6 h-6 rounded-full border-2 border-white bg-white/20"></div>
+                  <div className="w-6 h-6 rounded-full border-2 border-white bg-white/20 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full bg-lime-400"></div>
+                  </div>
+                  <div className="w-6 h-6 rounded-full border-2 border-white bg-white/20"></div>
+                </div>
+
+                {/* Question marks */}
+                <div className="absolute -top-3 -right-4 text-white/60 text-xl font-bold transform rotate-45">
+                  ?
+                </div>
+                <div className="absolute -bottom-3 -left-3 text-white/40 text-lg font-bold transform -rotate-12">
+                  ?
+                </div>
+
+                {/* Check mark for correct answer */}
+                <div className="absolute top-6 right-6 w-4 h-4 border-2 border-lime-400 rounded flex items-center justify-center">
+                  <div className="w-2 h-1 border-b-2 border-r-2 border-lime-400 transform rotate-45 translate-y-0.5"></div>
+                </div>
+
+                {/* Timer element */}
+                <div className="absolute -top-2 left-8 w-3 h-3 rounded-full bg-amber-400 relative">
+                  <div className="absolute inset-0 border border-white/40 rounded-full"></div>
+                  <div className="absolute top-0.5 left-1 w-0.5 h-1 bg-white/80 rounded"></div>
+                </div>
+
+                {/* Additional decorative elements */}
+                <div className="absolute -top-4 -right-2 w-2 h-2 bg-white/30 rounded-full"></div>
+                <div className="absolute -bottom-2 right-2 w-1 h-1 bg-white/20 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
+        </div>
+
         {/* Content based on active tab */}
 
         <>
@@ -1302,8 +1456,10 @@ const StudentQuizView: React.FC = () => {
             <div className="max-w-8xl mx-auto">
               {/* Stats Cards - Student view */}
               {!isTeacher && (
-                <div className="flex flex-row gap-6 mb-8">
-                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                <div className="flex flex-wrap gap-3 md:gap-6 mb-8">
+                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
+                    {/* Blue ribbon */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
                     <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <FileText className="h-6 w-6 text-blue-600" />
@@ -1319,7 +1475,9 @@ const StudentQuizView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
+                    {/* Green ribbon */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
                     <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-green-100 rounded-lg">
                         <CheckCircle className="h-6 w-6 text-green-600" />
@@ -1335,7 +1493,9 @@ const StudentQuizView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
+                    {/* Red ribbon */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600"></div>
                     <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-red-100 rounded-lg">
                         <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -1351,7 +1511,9 @@ const StudentQuizView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
+                    {/* Purple ribbon */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-purple-600"></div>
                     <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-purple-100 rounded-lg">
                         <Trophy className="h-6 w-6 text-purple-600" />
@@ -1367,7 +1529,9 @@ const StudentQuizView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white px-5 py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-[180px]">
+                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
+                    {/* Orange ribbon */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-orange-600"></div>
                     <div className="w-10 flex-shrink-0 flex items-center justify-center">
                       <div className="p-2 bg-orange-100 rounded-lg">
                         <BarChart3 className="h-6 w-6 text-orange-600" />
@@ -1387,8 +1551,8 @@ const StudentQuizView: React.FC = () => {
 
               {/* Stats Cards - Teacher view */}
               {isTeacher && (
-                <div className="flex flex-row gap-6 mb-8">
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                <div className="flex flex-wrap gap-4 md:gap-6 mb-8">
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center flex-1 md:flex-initial md:w-[220px]">
                     <div className="flex items-center justify-center">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <FileText className="h-6 w-6 text-blue-600" />
@@ -1404,7 +1568,7 @@ const StudentQuizView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center flex-1 md:flex-initial md:w-[220px]">
                     <div className="flex items-center justify-center">
                       <div className="p-2 bg-green-100 rounded-lg">
                         <CheckCircle className="h-6 w-6 text-green-600" />
@@ -1420,7 +1584,7 @@ const StudentQuizView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center flex-1 md:flex-initial md:w-[220px]">
                     <div className="flex items-center justify-center">
                       <div className="p-2 bg-purple-100 rounded-lg">
                         <Users className="h-6 w-6 text-purple-600" />
@@ -1440,7 +1604,7 @@ const StudentQuizView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center w-[220px]">
+                  <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center flex-1 md:flex-initial md:w-[220px]">
                     <div className="flex items-center justify-center">
                       <div className="p-2 bg-orange-100 rounded-lg">
                         <BarChart3 className="h-6 w-6 text-orange-600" />
@@ -1458,7 +1622,7 @@ const StudentQuizView: React.FC = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {quizzes.map((quiz) => (
                   <div
                     key={quiz.id}
@@ -1567,6 +1731,71 @@ const StudentQuizView: React.FC = () => {
           )}
         </>
       </div>
+
+      {/* Test if modal state is working */}
+      {modal.isOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(255, 0, 0, 0.9)",
+            zIndex: 999999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontSize: "24px",
+            fontWeight: "bold",
+            pointerEvents: "all",
+          }}
+          onClick={() => console.log("Test modal clicked!")}
+        >
+          <div
+            style={{
+              textAlign: "center",
+              padding: "20px",
+              backgroundColor: "black",
+              borderRadius: "10px",
+            }}
+          >
+            <div>TEST MODAL IS OPEN</div>
+            <div>Type: {modal.type}</div>
+            <div>Title: {modal.title}</div>
+            <div style={{ fontSize: "16px", marginTop: "10px" }}>
+              Message: {modal.message}
+            </div>
+            <button
+              onClick={closeModal}
+              style={{
+                marginTop: "20px",
+                padding: "10px 20px",
+                fontSize: "16px",
+              }}
+            >
+              Close Test Modal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Component */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        onConfirm={modal.onConfirm}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
+        autoClose={modal.autoClose}
+        autoCloseDelay={modal.autoCloseDelay}
+      />
     </div>
   );
 };
