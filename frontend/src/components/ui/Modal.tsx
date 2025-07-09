@@ -51,12 +51,23 @@ const Modal: React.FC<ModalProps> = ({
 }) => {
   // Auto close functionality
   useEffect(() => {
+    console.log("Modal auto-close effect:", {
+      isOpen,
+      autoClose,
+      type,
+      autoCloseDelay,
+    });
     if (isOpen && autoClose && type !== "confirm") {
+      console.log("Setting auto-close timer for", autoCloseDelay, "ms");
       const timer = setTimeout(() => {
+        console.log("Auto-close timer triggered, calling onClose");
         onClose();
       }, autoCloseDelay);
 
-      return () => clearTimeout(timer);
+      return () => {
+        console.log("Clearing auto-close timer");
+        clearTimeout(timer);
+      };
     }
   }, [isOpen, autoClose, autoCloseDelay, onClose, type]);
 

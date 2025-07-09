@@ -22,7 +22,6 @@ class AuthService {
 
   getToken(): string | null {
     const token = localStorage.getItem(this.TOKEN_KEY);
-    console.log("authService.getToken():", token ? "present" : "absent");
     return token;
   }
 
@@ -36,10 +35,6 @@ class AuthService {
   getUser(): User | null {
     const userData = localStorage.getItem(this.USER_KEY);
     const user = userData ? JSON.parse(userData) : null;
-    console.log(
-      "authService.getUser():",
-      user ? `${user.email} (${user.role})` : "null"
-    );
     return user;
   }
 

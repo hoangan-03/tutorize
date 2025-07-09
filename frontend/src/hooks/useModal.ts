@@ -13,12 +13,23 @@ export interface ModalState {
 }
 
 export const useModal = () => {
-  const [modal, setModal] = useState<ModalState>({
+  const [modal, setModalState] = useState<ModalState>({
     isOpen: false,
     type: "info",
   });
 
+  const setModal = useCallback(
+    (newState: ModalState | ((prev: ModalState) => ModalState)) => {
+      console.log("setModal called with:", newState);
+      console.trace("setModal stack trace:");
+      setModalState(newState);
+    },
+    []
+  );
+
   const closeModal = useCallback(() => {
+    console.log("closeModal called! Stack trace:");
+    console.trace();
     setModal((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
@@ -77,6 +88,7 @@ export const useModal = () => {
         },
         confirmText: options?.confirmText,
         cancelText: options?.cancelText,
+        autoClose: false, // Confirm modals should not auto close
       });
     },
     [openModal, closeModal]

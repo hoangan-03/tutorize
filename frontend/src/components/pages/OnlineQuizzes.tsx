@@ -22,7 +22,7 @@ import { quizService } from "../../services/quizService";
 import { Question, Quiz } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { Badge } from "../ui/Badge";
-import Modal from "../ui/Modal";
+
 import { useModal } from "../../hooks/useModal";
 import { QuizManagement } from "./QuizManagement";
 
@@ -33,7 +33,7 @@ const StudentQuizView: React.FC = () => {
   const { t } = useTranslation();
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
-  const { modal, closeModal, showError, showSuccess, showConfirm } = useModal();
+  const { showError, showSuccess } = useModal();
   const [currentView, setCurrentView] = useState<
     "list" | "quiz" | "result" | "teacher-view"
   >("list");
@@ -43,9 +43,7 @@ const StudentQuizView: React.FC = () => {
     []
   );
   const [quizResults, setQuizResults] = useState<any>(null);
-  console.log("quizResults", quizResults);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  console.log(quizzes);
   const [loading, setLoading] = useState(true);
   const [userStats, setUserStats] = useState({
     totalQuizzes: 0,
@@ -56,18 +54,7 @@ const StudentQuizView: React.FC = () => {
   });
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0); // seconds remaining
-
-  // Debug modal state
-  useEffect(() => {
-    console.log("Modal state changed:", {
-      isOpen: modal.isOpen,
-      type: modal.type,
-      title: modal.title,
-      message: modal.message,
-      onConfirm: !!modal.onConfirm,
-      fullModalObject: modal,
-    });
-  }, [modal]);
+  const [showTestModal, setShowTestModal] = useState(false);
 
   const storageKey = useMemo(() => {
     if (!user || !quizId) return null;
@@ -170,8 +157,6 @@ const StudentQuizView: React.FC = () => {
             setTimeout(async () => {
               try {
                 console.log("Time's up! Showing auto-submit message...");
-                console.log("About to show auto-submit modal...");
-                console.log("Current modal state before showSuccess:", modal);
                 showSuccess(
                   "Hết giờ làm bài! Hệ thống đang tự động nộp bài...",
                   {
@@ -180,11 +165,6 @@ const StudentQuizView: React.FC = () => {
                     autoCloseDelay: 5000,
                   }
                 );
-                console.log("Auto-submit modal showSuccess called");
-                // Check modal state right after call
-                setTimeout(() => {
-                  console.log("Modal state after showSuccess:", modal);
-                }, 100);
                 console.log(
                   "Auto-submit message shown, now calling finishQuiz..."
                 );
@@ -765,6 +745,78 @@ const StudentQuizView: React.FC = () => {
 
     return (
       <div className="p-2 md:p-8">
+        {/* Exit Confirmation Modal */}
+        {showTestModal && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 border-2 border-blue-200">
+              {/* Accent bar */}
+              <div className="h-1.5 w-full bg-blue-500"></div>
+
+              {/* Background gradient */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50">
+                {/* Header */}
+                <div className="flex items-start space-x-4 p-6 pb-4">
+                  <div className="flex-shrink-0 rounded-2xl p-3 bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                    <svg
+                      className="h-10 w-10 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <h3 className="text-2xl font-bold text-blue-800 mb-1">
+                      Xác nhận thoát
+                    </h3>
+                    <div className="h-0.5 w-16 bg-blue-500 rounded-full opacity-60"></div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="px-6 pb-6">
+                  <div className="bg-white bg-opacity-70 backdrop-blur-sm rounded-xl p-4 shadow-sm">
+                    <p className="text-gray-700 text-base leading-relaxed">
+                      Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được
+                      tính là 0 điểm.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="bg-white bg-opacity-90 backdrop-blur-sm border-t border-gray-200 border-opacity-20">
+                <div className="flex items-center justify-end space-x-3 p-6">
+                  <button
+                    onClick={() => setShowTestModal(false)}
+                    className="px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-700 border border-gray-300 hover:border-gray-400"
+                  >
+                    Tiếp tục làm bài
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowTestModal(false);
+                      clearAttemptAndNavigate();
+                    }}
+                    className="px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border border-blue-400 hover:border-indigo-500"
+                    autoFocus
+                  >
+                    Thoát
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
             <div className="flex items-center justify-between mb-8">
@@ -1038,27 +1090,8 @@ const StudentQuizView: React.FC = () => {
                     currentView
                   );
                   if (currentView === "quiz" && currentQuiz && !isTeacher) {
-                    console.log("About to show exit confirm modal...");
-                    console.log(
-                      "Current modal state before showConfirm:",
-                      modal
-                    );
-                    showConfirm(
-                      "Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được tính là 0 điểm.",
-                      clearAttemptAndNavigate,
-                      {
-                        title: "Xác nhận thoát",
-                        confirmText: "Thoát",
-                        cancelText: "Tiếp tục làm bài",
-                      }
-                    );
-                    console.log("Exit confirm modal showConfirm called");
-                    // Check modal state right after call
-                    setTimeout(() => {
-                      console.log("Modal state after showConfirm:", modal);
-                    }, 100);
+                    setShowTestModal(true);
                   } else {
-                    console.log("Direct navigation");
                     clearAttemptAndNavigate();
                   }
                 }}
@@ -1262,6 +1295,7 @@ const StudentQuizView: React.FC = () => {
     }
 
     // Original single submission result view
+
     return (
       <div className="p-8">
         <div className="max-w-4xl mx-auto">
@@ -1731,71 +1765,6 @@ const StudentQuizView: React.FC = () => {
           )}
         </>
       </div>
-
-      {/* Test if modal state is working */}
-      {modal.isOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(255, 0, 0, 0.9)",
-            zIndex: 999999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontSize: "24px",
-            fontWeight: "bold",
-            pointerEvents: "all",
-          }}
-          onClick={() => console.log("Test modal clicked!")}
-        >
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              backgroundColor: "black",
-              borderRadius: "10px",
-            }}
-          >
-            <div>TEST MODAL IS OPEN</div>
-            <div>Type: {modal.type}</div>
-            <div>Title: {modal.title}</div>
-            <div style={{ fontSize: "16px", marginTop: "10px" }}>
-              Message: {modal.message}
-            </div>
-            <button
-              onClick={closeModal}
-              style={{
-                marginTop: "20px",
-                padding: "10px 20px",
-                fontSize: "16px",
-              }}
-            >
-              Close Test Modal
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Component */}
-      <Modal
-        isOpen={modal.isOpen}
-        onClose={closeModal}
-        onConfirm={modal.onConfirm}
-        title={modal.title}
-        message={modal.message}
-        type={modal.type}
-        confirmText={modal.confirmText}
-        cancelText={modal.cancelText}
-        autoClose={modal.autoClose}
-        autoCloseDelay={modal.autoCloseDelay}
-      />
     </div>
   );
 };
