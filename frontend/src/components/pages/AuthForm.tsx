@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -126,7 +126,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [localError, setLocalError] = useState("");
   const [success, setSuccess] = useState("");
   const [tempPassword, setTempPassword] = useState("");
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
@@ -139,6 +139,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     updateProfile,
     changePassword,
     isAuthenticated,
+    error: authError,
+    clearError,
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -161,6 +163,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     }
   }, [mode, user]);
 
+  // Combined error from both local and auth context
+  const error = useMemo(
+    () => localError || authError || "",
+    [localError, authError]
+  );
+
   // Check authentication status and auto-redirect
   useEffect(() => {
     console.log("AuthForm: Authentication check:", {
@@ -169,30 +177,44 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
       mode,
       from,
       location: location.pathname,
+      hasError: !!error,
     });
 
-    if (isAuthenticated && (mode === "login" || mode === "signup")) {
+    // Only redirect if authenticated AND no current error being displayed
+    if (isAuthenticated && (mode === "login" || mode === "signup") && !error) {
       console.log(
         "AuthForm: User already authenticated, redirecting to:",
         from
       );
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, user, mode, navigate, from, location.pathname]);
+  }, [isAuthenticated, user, mode, navigate, from, location.pathname, error]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-    setError("");
+    setLocalError("");
     setSuccess("");
+    clearError(); // Clear auth context error
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+
+    console.log("🎯 Login form submitted");
+
+    // Prevent multiple submissions
+    if (isLoading) {
+      console.log("⏸️ Already loading, ignoring duplicate submission");
+      return;
+    }
+
     setIsLoading(true);
-    setError("");
+    setLocalError("");
+    clearError(); // Clear any existing auth errors
 
     try {
       console.log("🚀 Attempting login with:", {
@@ -214,13 +236,22 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         user: localStorage.getItem("auth_user") ? "present" : "absent",
       });
 
-      // Small delay to ensure state updates
+      // Only navigate if login was successful (no exception thrown)
+      // Wait a bit to ensure state updates are complete
       setTimeout(() => {
-        console.log("🔄 Navigating after delay...");
+        console.log("🔄 Navigating after successful login...");
         navigate(from, { replace: true });
       }, 100);
     } catch (err: any) {
-      // Handle different error response structures
+      console.log("❌ Login failed:", {
+        error: err,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data,
+        authError,
+      });
+
+      // Always set local error message to ensure it displays
       let errorMessage = t("errors.loginFailed");
 
       if (err.response?.data) {
@@ -233,7 +264,13 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         }
       }
 
-      setError(errorMessage);
+      console.log("🚨 Setting error message:", errorMessage);
+      setLocalError(errorMessage);
+
+      // Explicitly prevent any navigation
+      console.log("🛑 Error occurred - NOT navigating, staying on login page");
+
+      // Do NOT navigate on error - stay on login page to show error
     } finally {
       setIsLoading(false);
     }
@@ -242,11 +279,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setLocalError("");
+    clearError();
 
     try {
       if (formData.password !== formData.confirmPassword) {
-        setError(t("errors.passwordMismatch"));
+        setLocalError(t("errors.passwordMismatch"));
         return;
       }
 
@@ -275,7 +313,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         }
       }
 
-      setError(errorMessage);
+      setLocalError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -284,7 +322,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setLocalError("");
     setSuccess("");
 
     try {
@@ -296,7 +334,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         setTempPassword(response.tempPassword);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || t("errors.forgotPasswordFailed"));
+      setLocalError(
+        err.response?.data?.message || t("errors.forgotPasswordFailed")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -305,12 +345,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setLocalError("");
     setSuccess("");
 
     try {
       if (formData.newPassword !== formData.confirmPassword) {
-        setError(t("errors.passwordMismatch"));
+        setLocalError(t("errors.passwordMismatch"));
         return;
       }
 
@@ -340,7 +380,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         }
       }
 
-      setError(errorMessage);
+      setLocalError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -349,7 +389,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setLocalError("");
     setSuccess("");
 
     try {
@@ -364,7 +404,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
 
       setSuccess(t("auth.profileUpdateSuccess"));
     } catch (err: any) {
-      setError(err.response?.data?.message || t("errors.profileUpdateFailed"));
+      setLocalError(
+        err.response?.data?.message || t("errors.profileUpdateFailed")
+      );
     } finally {
       setIsLoading(false);
     }

@@ -102,9 +102,9 @@ export const Header: React.FC<HeaderProps> = ({
   const StudentNavigation = () => (
     <nav className="hidden lg:flex items-center space-x-1">
       <button
-        onClick={() => handleNavigation("/exercises")}
+        onClick={() => handleNavigation("/student/exercises")}
         className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-          isActivePath("/exercises")
+          isActivePath("/student/exercises") || isActivePath("/exercise/")
             ? "text-blue-600 bg-blue-50"
             : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
         }`}
@@ -113,9 +113,9 @@ export const Header: React.FC<HeaderProps> = ({
         {t("navigation.exercises")}
       </button>
       <button
-        onClick={() => handleNavigation("/quizzes")}
+        onClick={() => handleNavigation("/student/quizzes")}
         className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-          isActivePath("/quizzes")
+          isActivePath("/student/quizzes") || isActivePath("/quiz/")
             ? "text-blue-600 bg-blue-50"
             : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
         }`}
@@ -124,9 +124,9 @@ export const Header: React.FC<HeaderProps> = ({
         {t("navigation.quizzes")}
       </button>
       <button
-        onClick={() => handleNavigation("/ielts")}
+        onClick={() => handleNavigation("/student/ielts")}
         className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-          isActivePath("/ielts")
+          isActivePath("/student/ielts") || isActivePath("/ielts-test/")
             ? "text-blue-600 bg-blue-50"
             : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
         }`}
@@ -186,21 +186,21 @@ export const Header: React.FC<HeaderProps> = ({
   const MobileStudentNavigation = () => (
     <>
       <button
-        onClick={() => handleNavigation("/exercises")}
+        onClick={() => handleNavigation("/student/exercises")}
         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
       >
         <Edit className="h-5 w-5 mr-3" />
         {t("navigation.exercises")}
       </button>
       <button
-        onClick={() => handleNavigation("/quizzes")}
+        onClick={() => handleNavigation("/student/quizzes")}
         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
       >
         <FileText className="h-5 w-5 mr-3" />
         {t("navigation.quizzes")}
       </button>
       <button
-        onClick={() => handleNavigation("/ielts")}
+        onClick={() => handleNavigation("/student/ielts")}
         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
       >
         <Award className="h-5 w-5 mr-3" />

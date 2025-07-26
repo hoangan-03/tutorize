@@ -31,10 +31,26 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("auth_user");
-      window.location.href = "/login";
+      // Don't redirect if we're already on login/signup pages or if it's a login attempt
+      const currentPath = window.location.pathname;
+      const isAuthPage =
+        currentPath === "/login" ||
+        currentPath === "/signup" ||
+        currentPath === "/forgot-password";
+      const isLoginAttempt = error.config?.url?.includes("/auth/login");
+
+      if (!isAuthPage && !isLoginAttempt) {
+        // Clear token and redirect to login only for protected routes
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+        window.location.href = "/login";
+      } else if (isLoginAttempt) {
+        // For failed login attempts, don't clear localStorage yet
+        // Let the component handle the error display first
+        console.log("Login attempt failed, not clearing localStorage yet");
+      }
+
+      // For login attempts or auth pages, just let the error propagate
     }
     return Promise.reject(error);
   }

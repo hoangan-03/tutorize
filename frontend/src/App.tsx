@@ -30,6 +30,12 @@ import { OnlineQuizzes } from "./components/pages/OnlineQuizzes";
 import { WritingGrader } from "./components/pages/WritingGrader";
 import { ExerciseEditor } from "./components/pages/ExerciseEditor";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
+import { QuizList } from "./components/pages/QuizList";
+import { QuizResult } from "./components/pages/QuizResult";
+import { ExerciseList } from "./components/pages/ExerciseList";
+import { ExerciseDetail } from "./components/pages/ExerciseDetail";
+import { IeltsList } from "./components/pages/IeltsList";
+import { IeltsResult } from "./components/pages/IeltsResult";
 import { Role } from "./types/api";
 
 // Component tùy chỉnh để chuyển hướng dựa trên vai trò người dùng
@@ -41,10 +47,10 @@ const RoleBasedRedirect = () => {
     isAuthenticated,
     isTeacher,
     user,
-    redirectTo: isTeacher ? "/exercises" : "/quizzes",
+    redirectTo: isTeacher ? "/exercises" : "/student/quizzes",
   });
 
-  return <Navigate to={isTeacher ? "/exercises" : "/quizzes"} replace />;
+  return <Navigate to={isTeacher ? "/exercises" : "/student/quizzes"} replace />;
 };
 
 function AppContent() {
@@ -145,7 +151,7 @@ function AppContent() {
           }
         />
 
-        {/* Exercise Routes */}
+        {/* Exercise Routes - Teacher/Admin */}
         <Route
           path="/exercises"
           element={
@@ -161,7 +167,38 @@ function AppContent() {
           }
         />
 
-        {/* Quiz Routes */}
+        {/* Exercise Routes - Student */}
+        <Route
+          path="/student/exercises"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <ExerciseList />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/exercise/:exerciseId"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <ExerciseDetail />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Quiz Routes - Teacher/Admin */}
         <Route
           path="/quizzes"
           element={
@@ -172,6 +209,22 @@ function AppContent() {
               />
               <main>
                 <OnlineQuizzes />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Quiz Routes - Student */}
+        <Route
+          path="/student/quizzes"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <QuizList />
               </main>
             </ProtectedRoute>
           }
@@ -188,7 +241,22 @@ function AppContent() {
           }
         />
 
-        {/* IELTS Routes */}
+        <Route
+          path="/quiz/:quizId/results"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <QuizResult />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* IELTS Routes - Teacher/Admin */}
         <Route
           path="/ielts"
           element={
@@ -204,12 +272,43 @@ function AppContent() {
           }
         />
 
+        {/* IELTS Routes - Student */}
+        <Route
+          path="/student/ielts"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <IeltsList />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/ielts-test/:testId/play"
           element={
             <ProtectedRoute>
               <main>
                 <IeltsTestPlayer />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ielts-test/:submissionId/result"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <IeltsResult />
               </main>
             </ProtectedRoute>
           }

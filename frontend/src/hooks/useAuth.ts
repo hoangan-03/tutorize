@@ -82,11 +82,15 @@ export const useAuth = (): UseAuthReturn => {
   const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
       setIsLoading(true);
-      setError(null);
+      // Don't clear error here - let the component handle it
+      // setError(null);
 
       console.log("useAuth: Starting login...");
       const response = await authService.login(credentials);
       console.log("useAuth: Login response:", response);
+
+      // Only clear error on successful login
+      setError(null);
 
       authService.saveToken(response.accessToken);
       authService.saveUser(response.user);
