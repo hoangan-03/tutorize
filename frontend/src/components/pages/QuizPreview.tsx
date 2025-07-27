@@ -1,19 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Question, Quiz } from "../../types/api";
 
 interface QuizPreviewProps {
-  quiz: any;
+  quiz: Quiz;
   onBack: () => void;
 }
 
 export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{
-    [key: number]: any;
+    [key: number]: string;
   }>({});
 
-  const handleAnswerSelect = (questionId: number, answer: any) => {
+  const handleAnswerSelect = (questionId: number, answer: string) => {
     setSelectedAnswers((prev) => ({
       ...prev,
       [questionId]: answer,
@@ -62,7 +62,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
               Danh sách câu hỏi
             </h3>
             <div className="space-y-2">
-              {quiz.questions?.map((question: any, index: number) => (
+              {quiz.questions?.map((question: Question, index: number) => (
                 <button
                   key={question.id}
                   onClick={() => goToQuestion(index)}
@@ -151,7 +151,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
                                 isCorrect
                                   ? "border-green-500 bg-green-50"
                                   : selectedAnswers[currentQuestion.id] ===
-                                    optionIndex
+                                    String(optionIndex)
                                   ? "border-blue-500 bg-blue-50"
                                   : "border-gray-200 hover:bg-gray-50"
                               }`}
@@ -161,12 +161,12 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
                                 name={`question-${currentQuestion.id}`}
                                 checked={
                                   selectedAnswers[currentQuestion.id] ===
-                                  optionIndex
+                                  String(optionIndex)
                                 }
                                 onChange={() =>
                                   handleAnswerSelect(
                                     currentQuestion.id,
-                                    optionIndex
+                                    String(optionIndex)
                                   )
                                 }
                                 className={`h-4 w-4 focus:ring-2 border-2 ${

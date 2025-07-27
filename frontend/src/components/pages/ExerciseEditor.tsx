@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Eye,
   Calendar,
@@ -26,56 +26,59 @@ import { TeacherSubmissionsView } from "./TeacherSubmissionsView";
 import { ExerciseDashboard } from "./ExerciseDashboard";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { exerciseService } from "../../services/exerciseService";
-import { Exercise, Subject, ExerciseStatus } from "../../types/api";
+import { useExercises, useExerciseManagement } from "../../hooks/useExercise";
+import { Exercise, Subject, ExerciseStatus, EditMode } from "../../types/api";
 import { Badge } from "../ui/Badge";
+import { getDefaultDeadline } from "../utils";
 
 export const ExerciseEditor: React.FC = () => {
   const { isTeacher, user } = useAuth();
   const { t } = useTranslation();
+  const { exercises, isLoading } = useExercises();
+  const {
+    createExercise,
+    updateExercise,
+    deleteExercise,
+    publishExercise,
+    closeExercise,
+  } = useExerciseManagement();
 
   // All hooks must be called before any early returns
   const [currentView, setCurrentView] = useState<
     "list" | "create" | "edit" | "preview" | "submissions" | "dashboard"
   >("list");
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null
   );
-  const [editMode, setEditMode] = useState<"rich" | "latex">("rich");
+  const [editMode, setEditMode] = useState<EditMode>(EditMode.RICH);
 
   // Form state with correct types
   const [formData, setFormData] = useState<Exercise>({
     id: 0,
-    name: "",
-    subject: "MATH" as Subject,
+    name: "Sample Exercise",
+    subject: Subject.MATH,
     grade: 6,
-    deadline: "",
-    note: "",
-    content: "",
+    deadline: getDefaultDeadline(),
+    note: "Sample note",
+    content: "Sample content",
     createdBy: user?.id || 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     submissions: 0,
-    status: "ACTIVE" as ExerciseStatus,
+    status: ExerciseStatus.ACTIVE,
     maxScore: 100,
     allowLateSubmission: false,
     isPublic: true,
   });
-
-  useEffect(() => {
-    if (isTeacher) {
-      loadExercises();
-    }
-  }, [isTeacher]);
-
-  // Teacher stats
   const teacherStats = useMemo(() => {
     return {
       totalExercises: exercises.length,
-      activeExercises: exercises.filter((ex) => ex.status === "ACTIVE").length,
-      draftExercises: exercises.filter((ex) => ex.status === "DRAFT").length,
+      activeExercises: exercises.filter(
+        (ex) => ex.status === ExerciseStatus.ACTIVE
+      ).length,
+      draftExercises: exercises.filter(
+        (ex) => ex.status === ExerciseStatus.DRAFT
+      ).length,
       totalSubmissions: exercises.reduce(
         (sum, ex) => sum + (ex.submissions || 0),
         0
@@ -83,23 +86,9 @@ export const ExerciseEditor: React.FC = () => {
     };
   }, [exercises]);
 
-  // If user is a student, show the public view
   if (!isTeacher) {
     return <ExercisePublicView />;
   }
-
-  const loadExercises = async () => {
-    try {
-      setLoading(true);
-      const result = await exerciseService.getExercises();
-      setExercises(result.data);
-    } catch (error) {
-      console.error("Error loading exercises:", error);
-      setExercises([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -108,51 +97,47 @@ export const ExerciseEditor: React.FC = () => {
     }));
   };
 
-  const handleSave = async () => {
-    try {
-      if (selectedExercise) {
-        await exerciseService.updateExercise(selectedExercise.id!, formData);
-      } else {
-        await exerciseService.createExercise(formData);
-      }
-      await loadExercises();
-      setCurrentView("list");
-      resetForm();
-    } catch (error) {
-      console.error("Error saving exercise:", error);
-      alert("Có lỗi khi lưu bài tập. Vui lòng thử lại.");
-    }
-  };
-
   const handleEdit = (exercise: Exercise) => {
     setSelectedExercise(exercise);
-    setFormData(exercise);
+    // Convert ISO date to datetime-local format for form input
+    const formattedExercise = {
+      ...exercise,
+      deadline: exercise.deadline
+        ? new Date(exercise.deadline).toISOString().slice(0, 16)
+        : "",
+    };
+    setFormData(formattedExercise);
     setCurrentView("edit");
   };
 
   const handleDelete = async (exercise: Exercise) => {
     if (confirm("Bạn có chắc chắn muốn xóa bài tập này?")) {
       try {
-        await exerciseService.deleteExercise(exercise.id!);
-        await loadExercises();
+        await deleteExercise(exercise.id!);
+        // Clear selected exercise if it was the one being deleted
+        if (selectedExercise?.id === exercise.id) {
+          setSelectedExercise(null);
+          setCurrentView("list");
+        }
       } catch (error) {
         console.error("Error deleting exercise:", error);
-        alert("Có lỗi khi xóa bài tập. Vui lòng thử lại.");
       }
     }
   };
 
   const handleToggleStatus = async (exercise: Exercise) => {
     try {
-      const newStatus = exercise.status === "ACTIVE" ? "ARCHIVED" : "ACTIVE";
-      await exerciseService.updateExercise(exercise.id!, {
-        ...exercise,
-        status: newStatus as ExerciseStatus,
-      });
-      await loadExercises();
+      const newStatus =
+        exercise.status === ExerciseStatus.ACTIVE
+          ? ExerciseStatus.CLOSED
+          : ExerciseStatus.ACTIVE;
+      if (newStatus === ExerciseStatus.ACTIVE) {
+        await publishExercise(exercise.id!);
+      } else {
+        await closeExercise(exercise.id!);
+      }
     } catch (error) {
       console.error("Error updating exercise status:", error);
-      alert("Có lỗi khi cập nhật trạng thái bài tập. Vui lòng thử lại.");
     }
   };
 
@@ -172,20 +157,95 @@ export const ExerciseEditor: React.FC = () => {
     setCurrentView("dashboard");
   };
 
+  const handleFormToggleStatus = async () => {
+    if (selectedExercise) {
+      try {
+        const newStatus =
+          selectedExercise.status === ExerciseStatus.ACTIVE
+            ? ExerciseStatus.CLOSED
+            : ExerciseStatus.ACTIVE;
+
+        let updatedExercise;
+        if (newStatus === ExerciseStatus.ACTIVE) {
+          updatedExercise = await publishExercise(selectedExercise.id!);
+        } else {
+          updatedExercise = await closeExercise(selectedExercise.id!);
+        }
+
+        // Update local state to reflect the new status
+        setSelectedExercise(updatedExercise);
+        setFormData((prev) => ({
+          ...prev,
+          status: newStatus,
+        }));
+      } catch (error) {
+        console.error("Error updating exercise status:", error);
+      }
+    }
+  };
+
+  const handleCreateExercise = async () => {
+    try {
+      const exerciseData = {
+        name: formData.name,
+        subject: formData.subject,
+        grade: formData.grade,
+        deadline: formData.deadline
+          ? new Date(formData.deadline).toISOString()
+          : undefined,
+        note: formData.note,
+        content: formData.content,
+        latexContent: formData.latexContent,
+        status: formData.status,
+      };
+
+      await createExercise(exerciseData);
+      setCurrentView("list");
+      resetForm();
+    } catch (error) {
+      console.error("Error creating exercise:", error);
+    }
+  };
+
+  const handleEditExercise = async () => {
+    try {
+      if (!selectedExercise) return;
+
+      // Only include fields that are allowed in UpdateExerciseDto
+      const exerciseData = {
+        name: formData.name,
+        subject: formData.subject,
+        grade: formData.grade,
+        deadline: formData.deadline
+          ? new Date(formData.deadline).toISOString()
+          : undefined, // Use undefined instead of empty string
+        note: formData.note,
+        content: formData.content,
+        latexContent: formData.latexContent,
+        status: formData.status,
+      };
+
+      await updateExercise(selectedExercise.id!, exerciseData);
+      setCurrentView("list");
+    } catch (error) {
+      console.error("Error updating exercise:", error);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       id: 0,
-      name: "",
-      subject: "MATH" as Subject,
+      name: "Sample Exercise",
+      subject: Subject.MATH,
       grade: 6,
-      deadline: "",
-      note: "",
-      content: "",
+      deadline: getDefaultDeadline(),
+      note: "Sample note",
+      content: "Sample content",
       createdBy: user?.id || 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       submissions: 0,
-      status: "ACTIVE" as ExerciseStatus,
+      status: ExerciseStatus.ACTIVE,
       maxScore: 100,
       allowLateSubmission: false,
       isPublic: true,
@@ -200,7 +260,10 @@ export const ExerciseEditor: React.FC = () => {
         <ExerciseForm
           formData={formData as any}
           onInputChange={handleInputChange}
-          onSave={handleSave}
+          onToggleStatus={handleFormToggleStatus}
+          onSave={
+            currentView === "create" ? handleCreateExercise : handleEditExercise
+          }
           onCancel={() => setCurrentView("list")}
           isEdit={currentView === "edit"}
           editMode={editMode}
@@ -292,7 +355,10 @@ export const ExerciseEditor: React.FC = () => {
             <div className="flex flex-col items-end space-y-3">
               <div className="flex space-x-3">
                 <button
-                  onClick={() => setCurrentView("create")}
+                  onClick={() => {
+                    resetForm();
+                    setCurrentView("create");
+                  }}
                   className="flex items-center px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -371,7 +437,7 @@ export const ExerciseEditor: React.FC = () => {
 
         {/* Exercise List */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center items-center py-16">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
             </div>
@@ -407,21 +473,21 @@ export const ExerciseEditor: React.FC = () => {
                         <Badge
                           variant="status"
                           className={`${
-                            exercise.status === "ACTIVE"
+                            exercise.status === ExerciseStatus.ACTIVE
                               ? "bg-green-100 text-green-800"
-                              : exercise.status === "DRAFT"
+                              : exercise.status === ExerciseStatus.DRAFT
                               ? "bg-yellow-100 text-yellow-800"
-                              : exercise.status === "ARCHIVED"
+                              : exercise.status === ExerciseStatus.CLOSED
                               ? "bg-gray-100 text-gray-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {exercise.status === "ACTIVE"
+                          {exercise.status === ExerciseStatus.ACTIVE
                             ? t("status.active")
-                            : exercise.status === "DRAFT"
+                            : exercise.status === ExerciseStatus.DRAFT
                             ? t("status.draft")
-                            : exercise.status === "ARCHIVED"
-                            ? "Lưu trữ"
+                            : exercise.status === ExerciseStatus.CLOSED
+                            ? "Đã đóng"
                             : t("status.inactive")}
                         </Badge>
                         <Badge variant="subject">

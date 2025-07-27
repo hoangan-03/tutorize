@@ -4,13 +4,10 @@ import {
   IsNumber,
   IsEnum,
   IsOptional,
-  IsArray,
   IsDateString,
-  ValidateNested,
   Min,
   Max,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubjectGradeFilterDto } from '../../common/dto/pagination.dto';
 

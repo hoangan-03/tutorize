@@ -124,6 +124,23 @@ export class ExerciseController {
     return this.exerciseService.update(id, updateExerciseDto, userId);
   }
 
+  @Patch(':id/status')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Thay đổi trạng thái bài tập (đóng/mở)' })
+  @ApiResponse({ status: 200, description: 'Thay đổi trạng thái thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
+  @ApiResponse({
+    status: 403,
+    description: 'Không có quyền thay đổi trạng thái',
+  })
+  toggleStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { status: 'ACTIVE' | 'CLOSED' },
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.exerciseService.updateStatus(id, body.status, userId);
+  }
+
   @Delete(':id')
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Xóa bài tập' })

@@ -146,7 +146,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="p-8 min-h-[300px] focus:outline-none"
+        className="p-8 min-h-[300px] focus:outline-none editor-placeholder"
         style={{
           whiteSpace: "pre-wrap",
           wordWrap: "break-word",
@@ -155,8 +155,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         data-placeholder={placeholder}
       />
 
-      <style jsx>{`
-        [contenteditable]:empty:before {
+      <style>{`
+        .editor-placeholder:empty:before {
           content: attr(data-placeholder);
           color: #9ca3af;
           font-style: italic;

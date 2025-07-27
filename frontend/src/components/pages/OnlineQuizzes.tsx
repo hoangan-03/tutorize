@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
@@ -18,8 +17,14 @@ import {
   ArrowLeft,
   RotateCw,
 } from "lucide-react";
-import { quizService } from "../../services/quizService";
-import { Question, Quiz } from "../../types/api";
+import {
+  useQuizzes,
+  useQuizTaking,
+  useStudentStats,
+  useQuiz,
+  useQuizSubmissionHistory,
+} from "../../hooks/useQuiz";
+import { Question, Quiz, QuizSubmission, Role } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { Badge } from "../ui/Badge";
 
@@ -29,11 +34,13 @@ import { QuizManagement } from "./QuizManagement";
 // Student Quiz Component
 const StudentQuizView: React.FC = () => {
   const { user } = useAuth();
-  const isTeacher = user?.role === "TEACHER";
+  const isTeacher = user?.role === Role.TEACHER;
   const { t } = useTranslation();
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
   const { showError, showSuccess } = useModal();
+
+  // State declarations first
   const [currentView, setCurrentView] = useState<
     "list" | "quiz" | "result" | "teacher-view"
   >("list");
@@ -42,16 +49,39 @@ const StudentQuizView: React.FC = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<(number | string)[]>(
     []
   );
-  const [quizResults, setQuizResults] = useState<any>(null);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userStats, setUserStats] = useState({
-    totalQuizzes: 0,
-    completedQuizzes: 0,
-    overdueQuizzes: 0,
-    averageScore: 0,
-    perfectCount: 0,
-  });
+
+  const { quizzes, isLoading: loading } = useQuizzes();
+  const { stats: userStats } = useStudentStats();
+  const { submitQuizWithAnswers } = useQuizTaking();
+
+  // Dynamic hooks for specific quiz
+  const parsedQuizId = quizId ? parseInt(quizId) : null;
+  const { quiz: detailedQuizData, mutate: refetchQuiz } = useQuiz(
+    currentView === "quiz" || currentView === "teacher-view"
+      ? parsedQuizId
+      : null
+  );
+  const { submissionHistory, mutate: refetchSubmissionHistory } =
+    useQuizSubmissionHistory(currentView === "result" ? parsedQuizId : null);
+  const [quizResults, setQuizResults] = useState<{
+    score?: number;
+    totalQuestions?: number;
+    correctAnswers?: number;
+    percentage?: number;
+    passed: boolean;
+    // For submission history
+    correct?: number;
+    total?: number;
+    submission?: QuizSubmission;
+    isAutoSubmit?: boolean;
+    submissions?: QuizSubmission[];
+    canRetake?: boolean;
+    remainingAttempts?: number;
+    currentAttempt?: number;
+    maxScore?: number;
+    isSubmissionHistory?: boolean;
+    quiz?: Quiz;
+  } | null>(null);
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0); // seconds remaining
   const [showTestModal, setShowTestModal] = useState(false);
@@ -113,23 +143,14 @@ const StudentQuizView: React.FC = () => {
   ]);
 
   useEffect(() => {
-    // If there is a quizId in the URL, start the quiz directly
     if (quizId && !currentQuiz) {
       beginQuizAttempt(Number(quizId));
-    } else if (!quizId) {
-      // Otherwise, load the list of quizzes
-      loadQuizzes();
-      if (!isTeacher) {
-        loadStudentStats();
-      }
     }
-  }, [quizId, isTeacher]);
+  }, [quizId, currentQuiz]);
 
   const clearAttemptAndNavigate = useCallback(() => {
-    console.log("clearAttemptAndNavigate called", { storageKey });
     if (storageKey) {
       localStorage.removeItem(storageKey);
-      console.log("Removed localStorage item:", storageKey);
     }
 
     // Reset all quiz state
@@ -142,7 +163,6 @@ const StudentQuizView: React.FC = () => {
 
     // Navigate to quiz list
     navigate("/quizzes");
-    console.log("Navigated to /quizzes");
   }, [storageKey, navigate]);
 
   // Timer effect for countdown
@@ -197,8 +217,7 @@ const StudentQuizView: React.FC = () => {
         timeSpent: Math.floor((Date.now() - quizStartTime) / 1000),
       };
 
-      await quizService.submitQuiz(currentQuiz.id, submitData);
-      console.log("Auto-submitted quiz with score 0 due to page unload");
+      await submitQuizWithAnswers(currentQuiz.id, submitData);
 
       // Clear storage
       if (storageKey) {
@@ -245,52 +264,6 @@ const StudentQuizView: React.FC = () => {
     };
   }, [currentView, currentQuiz, isTeacher]);
 
-  const loadQuizzes = async () => {
-    try {
-      setLoading(true);
-      const result = await quizService.getQuizzes();
-      // Filter quizzes based on user role
-      const filteredQuizzes = isTeacher
-        ? result.data // Teachers can see all quizzes
-        : result.data.filter((quiz: Quiz) => quiz.status === "ACTIVE"); // Students only see active quizzes
-      setQuizzes(filteredQuizzes);
-    } catch (error) {
-      console.error("Error loading quizzes:", error);
-      setQuizzes([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadStudentStats = async () => {
-    try {
-      console.log(
-        "Loading student stats for user role:",
-        isTeacher ? "teacher" : "student"
-      );
-      const stats = await quizService.getStudentStats();
-      console.log("Student stats loaded successfully:", stats);
-      // Ensure averageScore is always a number
-      setUserStats({
-        totalQuizzes: stats.totalQuizzes || 0,
-        completedQuizzes: stats.completedQuizzes || 0,
-        overdueQuizzes: stats.overdueQuizzes || 0,
-        averageScore: stats.averageScore || 0,
-        perfectCount: stats.perfectCount || 0,
-      });
-    } catch (error) {
-      console.error("Error loading student stats:", error);
-      // Keep default values when API fails
-      setUserStats({
-        totalQuizzes: 0,
-        completedQuizzes: 0,
-        overdueQuizzes: 0,
-        averageScore: 0,
-        perfectCount: 0,
-      });
-    }
-  };
-
   const beginQuizAttempt = async (id: number) => {
     try {
       // Validation
@@ -301,7 +274,13 @@ const StudentQuizView: React.FC = () => {
       }
 
       console.log("Beginning quiz attempt for ID:", id);
-      const detailedQuiz = await quizService.getQuiz(id);
+
+      // Use the data from the hook if available, otherwise fetch
+      const detailedQuiz = detailedQuizData;
+      if (!detailedQuiz) {
+        refetchQuiz();
+        return; // Let the hook refetch trigger the data
+      }
 
       if (!detailedQuiz.questions || detailedQuiz.questions.length === 0) {
         showError("Quiz này hiện không có câu hỏi nào để làm.");
@@ -316,17 +295,20 @@ const StudentQuizView: React.FC = () => {
       setCurrentQuestionIndex(0);
       setSelectedAnswers([]);
       setQuizResults(null);
-
-      console.log("Quiz attempt started successfully for:", detailedQuiz.title);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Lỗi khi bắt đầu lượt làm bài mới:", error);
 
-      if (error.response?.status === 404) {
-        alert("Không tìm thấy quiz này.");
-      } else if (error.response?.status === 403) {
-        alert("Bạn không có quyền truy cập quiz này.");
-      } else if (error.response?.status === 400) {
-        alert("Quiz này đã hết hạn hoặc không còn hoạt động.");
+      if (error && typeof error === "object" && "response" in error) {
+        const httpError = error as { response?: { status?: number } };
+        if (httpError.response?.status === 404) {
+          alert("Không tìm thấy quiz này.");
+        } else if (httpError.response?.status === 403) {
+          alert("Bạn không có quyền truy cập quiz này.");
+        } else if (httpError.response?.status === 400) {
+          alert("Quiz này đã hết hạn hoặc không còn hoạt động.");
+        } else {
+          alert("Có lỗi khi bắt đầu lượt làm bài mới. Vui lòng thử lại.");
+        }
       } else {
         alert("Có lỗi khi bắt đầu lượt làm bài mới. Vui lòng thử lại.");
       }
@@ -336,31 +318,13 @@ const StudentQuizView: React.FC = () => {
   const startQuiz = async (quiz: Quiz) => {
     try {
       if (isTeacher) {
-        const detailedQuiz = await quizService.getQuizWithAnswers(quiz.id);
-        setCurrentQuiz(detailedQuiz);
-        setCurrentView("teacher-view");
+        // For teacher view, navigate to a specific URL to trigger the hook
+        navigate(`/quiz/${quiz.id}?view=teacher`);
         return;
       }
 
-      const submissionHistory = await quizService.getQuizSubmissionHistory(
-        quiz.id
-      );
-
-      if (
-        submissionHistory.submissions &&
-        submissionHistory.submissions.length > 0
-      ) {
-        // User has taken this quiz, show history view
-        setCurrentQuiz(submissionHistory.quiz);
-        setQuizResults({
-          ...submissionHistory,
-          isSubmissionHistory: true,
-        });
-        setCurrentView("result");
-      } else {
-        // This is the first attempt, navigate to the player
-        navigate(`/quiz/${quiz.id}/play`);
-      }
+      // For students, navigate to show submission history or start quiz
+      navigate(`/quiz/${quiz.id}`);
     } catch (error) {
       console.error("Lỗi khi tải chi tiết quiz:", error);
       alert("Có lỗi khi tải chi tiết quiz. Vui lòng thử lại.");
@@ -407,27 +371,19 @@ const StudentQuizView: React.FC = () => {
         // Filter out unanswered questions
         const validAnswers = selectedAnswers
           .map((answer, index) => {
-            const questionType = questions[index].type;
             const userAnswer =
               answer !== undefined && answer !== ""
                 ? answer.toString().trim()
                 : "";
 
-            console.log(`Question ${index + 1} (${questionType}):`, {
-              questionId: questions[index].id,
-              userAnswer: userAnswer,
-              originalAnswer: answer,
-              correctAnswer: questions[index].correctAnswer,
-            });
-
             return {
               questionId: questions[index].id,
               userAnswer: userAnswer,
-              timeTaken: 0, // You can track time per question if needed
+              timeTaken: 0,
             };
           })
           .filter(
-            (_answer: any, index: number) =>
+            (_answer: unknown, index: number) =>
               selectedAnswers[index] !== undefined &&
               selectedAnswers[index] !== "" &&
               (typeof selectedAnswers[index] === "string"
@@ -437,44 +393,51 @@ const StudentQuizView: React.FC = () => {
 
         const submitData = {
           answers: validAnswers,
-          timeSpent: Math.floor((Date.now() - quizStartTime) / 1000), // Time in seconds
+          timeSpent: Math.floor((Date.now() - quizStartTime) / 1000), // in seconds
         };
 
         if (isAutoSubmit) {
           console.log("Quiz auto-submitted due to timeout");
         }
 
-        const submission = await quizService.submitQuiz(
+        const submission = await submitQuizWithAnswers(
           currentQuiz.id,
           submitData
         );
 
-        // Sau khi nộp, lấy lại lịch sử để cập nhật số lượt còn lại
-        const submissionHistory = await quizService.getQuizSubmissionHistory(
-          currentQuiz.id
-        );
+        // Refresh submission history
+        refetchSubmissionHistory();
 
-        console.log("SubmissionHistory response:", submissionHistory);
+        // Use the updated submission history from hook
+        const submissionHistoryData = submissionHistory || {
+          submissions: [],
+          canRetake: false,
+          remainingAttempts: 0,
+          currentAttempt: 1,
+          maxScore: null,
+          quiz: currentQuiz,
+        };
+
+        console.log("SubmissionHistory response:", submissionHistoryData);
         console.log(
           "maxScore from submissionHistory:",
-          submissionHistory.maxScore
+          submissionHistoryData.maxScore
         );
 
         // Calculate results from submission
         const results = {
-          correct:
-            submission.answers?.filter((a: any) => a.isCorrect).length || 0,
+          correct: submission.answers?.filter((a) => a.isCorrect).length || 0,
           total: questions.length,
           passed: submission.score / submission.totalPoints >= 0.7,
           submission: submission,
           isAutoSubmit: isAutoSubmit,
-          submissions: submissionHistory.submissions,
-          canRetake: submissionHistory.canRetake,
-          remainingAttempts: submissionHistory.remainingAttempts,
-          currentAttempt: submissionHistory.currentAttempt,
-          maxScore: submissionHistory.maxScore,
+          submissions: submissionHistoryData.submissions,
+          canRetake: submissionHistoryData.canRetake,
+          remainingAttempts: submissionHistoryData.remainingAttempts,
+          currentAttempt: submissionHistoryData.currentAttempt,
+          maxScore: submissionHistoryData.maxScore ?? undefined, // Convert null to undefined
           isSubmissionHistory: true,
-          quiz: submissionHistory.quiz || currentQuiz, // Ensure quiz info is preserved
+          quiz: submissionHistoryData.quiz || currentQuiz, // Ensure quiz info is preserved
         };
 
         if (isAutoSubmit) {
@@ -499,24 +462,29 @@ const StudentQuizView: React.FC = () => {
         }
 
         setTimeLeft(0); // Stop the timer
-        // Reload stats after submission
-        loadStudentStats();
-      } catch (error: any) {
+        // Stats will be automatically refreshed via SWR hooks
+      } catch (error: unknown) {
         console.error("Error submitting quiz:", error);
 
         // Handle specific error cases
-        if (error.response?.status === 400) {
-          const errorMessage = error.response?.data?.message || error.message;
-          if (errorMessage.includes("đã nộp bài")) {
-            alert(
-              "Bạn đã hoàn thành quiz này trước đó rồi. Bạn sẽ được chuyển về danh sách quiz."
-            );
-            clearAttemptAndNavigate();
-            return;
-          } else if (errorMessage.includes("hết hạn")) {
-            alert("Quiz này đã hết hạn nộp bài.");
-            clearAttemptAndNavigate();
-            return;
+        if (error && typeof error === "object" && "response" in error) {
+          const httpError = error as {
+            response?: { status?: number; data?: { message?: string } };
+          };
+          if (httpError.response?.status === 400) {
+            const errorMessage =
+              httpError.response?.data?.message || "Unknown error";
+            if (errorMessage.includes("đã nộp bài")) {
+              alert(
+                "Bạn đã hoàn thành quiz này trước đó rồi. Bạn sẽ được chuyển về danh sách quiz."
+              );
+              clearAttemptAndNavigate();
+              return;
+            } else if (errorMessage.includes("hết hạn")) {
+              alert("Quiz này đã hết hạn nộp bài.");
+              clearAttemptAndNavigate();
+              return;
+            }
           }
         }
 
@@ -1150,7 +1118,7 @@ const StudentQuizView: React.FC = () => {
               {/* Submission History */}
               <div className="space-y-6">
                 {quizResults.submissions?.map(
-                  (submission: any, index: number) => (
+                  (submission: QuizSubmission, index: number) => (
                     <div
                       key={submission.id}
                       className="bg-gray-50 rounded-lg p-6 border"
@@ -1191,7 +1159,7 @@ const StudentQuizView: React.FC = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div className="text-center p-3 bg-white rounded">
                           <div className="text-lg font-semibold text-green-600">
-                            {submission.answers?.filter((a: any) => a.isCorrect)
+                            {submission.answers?.filter((a) => a.isCorrect)
                               .length || 0}
                           </div>
                           <div className="text-sm text-gray-600">
@@ -1253,18 +1221,13 @@ const StudentQuizView: React.FC = () => {
                   <span>{t("quizzes.back")}</span>
                 </button>
                 <div className="flex items-center space-x-4 w-full md:w-auto">
-                  {quizResults.currentAttempt > 0 ? (
+                  {(quizResults.currentAttempt ?? 0) > 0 ? (
                     <button
                       onClick={() => {
-                        console.log(
-                          "Retake clicked, currentQuiz:",
-                          currentQuiz
-                        );
                         const quizIdToRetake =
                           currentQuiz?.id ||
                           quizResults.quiz?.id ||
                           Number(quizId);
-                        console.log("Quiz ID for retake:", quizIdToRetake);
                         if (quizIdToRetake) {
                           navigate(`/quiz/${quizIdToRetake}/play`);
                         } else {
@@ -1360,8 +1323,8 @@ const StudentQuizView: React.FC = () => {
                 <div className="flex-1 flex flex-col items-center justify-center">
                   <p className="text-xl font-semibold text-gray-900">
                     {(
-                      ((quizResults.submission.score || 0) /
-                        (quizResults.submission.totalPoints || 1)) *
+                      ((quizResults.submission?.score || 0) /
+                        (quizResults.submission?.totalPoints || 1)) *
                       10
                     ).toFixed(1)}
                   </p>
@@ -1461,7 +1424,7 @@ const StudentQuizView: React.FC = () => {
                 </div>
 
                 {/* Timer element */}
-                <div className="absolute -top-2 left-8 w-3 h-3 rounded-full bg-amber-400 relative">
+                <div className="absolute -top-2 left-8 w-3 h-3 rounded-full bg-amber-400">
                   <div className="absolute inset-0 border border-white/40 rounded-full"></div>
                   <div className="absolute top-0.5 left-1 w-0.5 h-1 bg-white/80 rounded"></div>
                 </div>

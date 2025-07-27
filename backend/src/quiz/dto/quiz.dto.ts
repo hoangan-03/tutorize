@@ -18,40 +18,48 @@ import { SubjectGradeFilterDto } from '../../common/dto/pagination.dto';
 import { QuestionType, QuizStatus, Subject } from '@prisma/client';
 
 export class CreateQuestionDto {
-  @ApiProperty({ description: 'Nội dung câu hỏi' })
+  @ApiProperty({ description: 'Nội dung câu hỏi', example: 'Câu hỏi mẫu' })
   @IsString()
   @IsNotEmpty()
   question: string;
 
-  @ApiProperty({ enum: QuestionType, description: 'Loại câu hỏi' })
+  @ApiProperty({
+    enum: QuestionType,
+    description: 'Loại câu hỏi',
+    example: QuestionType.MULTIPLE_CHOICE,
+  })
   @IsEnum(QuestionType)
   type: QuestionType;
 
   @ApiPropertyOptional({
     type: [String],
     description: 'Các lựa chọn (cho multiple choice)',
+    example: ['A', 'B', 'C', 'D'],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   options?: string[];
 
-  @ApiProperty({ description: 'Đáp án đúng' })
+  @ApiProperty({ description: 'Đáp án đúng', example: 'A' })
   @IsString()
   correctAnswer: string;
 
-  @ApiPropertyOptional({ default: 1, description: 'Điểm số' })
+  @ApiPropertyOptional({ default: 1, description: 'Điểm số', example: 1 })
   @IsOptional()
   @IsNumber()
   @Min(0)
   points?: number = 1;
 
-  @ApiPropertyOptional({ description: 'Giải thích đáp án' })
+  @ApiPropertyOptional({
+    description: 'Giải thích đáp án',
+    example: 'Giải thích cho đáp án A',
+  })
   @IsOptional()
   @IsString()
   explanation?: string;
 
-  @ApiProperty({ description: 'Thứ tự câu hỏi' })
+  @ApiProperty({ description: 'Thứ tự câu hỏi', example: 1 })
   @IsNumber()
   @Min(1)
   order: number;
@@ -68,33 +76,39 @@ export class CreateQuestionDto {
 }
 
 export class CreateQuizDto {
-  @ApiProperty({ description: 'Tiêu đề quiz' })
+  @ApiProperty({ description: 'Tiêu đề quiz', example: 'Quiz Toán 1' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ description: 'Mô tả quiz' })
+  @ApiProperty({
+    description: 'Mô tả quiz',
+    example: 'Quiz về các phép toán cơ bản',
+  })
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ description: 'Môn học' })
+  @ApiProperty({ description: 'Môn học', enum: Subject })
   @IsString()
   @IsNotEmpty()
   subject: Subject;
 
-  @ApiProperty({ description: 'Khối lớp' })
+  @ApiProperty({ description: 'Khối lớp', example: 8 })
   @IsNumber()
   @Min(1)
   @Max(12)
   grade: number;
 
-  @ApiProperty({ description: 'Thời gian làm bài (phút)' })
+  @ApiProperty({ description: 'Thời gian làm bài (phút)', example: 30 })
   @IsNumber()
   @Min(1)
   timeLimit: number;
 
-  @ApiProperty({ description: 'Hạn chót nộp bài' })
+  @ApiProperty({
+    description: 'Hạn chót nộp bài',
+    example: '2023-12-31T23:59:59.999Z',
+  })
   @IsDateString()
   deadline: string;
 

@@ -1,65 +1,46 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Save, FileText } from "lucide-react";
+import { Play, Pause, FileText, Plus, Save } from "lucide-react";
 import { RichTextEditor } from "../ui/RichTextEditor";
-
-interface Exercise {
-  id?: number;
-  name: string;
-  subject: string;
-  grade: number;
-  deadline: string;
-  note: string;
-  content: string;
-  latexContent: string;
-  createdBy: number;
-  createdAt: string;
-  submissions: number;
-  status: string;
-}
+import { EditMode, Exercise, ExerciseStatus, Subject } from "../../types/api";
 
 interface ExerciseFormProps {
   formData: Exercise;
-  onInputChange: (field: string, value: any) => void;
-  onSave: () => void;
+  onInputChange: (field: string, value: unknown) => void;
+  onToggleStatus: () => void;
+  onSave?: () => void;
   onCancel: () => void;
   isEdit: boolean;
-  editMode: "rich" | "latex";
-  onEditModeChange: (mode: "rich" | "latex") => void;
+  editMode: EditMode;
+  onEditModeChange: (mode: EditMode) => void;
 }
 
 export const ExerciseForm: React.FC<ExerciseFormProps> = ({
   formData,
   onInputChange,
+  onToggleStatus,
   onSave,
   onCancel,
   isEdit,
   editMode,
   onEditModeChange,
 }) => {
-  const subjects = [
-    "Mathematics",
-    "Science",
-    "English",
-    "History",
-    "Geography",
-  ];
+  const subjects = Object.values(Subject);
   const grades = [6, 7, 8, 9, 10, 11, 12];
 
   // Rich text editor modules
-  const quillModules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      [{ script: "sub" }, { script: "super" }],
-      [{ indent: "-1" }, { indent: "+1" }],
-      [{ color: [] }, { background: [] }],
-      [{ align: [] }],
-      ["link", "image"],
-      ["clean"],
-    ],
-  };
+  // const quillModules = {
+  //   toolbar: [
+  //     [{ header: [1, 2, 3, false] }],
+  //     ["bold", "italic", "underline", "strike"],
+  //     [{ list: "ordered" }, { list: "bullet" }],
+  //     [{ script: "sub" }, { script: "super" }],
+  //     [{ indent: "-1" }, { indent: "+1" }],
+  //     [{ color: [] }, { background: [] }],
+  //     [{ align: [] }],
+  //     ["link", "image"],
+  //     ["clean"],
+  //   ],
+  // };
 
   return (
     <div className="max-w-8xl mx-auto">
@@ -74,13 +55,45 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
           >
             Hủy
           </button>
-          <button
-            onClick={onSave}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Lưu bài tập
-          </button>
+          {!isEdit ? (
+            <button
+              onClick={onSave}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Tạo bài tập
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={onSave}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Lưu thay đổi
+              </button>
+              <button
+                onClick={onToggleStatus}
+                className={`flex items-center px-4 py-2 rounded-md transition-colors ${
+                  formData.status === "ACTIVE"
+                    ? "bg-orange-600 hover:bg-orange-700 text-white"
+                    : "bg-green-600 hover:bg-green-700 text-white"
+                }`}
+              >
+                {formData.status === ExerciseStatus.ACTIVE ? (
+                  <>
+                    <Pause className="h-4 w-4 mr-2" />
+                    Đóng bài tập
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Mở bài tập
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -147,7 +160,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                   Hạn nộp *
                 </label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   value={formData.deadline}
                   onChange={(e) => onInputChange("deadline", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -180,9 +193,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                 </h3>
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => onEditModeChange("rich")}
+                    onClick={() => onEditModeChange(EditMode.RICH)}
                     className={`px-3 py-1 text-sm rounded ${
-                      editMode === "rich"
+                      editMode === EditMode.RICH
                         ? "bg-blue-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
@@ -190,11 +203,11 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                     <FileText className="h-4 w-4 inline mr-1" />
                     Rich Text
                   </button>
-                  {formData.subject === "Mathematics" && (
+                  {formData.subject === Subject.MATH && (
                     <button
-                      onClick={() => onEditModeChange("latex")}
+                      onClick={() => onEditModeChange(EditMode.LATEX)}
                       className={`px-3 py-1 text-sm rounded ${
-                        editMode === "latex"
+                        editMode === EditMode.LATEX
                           ? "bg-blue-600 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}

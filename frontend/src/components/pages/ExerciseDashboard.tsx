@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   BarChart3,
   TrendingUp,
-  Users,
   Clock,
   Star,
   Award,
@@ -12,7 +11,7 @@ import {
   Target,
 } from "lucide-react";
 import { Exercise, ExerciseSubmission } from "../../types/api";
-import { exerciseService } from "../../services/exerciseService";
+import { useExerciseSubmissionsList } from "../../hooks/useExercise";
 
 interface ExerciseDashboardProps {
   exercise: Exercise;
@@ -38,31 +37,18 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
   onBack,
 }) => {
   const [stats, setStats] = useState<ExerciseStats | null>(null);
-  const [submissions, setSubmissions] = useState<ExerciseSubmission[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Use hook to fetch submissions
+  const { submissions, isLoading: submissionsLoading } =
+    useExerciseSubmissionsList(exercise.id!);
+
   useEffect(() => {
-    loadData();
-  }, [exercise.id]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-
-      // Load submissions
-      const submissionsResult = await exerciseService.getExerciseSubmissions(
-        exercise.id!
-      );
-      setSubmissions(submissionsResult.data);
-
-      // Calculate stats
-      calculateStats(submissionsResult.data);
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
-    } finally {
+    if (!submissionsLoading) {
+      calculateStats(submissions);
       setLoading(false);
     }
-  };
+  }, [submissions, submissionsLoading]);
 
   const calculateStats = (submissions: ExerciseSubmission[]) => {
     const totalSubmissions = submissions.length;

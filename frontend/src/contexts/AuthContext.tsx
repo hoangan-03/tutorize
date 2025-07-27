@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // For demo purposes, use a real login with demo credentials
     auth
       .login({
-        email: "teacher@tutorplatform.com",
+        email: "teacher@gmail.com",
         password: "Teacher123!",
       })
       .catch(() => {

@@ -14,7 +14,7 @@ import {
   UpdateQuizStatusDto,
 } from './dto/quiz.dto';
 import { PaginatedResultDto } from '../common/dto/pagination.dto';
-import { Role } from '@prisma/client';
+import { QuestionType, Role } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
@@ -33,7 +33,7 @@ export class QuizService {
             let processedCorrectAnswer = question.correctAnswer;
 
             if (
-              question.type === 'MULTIPLE_CHOICE' &&
+              question.type === QuestionType.MULTIPLE_CHOICE &&
               question.options &&
               question.options.length > 0
             ) {
@@ -47,7 +47,7 @@ export class QuizService {
             }
 
             // For True/False questions, normalize to lowercase
-            if (question.type === 'TRUE_FALSE') {
+            if (question.type === QuestionType.TRUE_FALSE) {
               if (question.correctAnswer?.toLowerCase() === 'true') {
                 processedCorrectAnswer = 'true';
               } else if (question.correctAnswer?.toLowerCase() === 'false') {
@@ -329,7 +329,7 @@ export class QuizService {
             let processedCorrectAnswer = question.correctAnswer;
 
             if (
-              question.type === 'MULTIPLE_CHOICE' &&
+              question.type === QuestionType.MULTIPLE_CHOICE &&
               question.options &&
               question.options.length > 0
             ) {
@@ -343,7 +343,7 @@ export class QuizService {
             }
 
             // For True/False questions, normalize to lowercase
-            if (question.type === 'TRUE_FALSE') {
+            if (question.type === QuestionType.TRUE_FALSE) {
               if (question.correctAnswer?.toLowerCase() === 'true') {
                 processedCorrectAnswer = 'true';
               } else if (question.correctAnswer?.toLowerCase() === 'false') {
@@ -407,7 +407,7 @@ export class QuizService {
       where: { id: userId },
     });
 
-    if (user?.role !== 'TEACHER' && quiz.createdBy !== userId) {
+    if (user?.role !== Role.TEACHER && quiz.createdBy !== userId) {
       throw new ForbiddenException('Không có quyền xóa quiz này');
     }
 
@@ -436,7 +436,7 @@ export class QuizService {
       where: { id: userId },
     });
 
-    if (user?.role !== 'TEACHER' && quiz.createdBy !== userId) {
+    if (user?.role !== Role.TEACHER && quiz.createdBy !== userId) {
       throw new ForbiddenException(
         'Không có quyền cập nhật trạng thái quiz này',
       );

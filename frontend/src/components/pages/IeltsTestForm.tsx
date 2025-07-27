@@ -1,6 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ieltsService } from "../../services/ieltsService";
+import {
+  useIeltsTestWithAnswers,
+  useIeltsTestManagement,
+  useIeltsSectionManagement,
+  useIeltsQuestionManagement,
+} from "../../hooks/useIelts";
 import type {
   IeltsTest,
   IeltsSection,
@@ -21,6 +26,17 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   testId,
 }) => {
   const { t } = useTranslation();
+  const {
+    test: fetchedTest,
+    isLoading: loading,
+    error: fetchError,
+  } = useIeltsTestWithAnswers(testId || null);
+  const { createTest, updateTest } = useIeltsTestManagement();
+  const { createSection, updateSection, removeSection } =
+    useIeltsSectionManagement();
+  const { createQuestion, updateQuestion, removeQuestion } =
+    useIeltsQuestionManagement();
+
   const [test, setTest] = useState<Partial<IeltsTest>>({
     title: "",
     description: "",
@@ -30,7 +46,6 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
     instructions: "",
     sections: [],
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,23 +58,17 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   const [currentSectionIdForNewQuestion, setCurrentSectionIdForNewQuestion] =
     useState<number | null>(null);
 
-  const fetchTest = useCallback(async () => {
-    if (!testId) return;
-    setLoading(true);
-    try {
-      const data = await ieltsService.getTestWithAnswers(testId);
-      setTest(data);
-    } catch (err) {
-      console.error(err);
-      setError(t("ielts.form.error.load"));
-    } finally {
-      setLoading(false);
+  // Update local state when fetched test changes
+  React.useEffect(() => {
+    if (fetchedTest) {
+      setTest(fetchedTest);
     }
-  }, [testId, t]);
+  }, [fetchedTest]);
 
-  useEffect(() => {
-    fetchTest();
-  }, [fetchTest]);
+  // Update error state
+  React.useEffect(() => {
+    setError(fetchError ? t("ielts.form.error.load") : null);
+  }, [fetchError, t]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -77,22 +86,19 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     try {
       if (testId) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { sections, ...updateData } = test;
-        await ieltsService.updateTest(testId, updateData);
+        await updateTest(testId, updateData);
       } else {
-        await ieltsService.createTest(test);
+        await createTest(test);
       }
       onBack();
     } catch (err) {
       console.error(err);
       setError(t("ielts.form.error.save"));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -110,8 +116,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   const handleDeleteSection = async (sectionId: number) => {
     if (window.confirm(t("ielts.form.confirmDeleteSection"))) {
       try {
-        await ieltsService.removeSection(sectionId);
-        fetchTest(); // Refresh
+        await removeSection(sectionId);
       } catch (err) {
         console.error("Failed to delete section", err);
         setError(t("ielts.form.error.deleteSection"));
@@ -123,11 +128,10 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
     if (!testId) return;
     try {
       if (sectionData.id) {
-        await ieltsService.updateSection(sectionData.id, sectionData);
+        await updateSection(sectionData.id, sectionData);
       } else {
-        await ieltsService.createSection(testId, sectionData);
+        await createSection(testId, sectionData);
       }
-      fetchTest(); // Refresh
       setIsModalOpen(false);
     } catch (err) {
       console.error("Failed to save section", err);
@@ -158,8 +162,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   const handleDeleteQuestion = async (questionId: number) => {
     if (window.confirm(t("ielts.form.confirmDeleteQuestion"))) {
       try {
-        await ieltsService.removeQuestion(questionId);
-        fetchTest(); // Refresh
+        await removeQuestion(questionId);
       } catch (err) {
         console.error("Failed to delete question", err);
         setError(t("ielts.form.error.deleteQuestion"));
@@ -170,14 +173,10 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   const handleSaveQuestion = async (questionData: Partial<IeltsQuestion>) => {
     try {
       if (questionData.id) {
-        await ieltsService.updateQuestion(questionData.id, questionData);
+        await updateQuestion(questionData.id, questionData);
       } else if (currentSectionIdForNewQuestion) {
-        await ieltsService.createQuestion(
-          currentSectionIdForNewQuestion,
-          questionData
-        );
+        await createQuestion(currentSectionIdForNewQuestion, questionData);
       }
-      fetchTest(); // Refresh
       setIsQuestionModalOpen(false);
     } catch (err) {
       console.error("Failed to save question", err);

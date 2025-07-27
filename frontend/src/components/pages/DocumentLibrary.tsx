@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, Download, Eye, BookOpen } from "lucide-react";
-import { documentService } from "../../services/documentService";
-import { Document } from "../../types/api";
+import { useDocuments } from "../../hooks/useDocuments";
 import { Badge } from "../ui/Badge";
 
 export const DocumentLibrary: React.FC = () => {
@@ -11,33 +9,18 @@ export const DocumentLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("All");
   const [selectedGrade, setSelectedGrade] = useState("All");
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadDocuments();
-  }, [searchTerm, selectedSubject, selectedGrade]);
-
-  const loadDocuments = async () => {
-    try {
-      setLoading(true);
-      const params: any = {};
-
-      if (searchTerm) params.search = searchTerm;
-      if (selectedSubject && selectedSubject !== "All")
-        params.subject = selectedSubject;
-      if (selectedGrade && selectedGrade !== "All")
-        params.grade = parseInt(selectedGrade);
-
-      const result = await documentService.getDocuments(params);
-      setDocuments(result.data);
-    } catch (error) {
-      console.error("Error loading documents:", error);
-      setDocuments([]);
-    } finally {
-      setLoading(false);
-    }
+  // Build filter params
+  const params = {
+    ...(searchTerm && { search: searchTerm }),
+    ...(selectedSubject &&
+      selectedSubject !== "All" && { subject: selectedSubject }),
+    ...(selectedGrade &&
+      selectedGrade !== "All" && { grade: parseInt(selectedGrade) }),
   };
+
+  // Use hook for data fetching
+  const { documents, isLoading: loading } = useDocuments(params);
 
   const subjects = [
     "All",

@@ -1,37 +1,39 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { Save, Plus, Trash2, Clock, Calendar } from "lucide-react";
-import { Subject } from "../../types/api";
+import {
+  Question,
+  QuestionType,
+  Quiz,
+  QuizStatus,
+  Subject,
+} from "../../types/api";
+import { getDefaultDeadline } from "../utils";
 
-interface Question {
-  id: number;
-  question: string;
-  type: "multiple-choice" | "true-false" | "short-answer";
-  options: string[];
-  correctAnswer: string;
-  points: number;
-  order: number;
-}
+type FormQuestion = Omit<
+  Question,
+  "id" | "quizId" | "createdAt" | "updatedAt" | "quiz" | "answers"
+> & {
+  id?: number;
+};
 
 interface QuizFormData {
   title: string;
-  subject: string;
+  subject: Subject;
   grade: number;
   description: string;
   timeLimit: number;
   deadline: string | null;
-  status: "draft" | "active";
-  questions: Question[];
+  status: QuizStatus;
+  questions: FormQuestion[];
 }
 
 interface QuizFormProps {
-  quiz?: any;
+  quiz?: Quiz;
   onBack: () => void;
   onSave: (quiz: QuizFormData) => void;
 }
 
 export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
-  // Helper function to convert date to datetime-local format
   const formatDateForInput = (
     dateString: string | null | undefined
   ): string => {
@@ -54,7 +56,8 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
     }
   };
 
-  // Helper function to convert datetime-local format to ISO string
+  // Helper function to get default datetime (tomorrow at 23:59)
+
   const formatDateForAPI = (dateString: string): string => {
     if (!dateString) return "";
     try {
@@ -87,19 +90,28 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   };
 
   const [formData, setFormData] = useState<QuizFormData>({
-    title: quiz?.title || "",
-    subject: quiz?.subject || "Mathematics",
+    title: quiz?.title || "Sample Quiz",
+    subject: quiz?.subject || Subject.MATH,
     grade: quiz?.grade || 6,
-    description: quiz?.description || "",
+    description: quiz?.description || "Sample description",
     timeLimit: quiz?.timeLimit || 30,
-    deadline: formatDateForInput(quiz?.deadline) || "",
-    status: quiz?.status || "draft",
-    questions: (quiz?.questions || []).map((q: any, index: number) => ({
-      ...q,
+    deadline: quiz?.deadline
+      ? formatDateForInput(quiz.deadline)
+      : getDefaultDeadline(),
+    status: quiz?.status || QuizStatus.DRAFT,
+    questions: (quiz?.questions || []).map((q: Question, index: number) => ({
+      id: q.id,
+      question: q.question,
+      type: q.type,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      points: q.points,
+      explanation: q.explanation,
       order: q.order || index + 1,
+      imageUrl: q.imageUrl,
+      audioUrl: q.audioUrl,
     })),
   });
-  console.log("this is formData", formData);
 
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(
     null
@@ -108,10 +120,9 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   const grades = [6, 7, 8, 9, 10, 11, 12];
 
   const addQuestion = () => {
-    const newQuestion: Question = {
-      id: Date.now(),
+    const newQuestion: FormQuestion = {
       question: "",
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       options: ["", "", "", ""],
       correctAnswer: "0",
       points: 1,
@@ -128,7 +139,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
 
   const updateQuestion = (
     index: number,
-    updatedQuestion: Partial<Question>
+    updatedQuestion: Partial<FormQuestion>
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -166,7 +177,6 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Convert deadline to proper format for API
     const quizDataToSave = {
       ...formData,
       deadline: formData.deadline ? formatDateForAPI(formData.deadline) : null,
@@ -176,6 +186,25 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   };
 
   const subjects = Object.values(Subject);
+
+  const subjectDisplayNames = {
+    [Subject.MATH]: "Toán học",
+    [Subject.PHYSICS]: "Vật lý",
+    [Subject.LITERATURE]: "Văn học",
+    [Subject.CHEMISTRY]: "Hóa học",
+    [Subject.BIOLOGY]: "Sinh học",
+    [Subject.NATURAL_SCIENCE]: "Khoa học tự nhiên",
+    [Subject.ENGLISH]: "Tiếng Anh",
+    [Subject.HISTORY]: "Lịch sử",
+    [Subject.GEOGRAPHY]: "Địa lý",
+    [Subject.CIVICS]: "Giáo dục công dân",
+    [Subject.CAREER_GUIDANCE]: "Hoạt động trải nghiệm - hướng nghiệp",
+    [Subject.LOCAL_STUDIES]: "Giáo dục địa phương",
+    [Subject.ECONOMICS_LAW]: "GDKT&PL",
+    [Subject.TECHNOLOGY]: "Công nghệ",
+    [Subject.ART]: "Mỹ thuật",
+    [Subject.MUSIC]: "Âm nhạc",
+  };
 
   const isEditMode = !!quiz;
 
@@ -215,13 +244,16 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 required
                 value={formData.subject}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, subject: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    subject: e.target.value as Subject,
+                  }))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {subjects.map((subject) => (
                   <option key={subject} value={subject}>
-                    {subject}
+                    {subjectDisplayNames[subject]}
                   </option>
                 ))}
               </select>
@@ -415,17 +447,20 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                             value={question.type}
                             onChange={(e) =>
                               updateQuestion(questionIndex, {
-                                type: e.target.value as
-                                  | "multiple-choice"
-                                  | "true-false"
-                                  | "short-answer",
+                                type: e.target.value as QuestionType,
                               })
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           >
-                            <option value="multiple-choice">Trắc nghiệm</option>
-                            <option value="true-false">Đúng/Sai</option>
-                            <option value="short-answer">Tự luận ngắn</option>
+                            <option value={QuestionType.MULTIPLE_CHOICE}>
+                              Trắc nghiệm
+                            </option>
+                            <option value={QuestionType.TRUE_FALSE}>
+                              Đúng/Sai
+                            </option>
+                            <option value={QuestionType.FILL_BLANK}>
+                              Tự luận ngắn
+                            </option>
                           </select>
                         </div>
 
@@ -448,7 +483,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                         </div>
                       </div>
 
-                      {question.type === "multiple-choice" && (
+                      {question.type === QuestionType.MULTIPLE_CHOICE && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Các phương án trả lời
@@ -497,7 +532,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                         </div>
                       )}
 
-                      {question.type === "true-false" && (
+                      {question.type === QuestionType.TRUE_FALSE && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Đáp án đúng
@@ -535,7 +570,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                         </div>
                       )}
 
-                      {question.type === "short-answer" && (
+                      {question.type === QuestionType.FILL_BLANK && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                             Đáp án mẫu

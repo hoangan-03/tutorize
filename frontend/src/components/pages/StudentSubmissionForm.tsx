@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Exercise, ExerciseSubmission } from "../../types/api";
-import { exerciseService } from "../../services/exerciseService";
+import { useExerciseSubmissions } from "../../hooks/useExercise";
 
 interface StudentSubmissionFormProps {
   exercise: Exercise;
@@ -25,6 +25,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const { submitExercise } = useExerciseSubmissions();
   const [content, setContent] = useState(existingSubmission?.content || "");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -107,12 +108,8 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
     try {
       setUploading(true);
 
-      // Submit with content and files
-      const submission = await exerciseService.submitExercise(
-        exercise.id!,
-        content,
-        files
-      );
+      // Submit with content and files using hook
+      const submission = await submitExercise(exercise.id!, content, files);
 
       onSubmissionSuccess(submission);
     } catch (error) {

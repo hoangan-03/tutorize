@@ -13,21 +13,7 @@ import {
 import { InlineMath } from "react-katex";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-
-interface Exercise {
-  id?: number;
-  name: string;
-  subject: string;
-  grade: number;
-  deadline: string;
-  note: string;
-  content: string;
-  latexContent: string;
-  createdBy: number;
-  createdAt: string;
-  submissions: number;
-  status: string;
-}
+import { Exercise, Subject } from "../../types/api";
 
 interface ExercisePreviewProps {
   exercise: Exercise;
@@ -474,7 +460,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                     >
                       Rich Text
                     </button>
-                    {exercise.subject === "Mathematics" &&
+                    {exercise.subject === Subject.MATH &&
                       exercise.latexContent && (
                         <button
                           onClick={() => setPreviewMode("latex")}
@@ -592,7 +578,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
               ) : (
                 <div className="prose max-w-none">
                   <div className="space-y-4">
-                    {exercise.latexContent.split("\n").map((line, i) => {
+                    {exercise.latexContent?.split("\n").map((line, i) => {
                       if (line.includes("$") && !line.includes("$$")) {
                         const parts = line.split("$");
                         return (

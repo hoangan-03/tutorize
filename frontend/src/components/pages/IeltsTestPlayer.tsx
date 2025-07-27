@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import {
-  ieltsService,
-  IeltsTest,
-  IeltsQuestion,
-} from "../../services/ieltsService";
+import { useIeltsTest, useIeltsTestManagement } from "../../hooks/useIelts";
+import { IeltsQuestion } from "../../services/ieltsService";
 
 // Store complex answers as a JSON string for simplicity
 export type Answer = string;
@@ -254,9 +250,12 @@ export const IeltsTestPlayer: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [test, setTest] = useState<IeltsTest | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    test,
+    isLoading: loading,
+    error,
+  } = useIeltsTest(testId ? Number(testId) : null);
+  const { submitTest } = useIeltsTestManagement();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
 
   // Key for localStorage
@@ -271,12 +270,25 @@ export const IeltsTestPlayer: React.FC = () => {
     return savedState ? JSON.parse(savedState).answers : {};
   });
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    const savedState = localStorage.getItem(storageKey);
-    return savedState ? JSON.parse(savedState).timeLeft : 0;
+    if (test) {
+      const savedState = localStorage.getItem(storageKey);
+      return savedState ? JSON.parse(savedState).timeLeft : test.timeLimit * 60;
+    }
+    return 0;
   });
 
+  // Initialize timeLeft when test loads
+  React.useEffect(() => {
+    if (test && timeLeft === 0) {
+      const savedState = localStorage.getItem(storageKey);
+      setTimeLeft(
+        savedState ? JSON.parse(savedState).timeLeft : test.timeLimit * 60
+      );
+    }
+  }, [test, storageKey, timeLeft]);
+
   // Persist state to localStorage on change
-  useEffect(() => {
+  React.useEffect(() => {
     if (test) {
       // Only save if the test has loaded
       const stateToSave = { answers, timeLeft };
@@ -291,36 +303,13 @@ export const IeltsTestPlayer: React.FC = () => {
     }, [storageKey])
   );
 
-  const fetchTest = useCallback(async () => {
-    if (!testId) return;
-    try {
-      setLoading(true);
-      const testData = await ieltsService.getTest(Number(testId));
-      setTest(testData);
-      const savedState = localStorage.getItem(storageKey);
-      if (savedState) {
-        setTimeLeft(JSON.parse(savedState).timeLeft);
-      } else {
-        setTimeLeft(testData.timeLimit * 60);
-      }
-    } catch (err) {
-      setError(t("ielts.player.loadError"));
-    } finally {
-      setLoading(false);
-    }
-  }, [testId, storageKey, t]);
-
-  useEffect(() => {
-    fetchTest();
-  }, [fetchTest]);
-
   const clearAttemptAndNavigate = useCallback(() => {
     localStorage.removeItem(storageKey);
     navigate("/ielts");
   }, [storageKey, navigate]);
 
   const handleSubmit = useCallback(
-    (isAutoSubmit = false) => {
+    async (isAutoSubmit = false) => {
       if (!isAutoSubmit && !window.confirm(t("ielts.player.submitConfirm"))) {
         return;
       }
@@ -332,19 +321,18 @@ export const IeltsTestPlayer: React.FC = () => {
             answer,
           })
         );
-        ieltsService.submitTest(Number(testId), submissionData);
+        await submitTest(Number(testId!), submissionData);
         alert(t("ielts.player.submitSuccess"));
         clearAttemptAndNavigate();
       } catch (err) {
-        setError(t("ielts.player.submitError"));
-        // console.error(err);
+        console.error("Submit error:", err);
       }
     },
-    [answers, testId, clearAttemptAndNavigate, t]
+    [answers, testId, clearAttemptAndNavigate, t, submitTest]
   );
 
   // Timer countdown effect
-  useEffect(() => {
+  React.useEffect(() => {
     if (timeLeft <= 0 || !test) return;
 
     const timer = setInterval(() => {

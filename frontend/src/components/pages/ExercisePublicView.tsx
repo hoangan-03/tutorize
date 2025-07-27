@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Eye,
   Calendar,
@@ -15,7 +15,7 @@ import {
 import { InlineMath } from "react-katex";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { exerciseService } from "../../services/exerciseService";
+import { useExercises } from "../../hooks/useExercise";
 import { Exercise } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -27,6 +27,7 @@ import "katex/dist/katex.min.css";
 export const ExercisePublicView: React.FC = () => {
   const { isTeacher } = useAuth();
   const { t } = useTranslation();
+  const { exercises, isLoading } = useExercises();
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null
   );
@@ -36,25 +37,6 @@ export const ExercisePublicView: React.FC = () => {
   >("reading");
   const [selectedFont, setSelectedFont] = useState<string>("Cambria Math");
   const contentRef = useRef<HTMLDivElement>(null);
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadExercises();
-  }, []);
-
-  const loadExercises = async () => {
-    try {
-      setLoading(true);
-      const result = await exerciseService.getExercises();
-      setExercises(result.data);
-    } catch (error) {
-      console.error("Error loading exercises:", error);
-      setExercises([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const popularFonts = [
     { name: "Cambria Math", value: '"Cambria Math", Cambria, serif' },
@@ -923,7 +905,7 @@ export const ExercisePublicView: React.FC = () => {
         </div>
 
         {/* Exercises Grid */}
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
@@ -1017,7 +999,7 @@ export const ExercisePublicView: React.FC = () => {
           </div>
         )}
 
-        {exercises.length === 0 && !loading && (
+        {exercises.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">

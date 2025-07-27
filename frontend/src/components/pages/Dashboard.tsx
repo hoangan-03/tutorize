@@ -11,100 +11,44 @@ import {
   Clock,
   PlayCircle,
   Target,
-  Users,
   Calendar,
 } from "lucide-react";
-import { quizService } from "../../services/quizService";
-import { exerciseService } from "../../services/exerciseService";
+import { useStudentStats } from "../../hooks/useQuiz";
 import { useNavigate } from "react-router-dom";
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  // Use hooks for data
+  const { stats: quizStats } = useStudentStats();
+
   const [continueLearningData, setContinueLearningData] = useState<any[]>([]);
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [stats, setStats] = useState({
     quizzesCompleted: 0,
     averageScore: 0,
     studyTime: 0,
     ranking: 0,
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      // Load user's recent submissions and progress
-      const [quizSubmissions, exerciseSubmissions] = await Promise.all([
-        quizService.getMySubmissions({ limit: 5 }),
-        exerciseService.getMySubmissions({ limit: 5 }),
-      ]);
-
-      // Create continue learning data from recent submissions
-      const continueData = [
-        ...quizSubmissions.data.map((submission: any) => ({
-          title: `${submission.quiz?.title || "Quiz"}`,
-          type: "quiz",
-          progress: Math.round(submission.score || 0),
-          id: submission.quiz?.id,
-        })),
-        ...exerciseSubmissions.data.map((submission: any) => ({
-          title: `${submission.exercise?.name || "Exercise"}`,
-          type: "exercise",
-          progress: submission.score ? Math.round(submission.score) : 0,
-          id: submission.exercise?.id,
-        })),
-      ].slice(0, 3);
-
-      setContinueLearningData(continueData);
-
-      // Calculate stats from submissions
-      const totalQuizzes = quizSubmissions.data.length;
-      const avgQuizScore =
-        totalQuizzes > 0
-          ? quizSubmissions.data.reduce(
-              (acc: number, sub: any) => acc + (sub.score || 0),
-              0
-            ) / totalQuizzes
-          : 0;
-
+    if (quizStats) {
       setStats({
-        quizzesCompleted: totalQuizzes,
-        averageScore: Math.round(avgQuizScore),
+        quizzesCompleted: quizStats.totalQuizzes || 0,
+        averageScore: Math.round(quizStats.averageScore || 0),
         studyTime: Math.floor(Math.random() * 50) + 10, // Mock for now
         ranking: Math.floor(Math.random() * 100) + 1, // Mock for now
       });
 
-      // Set recent activities
-      const activities = [
-        ...quizSubmissions.data
-          .slice(0, 3)
-          .map(
-            (sub: any) =>
-              `${t("dashboard.completed")} ${sub.quiz?.title || "quiz"}`
-          ),
-        ...exerciseSubmissions.data
-          .slice(0, 2)
-          .map(
-            (sub: any) =>
-              `${t("dashboard.submitted")} ${sub.exercise?.name || "exercise"}`
-          ),
-      ];
-      setRecentActivities(activities);
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
-      // Fallback to empty data
-      setContinueLearningData([]);
-      setRecentActivities([]);
-    } finally {
-      setLoading(false);
+      // Create mock continue learning data
+      setContinueLearningData([
+        { title: "Recent Quiz", type: "quiz", progress: 85, id: 1 },
+        { title: "Exercise", type: "exercise", progress: 92, id: 1 },
+        { title: "Math Quiz", type: "quiz", progress: 78, id: 2 },
+      ]);
     }
-  };
+  }, [quizStats]);
 
   return (
     <div className="p-8">

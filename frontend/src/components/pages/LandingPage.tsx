@@ -23,7 +23,7 @@ export const LandingPage: React.FC = () => {
               <polygon points="50,0 100,0 50,100 0,100" />
             </svg>
 
-            <main className="pt-10 mx-auto max-w-8xl px-4 sm:pt-12 sm:px-6 md:pt-16 lg:pt-20 lg:px-8 xl:pt-28">
+            <main className="pt-10 mx-auto max-w-8xl px-4 sm:pt-12 sm:px-6 md:pt-16 lg:pt-20 lg:px-16 xl:pt-28">
               <div className="sm:text-center lg:text-left">
                 <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
                   <span className="block xl:inline">
@@ -69,15 +69,15 @@ export const LandingPage: React.FC = () => {
 
       {/* Features Section */}
       <div className="py-12 bg-white">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-16">
+          <div className="lg:text-center flex flex-col items-center">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">
               {t("landing.featuresTitle")}
             </h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
               {t("landing.allYouNeed")}
             </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-36">
               {t("landing.featuresDescription")}
             </p>
           </div>
@@ -88,10 +88,10 @@ export const LandingPage: React.FC = () => {
                 <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <BookOpen className="h-6 w-6" />
                 </div>
-                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900 text-start">
                   {t("landing.docLibraryTitle")}
                 </p>
-                <p className="mt-2 ml-16 text-base text-gray-500">
+                <p className="mt-2 ml-16 text-base text-gray-500 text-start">
                   {t("landing.docLibraryDescription")}
                 </p>
               </div>
@@ -100,10 +100,10 @@ export const LandingPage: React.FC = () => {
                 <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <FileText className="h-6 w-6" />
                 </div>
-                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900 text-start">
                   {t("landing.interactiveQuizzesTitle")}
                 </p>
-                <p className="mt-2 ml-16 text-base text-gray-500">
+                <p className="mt-2 ml-16 text-base text-gray-500 text-start">
                   {t("landing.interactiveQuizzesDescription")}
                 </p>
               </div>
@@ -112,10 +112,10 @@ export const LandingPage: React.FC = () => {
                 <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <Award className="h-6 w-6" />
                 </div>
-                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900 text-start">
                   {t("landing.ieltsPrepTitle")}
                 </p>
-                <p className="mt-2 ml-16 text-base text-gray-500">
+                <p className="mt-2 ml-16 text-base text-gray-500 text-start">
                   {t("landing.ieltsPrepDescription")}
                 </p>
               </div>
@@ -124,10 +124,10 @@ export const LandingPage: React.FC = () => {
                 <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <PenTool className="h-6 w-6" />
                 </div>
-                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900 text-start">
                   {t("landing.aiGraderTitle")}
                 </p>
-                <p className="mt-2 ml-16 text-base text-gray-500">
+                <p className="mt-2 ml-16 text-base text-gray-500 text-start">
                   {t("landing.aiGraderDescription")}
                 </p>
               </div>
@@ -178,7 +178,7 @@ export const LandingPage: React.FC = () => {
 
       {/* Testimonials Section */}
       <div className="bg-white py-16 lg:py-24">
-        <div className="relative max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-8xl mx-auto px-4 sm:px-6 lg:px-16">
           <div className="relative">
             <blockquote className="mt-10">
               <div className="max-w-3xl mx-auto text-center text-2xl leading-9 font-medium text-gray-900">
@@ -215,7 +215,7 @@ export const LandingPage: React.FC = () => {
 
       {/* CTA Section */}
       <div className="bg-gray-50">
-        <div className="max-w-8xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
+        <div className="max-w-8xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-16 lg:flex lg:items-center lg:justify-between">
           <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
             <span className="block">{t("landing.ctaTitle")}</span>
             <span className="block text-blue-600">

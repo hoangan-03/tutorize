@@ -32,7 +32,6 @@ import { ExerciseEditor } from "./components/pages/ExerciseEditor";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
 import { Role } from "./types/api";
 
-// Component tùy chỉnh để chuyển hướng dựa trên vai trò người dùng
 const RoleBasedRedirect = () => {
   const { user, isAuthenticated } = useAuth();
   const isTeacher = user?.role === Role.TEACHER;

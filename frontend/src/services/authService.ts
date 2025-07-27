@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { api } from "../lib/api";
 import {
   LoginRequest,
@@ -27,9 +25,7 @@ class AuthService {
 
   // User management
   saveUser(user: User): void {
-    console.log("authService: Saving user:", user);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    console.log("authService: User saved to localStorage");
   }
 
   getUser(): User | null {
@@ -51,9 +47,7 @@ class AuthService {
 
   // Authentication methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    console.log("authService: Making login request...");
     const response = await api.post<AuthResponse>("/auth/login", credentials);
-    console.log("authService: Login API response:", response.data);
     return response.data;
   }
 
@@ -81,11 +75,11 @@ class AuthService {
 
   async updateProfile(data: UpdateProfileRequest): Promise<{
     message: string;
-    profile: any;
+    profile: User;
   }> {
     const response = await api.patch<{
       message: string;
-      profile: any;
+      profile: User;
     }>("/auth/profile", data);
     return response.data;
   }

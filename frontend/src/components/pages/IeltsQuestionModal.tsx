@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import type {
   IeltsQuestion,
   IeltsQuestionType,
@@ -45,8 +45,7 @@ const typeConfigs: Record<
     subQuestions: {
       show: true,
       label: "Các nhận định cần xác minh",
-      placeholder:
-        "Ví dụ:\nNhận định 1: The author is a biologist.\nNhận định 2: The study was conducted in Africa.",
+      placeholder: "Ví dụ:\nNhận định 1: The author is a biologist.\nNhận định 2: The study was conducted in Africa.",
     },
     options: {
       show: true,
@@ -63,8 +62,7 @@ const typeConfigs: Record<
     subQuestions: {
       show: true,
       label: "Các mục cần nối (Câu hỏi)",
-      placeholder:
-        "Ví dụ:\nCâu 1: A reference to a past study\nCâu 2: A description of the methodology",
+      placeholder: "Ví dụ:\nCâu 1: A reference to a past study\nCâu 2: A description of the methodology",
     },
     options: {
       show: true,
@@ -81,8 +79,7 @@ const typeConfigs: Record<
     subQuestions: {
       show: true,
       label: "Danh sách câu hỏi",
-      placeholder:
-        "Ví dụ:\nCâu 1: What was the primary reason?\nCâu 2: In what year...?",
+      placeholder: "Ví dụ:\nCâu 1: What was the primary reason?\nCâu 2: In what year...?",
     },
     options: { show: false },
     correctAnswers: {
@@ -104,6 +101,40 @@ const typeConfigs: Record<
       helpText: "Số lượng đáp án phải khớp với số lượng câu.",
     },
   },
+  WRITING: {
+    subQuestions: {
+      show: false,
+      label: undefined,
+      placeholder: undefined
+    },
+    options: {
+      show: false,
+      label: undefined,
+      placeholder: undefined
+    },
+    correctAnswers: {
+      label: "",
+      placeholder: "",
+      helpText: ""
+    }
+  },
+  DIAGRAM_LABELING: {
+    subQuestions: {
+      show: false,
+      label: undefined,
+      placeholder: undefined
+    },
+    options: {
+      show: false,
+      label: undefined,
+      placeholder: undefined
+    },
+    correctAnswers: {
+      label: "",
+      placeholder: "",
+      helpText: ""
+    }
+  }
 };
 
 export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({

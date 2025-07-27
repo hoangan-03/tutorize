@@ -1,6 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Users,
   Clock,
@@ -12,7 +11,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { quizService } from "../../services/quizService";
+import { useDetailedQuizStats } from "../../hooks/useQuiz";
 
 interface QuizDashboardProps {
   quiz: any;
@@ -52,27 +51,10 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   onBack,
 }) => {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { stats, isLoading: loading } = useDetailedQuizStats(quiz?.id);
   const [activeTab, setActiveTab] = useState<
     "overview" | "students" | "questions"
   >("overview");
-
-  useEffect(() => {
-    loadStats();
-  }, [quiz.id]);
-
-  const loadStats = async () => {
-    try {
-      setLoading(true);
-      const detailedStats = await quizService.getDetailedQuizStats(quiz.id);
-      setStats(detailedStats);
-    } catch (error) {
-      console.error("Error loading quiz stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const exportResults = () => {
     if (!stats?.submissions) return;

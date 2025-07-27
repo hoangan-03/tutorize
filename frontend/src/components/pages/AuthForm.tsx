@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Role, Subject } from "../../types/api";
-import { authService } from "../../services/authService";
 
 interface AuthFormProps {
   mode: "login" | "signup" | "forgot-password" | "change-password" | "profile";
@@ -138,6 +137,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     register,
     updateProfile,
     changePassword,
+    forgotPassword,
     isAuthenticated,
   } = useAuth();
   const navigate = useNavigate();
@@ -288,7 +288,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     setSuccess("");
 
     try {
-      const response = await authService.forgotPassword(formData.email);
+      const response = await forgotPassword(formData.email);
       setSuccess(response.message);
 
       // For demo purposes, show the temporary password
@@ -722,7 +722,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                       name="subject"
                       value={formData.subject}
                       onChange={(e) =>
-                        handleInputChange("subject", e.target.value as Subject)
+                        handleInputChange("subject", e.target.value)
                       }
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
                     >
@@ -1175,7 +1175,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                   onClick={() => {
                     setFormData((prev) => ({
                       ...prev,
-                      email: "teacher@tutorplatform.com",
+                      email: "teacher@gmail.com",
                       password: "Teacher123!",
                     }));
                   }}

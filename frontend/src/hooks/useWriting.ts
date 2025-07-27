@@ -1,15 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import useSWR, { mutate } from "swr";
 import { writingService } from "../services/writingService";
-import { WritingAssessment, PaginationParams } from "../types/api";
+import { WritingAssessment, PaginationParams, WritingType } from "../types/api";
 import { toast } from "react-toastify";
 
 // Get all writing assessments with pagination
 export const useWritingAssessments = (params?: PaginationParams) => {
   const { data, error, isLoading } = useSWR(
     ["/writing", params],
-    ([url, params]) => writingService.getAssessments(params),
+    ([, params]) => writingService.getAssessments(params),
     {
       revalidateOnFocus: false,
     }
@@ -53,52 +51,29 @@ export const useWritingManagement = () => {
   const assessWriting = async (data: {
     title: string;
     content: string;
-    type: "ESSAY" | "IELTS_TASK1" | "IELTS_TASK2" | "CREATIVE" | "ACADEMIC";
+    type: WritingType;
   }) => {
-    try {
-      const assessment = await writingService.assessWriting(data);
-      mutate("/writing");
-      toast.success("Đánh giá bài viết thành công!");
-      return assessment;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] ||
-        "Đánh giá bài viết thất bại";
-      toast.error(message);
-      throw error;
-    }
+    const assessment = await writingService.assessWriting(data);
+    mutate("/writing");
+    toast.success("Đánh giá bài viết thành công!");
+    return assessment;
   };
 
   const updateAssessment = async (
     id: number,
     data: Partial<WritingAssessment>
   ) => {
-    try {
-      const assessment = await writingService.updateAssessment(id, data);
-      mutate(`/writing/${id}`, assessment, false);
-      mutate("/writing");
-      toast.success("Cập nhật đánh giá thành công!");
-      return assessment;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] ||
-        "Cập nhật đánh giá thất bại";
-      toast.error(message);
-      throw error;
-    }
+    const assessment = await writingService.updateAssessment(id, data);
+    mutate(`/writing/${id}`, assessment, false);
+    mutate("/writing");
+    toast.success("Cập nhật đánh giá thành công!");
+    return assessment;
   };
 
   const deleteAssessment = async (id: number) => {
-    try {
-      await writingService.deleteAssessment(id);
-      mutate("/writing");
-      toast.success("Xóa đánh giá thành công!");
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Xóa đánh giá thất bại";
-      toast.error(message);
-      throw error;
-    }
+    await writingService.deleteAssessment(id);
+    mutate("/writing");
+    toast.success("Xóa đánh giá thành công!");
   };
 
   const addHumanFeedback = async (
@@ -108,18 +83,11 @@ export const useWritingManagement = () => {
       humanFeedback: string;
     }
   ) => {
-    try {
-      const assessment = await writingService.addHumanFeedback(id, data);
-      mutate(`/writing/${id}`, assessment, false);
-      mutate("/writing");
-      toast.success("Thêm đánh giá của giáo viên thành công!");
-      return assessment;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Thêm đánh giá thất bại";
-      toast.error(message);
-      throw error;
-    }
+    const assessment = await writingService.addHumanFeedback(id, data);
+    mutate(`/writing/${id}`, assessment, false);
+    mutate("/writing");
+    toast.success("Thêm đánh giá của giáo viên thành công!");
+    return assessment;
   };
 
   return {

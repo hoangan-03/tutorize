@@ -2,22 +2,7 @@ import React from "react";
 import { Plus, Eye, Edit, Trash2, Calendar, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/Badge";
-import { Subject } from "../../types/api";
-
-interface Exercise {
-  id?: number;
-  name: string;
-  subject: Subject;
-  grade: number;
-  deadline: string;
-  note: string;
-  content: string;
-  latexContent: string;
-  createdBy: number;
-  createdAt: string;
-  submissions: number;
-  status: string;
-}
+import { Exercise, ExerciseStatus } from "../../types/api";
 
 interface ExerciseListProps {
   exercises: Exercise[];
@@ -132,12 +117,12 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
               <Badge
                 variant="status"
                 className={`px-2 py-1 text-xs ${
-                  exercise.status === "active"
+                  exercise.status === ExerciseStatus.ACTIVE
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
                 }`}
               >
-                {exercise.status === "active"
+                {exercise.status === ExerciseStatus.ACTIVE
                   ? t("exerciseEditorUI.statusActive")
                   : t("exerciseEditorUI.statusClosed")}
               </Badge>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import useSWR, { mutate } from "swr";
 import { documentService } from "../services/documentService";
 import { Document, PaginationParams } from "../types/api";
@@ -8,7 +7,7 @@ import { toast } from "react-toastify";
 export const useDocuments = (params?: PaginationParams) => {
   const { data, error, isLoading } = useSWR(
     ["/documents", params],
-    ([url, params]) => documentService.getDocuments(params),
+    ([url, params]) => documentService.getDocuments(url, params),
     {
       revalidateOnFocus: false,
     }
@@ -53,88 +52,51 @@ export const useDocumentManagement = () => {
     file: File,
     metadata: { title: string; description?: string; isPublic?: boolean }
   ) => {
-    try {
-      const document = await documentService.uploadDocument(file, metadata);
-      mutate("/documents");
-      toast.success("Tải lên tài liệu thành công!");
-      return document;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] ||
-        "Tải lên tài liệu thất bại";
-      toast.error(message);
-      throw error;
-    }
+    const document = await documentService.uploadDocument(file, metadata);
+    mutate("/documents");
+    toast.success("Tải lên tài liệu thành công!");
+    return document;
   };
 
   const updateDocument = async (
     id: number,
     documentData: Partial<Document>
   ) => {
-    try {
-      const document = await documentService.updateDocument(id, documentData);
-      mutate(`/documents/${id}`, document, false);
-      mutate("/documents");
-      toast.success("Cập nhật tài liệu thành công!");
-      return document;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] ||
-        "Cập nhật tài liệu thất bại";
-      toast.error(message);
-      throw error;
-    }
+    const document = await documentService.updateDocument(id, documentData);
+    mutate(`/documents/${id}`, document, false);
+    mutate("/documents");
+    toast.success("Cập nhật tài liệu thành công!");
+    return document;
   };
 
   const deleteDocument = async (id: number) => {
-    try {
-      await documentService.deleteDocument(id);
-      mutate("/documents");
-      toast.success("Xóa tài liệu thành công!");
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Xóa tài liệu thất bại";
-      toast.error(message);
-      throw error;
-    }
+    await documentService.deleteDocument(id);
+    mutate("/documents");
+    toast.success("Xóa tài liệu thành công!");
   };
 
   const downloadDocument = async (id: number, fileName: string) => {
-    try {
-      const blob = await documentService.downloadDocument(id);
+    const blob = await documentService.downloadDocument(id);
 
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 
-      toast.success("Tải xuống thành công!");
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Tải xuống thất bại";
-      toast.error(message);
-      throw error;
-    }
+    toast.success("Tải xuống thành công!");
   };
 
   const approveDocument = async (id: number) => {
-    try {
-      const document = await documentService.approveDocument(id);
-      mutate(`/documents/${id}`, document, false);
-      mutate("/documents");
-      toast.success("Duyệt tài liệu thành công!");
-      return document;
-    } catch (error: any) {
-      const message =
-        error.response?.data?.error?.message?.[0] || "Duyệt tài liệu thất bại";
-      toast.error(message);
-      throw error;
-    }
+    const document = await documentService.approveDocument(id);
+    mutate(`/documents/${id}`, document, false);
+    mutate("/documents");
+    toast.success("Duyệt tài liệu thành công!");
+    return document;
   };
 
   return {
@@ -157,7 +119,8 @@ export const useDocumentSearch = (
 ) => {
   const { data, error, isLoading } = useSWR(
     query ? ["/documents/search", query, filters] : null,
-    ([url, query, filters]) => documentService.searchDocuments(query, filters),
+    ([url, query, filters]) =>
+      documentService.searchDocuments(url, query, filters),
     {
       revalidateOnFocus: false,
     }
@@ -166,23 +129,6 @@ export const useDocumentSearch = (
   return {
     documents: data?.data || [],
     total: data?.total || 0,
-    isLoading,
-    error,
-  };
-};
-
-// Get document statistics
-export const useDocumentStats = () => {
-  const {
-    data: stats,
-    error,
-    isLoading,
-  } = useSWR("/documents/stats", () => documentService.getDocumentStats(), {
-    revalidateOnFocus: false,
-  });
-
-  return {
-    stats,
     isLoading,
     error,
   };

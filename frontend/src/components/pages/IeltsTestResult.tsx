@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ieltsService,
-  IeltsSubmissionResult,
-  IeltsQuestion,
-} from "../../services/ieltsService";
+import { IeltsSubmissionResult } from "../../services/ieltsService";
+import { useIeltsSubmissionDetails } from "../../hooks/useIelts";
 import {
   CheckCircleIcon,
   XCircleIcon,
   BookOpenIcon,
-  InformationCircleIcon,
 } from "@heroicons/react/24/solid";
 
 interface IeltsTestResultProps {
@@ -17,72 +13,16 @@ interface IeltsTestResultProps {
   onBack: () => void;
 }
 
-const getAnswerDisplay = (
-  question: IeltsQuestion & { userAnswer?: string; isCorrect?: boolean },
-  t: (key: string) => string
-) => {
-  const userAnswer = question.userAnswer || "N/A";
-  const correctAnswers = (question.correctAnswers || []).join(", ");
-
-  return (
-    <div className="mt-4 space-y-2 text-sm">
-      <div className="flex items-start">
-        <strong className="w-32 text-gray-600">
-          {t("ielts.result.userAnswer")}
-        </strong>
-        <span
-          className={`font-medium text-start ${
-            question.isCorrect ? "text-green-700" : "text-red-700"
-          }`}
-        >
-          {userAnswer}
-        </span>
-      </div>
-      {!question.isCorrect && (
-        <div className="flex items-start text-start">
-          <strong className="w-32 text-gray-600">
-            {t("ielts.result.correctAnswer")}
-          </strong>
-          <span className="font-medium text-blue-700">{correctAnswers}</span>
-        </div>
-      )}
-      {question.explanation && (
-        <div className="flex items-start mt-2 p-2 bg-yellow-50 rounded-md">
-          <InformationCircleIcon className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" />
-          <p className="text-gray-700">{question.explanation}</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
   submissionId,
   onBack,
 }) => {
   const { t } = useTranslation();
-  const [submission, setSubmission] = useState<IeltsSubmissionResult | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchSubmission = async () => {
-      try {
-        setLoading(true);
-        const result = await ieltsService.getSubmissionDetails(submissionId);
-        setSubmission(result);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load test results.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSubmission();
-  }, [submissionId]);
+  const {
+    submission,
+    isLoading: loading,
+    error,
+  } = useIeltsSubmissionDetails(submissionId);
 
   const questionNumberOffsets = useMemo(() => {
     if (!submission?.test) return [];

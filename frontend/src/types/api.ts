@@ -1,4 +1,3 @@
-// Base API Response interface
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
@@ -13,7 +12,6 @@ export interface ApiResponse<T = unknown> {
   path: string;
 }
 
-// Enums
 export enum Role {
   TEACHER = "TEACHER",
   STUDENT = "STUDENT",
@@ -22,7 +20,8 @@ export enum Role {
 export enum QuizStatus {
   DRAFT = "DRAFT",
   ACTIVE = "ACTIVE",
-  CLOSED = "CLOSED",
+  INACTIVE = "INACTIVE",
+  OVERDUE = "OVERDUE",
 }
 
 export enum Subject {
@@ -62,12 +61,12 @@ export enum SubmissionStatus {
 export enum ExerciseStatus {
   DRAFT = "DRAFT",
   ACTIVE = "ACTIVE",
-  ARCHIVED = "ARCHIVED",
+  CLOSED = "CLOSED",
 }
 
 export enum DocumentType {
   PDF = "PDF",
-  VIDE = "VIDE",
+  VIDEO = "VIDEO",
   IMAGE = "IMAGE",
   PRESENTATION = "PRESENTATION",
   WORD = "WORD",
@@ -94,18 +93,16 @@ export enum IeltsLevel {
 
 export enum IeltsQuestionType {
   MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
-  FILL_BLANK = "FILL_BLANK",
-  MATCHING = "MATCHING",
   TRUE_FALSE_NOT_GIVEN = "TRUE_FALSE_NOT_GIVEN",
-  ESSAY = "ESSAY",
+  IDENTIFYING_INFORMATION = "IDENTIFYING_INFORMATION", // True/False/Not Given, Yes/No/Not Given
+  MATCHING = "MATCHING", // Matching headings, features, sentence endings
+  COMPLETION = "COMPLETION", // Sentence, summary, note, table, flow-chart completion
+  SHORT_ANSWER = "SHORT_ANSWER",
 }
 
 export enum WritingType {
-  ESSAY = "ESSAY",
   IELTS_TASK1 = "IELTS_TASK1",
   IELTS_TASK2 = "IELTS_TASK2",
-  CREATIVE = "CREATIVE",
-  ACADEMIC = "ACADEMIC",
 }
 
 export enum NotificationType {
@@ -113,10 +110,6 @@ export enum NotificationType {
   WARNING = "WARNING",
   ERROR = "ERROR",
   SUCCESS = "SUCCESS",
-  QUIZ_ASSIGNED = "QUIZ_ASSIGNED",
-  EXERCISE_ASSIGNED = "EXERCISE_ASSIGNED",
-  GRADE_RELEASED = "GRADE_RELEASED",
-  DEADLINE_REMINDER = "DEADLINE_REMINDER",
 }
 
 // User Types
@@ -135,7 +128,6 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   profile?: UserProfile;
   quizzesCreated?: Quiz[];
   quizSubmissions?: QuizSubmission[];
@@ -162,7 +154,6 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   user?: User;
 }
 
@@ -223,7 +214,6 @@ export interface Quiz {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   creator?: User;
   questions?: Question[];
   submissions?: QuizSubmission[];
@@ -244,7 +234,6 @@ export interface Question {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   quiz?: Quiz;
   answers?: QuizAnswer[];
 }
@@ -262,7 +251,6 @@ export interface QuizSubmission {
   feedback?: string;
   status: SubmissionStatus;
 
-  // Relations
   quiz?: Quiz;
   user?: User;
   answers?: QuizAnswer[];
@@ -278,7 +266,6 @@ export interface QuizAnswer {
   timeTaken: number;
   createdAt: string;
 
-  // Relations
   submission?: QuizSubmission;
   question?: Question;
 }
@@ -303,11 +290,18 @@ export interface Exercise {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   creator?: User;
   attachments?: ExerciseAttachment[];
   exerciseSubmissions?: ExerciseSubmission[];
   rubric?: GradingRubric;
+  _count?: {
+    exerciseSubmissions: number;
+  };
+}
+
+export enum EditMode {
+  RICH = "rich",
+  LATEX = "latex",
 }
 
 export interface ExerciseAttachment {
@@ -320,7 +314,6 @@ export interface ExerciseAttachment {
   url: string;
   uploadedAt: string;
 
-  // Relations
   exercise?: Exercise;
 }
 
@@ -337,7 +330,6 @@ export interface ExerciseSubmission {
   status: SubmissionStatus;
   version: number;
 
-  // Relations
   exercise?: Exercise;
   user?: User;
   attachments?: SubmissionAttachment[];
@@ -353,7 +345,6 @@ export interface SubmissionAttachment {
   url: string;
   uploadedAt: string;
 
-  // Relations
   submission?: ExerciseSubmission;
 }
 
@@ -365,7 +356,6 @@ export interface GradingRubric {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   exercise?: Exercise;
 }
 
@@ -392,7 +382,6 @@ export interface Document {
   uploadedAt: string;
   updatedAt: string;
 
-  // Relations
   uploader?: User;
   accesses?: DocumentAccess[];
 }
@@ -406,7 +395,6 @@ export interface DocumentAccess {
   ipAddress?: string;
   userAgent?: string;
 
-  // Relations
   document?: Document;
   user?: User;
 }
@@ -424,7 +412,6 @@ export interface IeltsTest {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   sections?: IeltsSection[];
   submissions?: IeltsSubmission[];
 }
@@ -441,7 +428,6 @@ export interface IeltsSection {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   test?: IeltsTest;
   questions?: IeltsQuestion[];
 }
@@ -458,7 +444,6 @@ export interface IeltsQuestion {
   createdAt: string;
   updatedAt: string;
 
-  // Relations
   section?: IeltsSection;
   answers?: IeltsAnswer[];
 }
@@ -475,7 +460,6 @@ export interface IeltsSubmission {
   gradedAt?: string;
   audioRecording?: string;
 
-  // Relations
   test?: IeltsTest;
   user?: User;
   answers?: IeltsAnswer[];
@@ -489,7 +473,6 @@ export interface IeltsAnswer {
   isCorrect: boolean;
   createdAt: string;
 
-  // Relations
   submission?: IeltsSubmission;
   question?: IeltsQuestion;
 }
@@ -510,7 +493,6 @@ export interface WritingAssessment {
   gradedAt: string;
   isPublic: boolean;
 
-  // Relations
   user?: User;
 }
 
@@ -525,7 +507,6 @@ export interface Notification {
   data?: Record<string, unknown>;
   createdAt: string;
 
-  // Relations
   user?: User;
 }
 
@@ -539,7 +520,6 @@ export interface SystemLog {
   userAgent?: string;
   createdAt: string;
 
-  // Relations
   user?: User;
 }
 

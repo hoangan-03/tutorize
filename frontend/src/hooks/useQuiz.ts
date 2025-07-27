@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import useSWR, { mutate } from "swr";
 import { quizService } from "../services/quizService";
@@ -9,7 +8,7 @@ import { toast } from "react-toastify";
 export const useQuizzes = (params?: PaginationParams) => {
   const { data, error, isLoading } = useSWR(
     ["/quizzes", params],
-    ([url, params]) => quizService.getQuizzes(params),
+    ([url, params]) => quizService.getQuizzes(url, params),
     {
       revalidateOnFocus: false,
     }
@@ -129,7 +128,7 @@ export const useQuizManagement = () => {
 
 // Quiz taking hooks
 export const useQuizTaking = () => {
-  const startQuiz = async (quizid: number) => {
+  const startQuiz = async (quizId: number) => {
     try {
       const submission = await quizService.startQuiz(quizId);
       toast.success("Bắt đầu làm quiz!");
@@ -144,7 +143,7 @@ export const useQuizTaking = () => {
 
   const saveAnswer = async (
     submissionId: number,
-    questionid: number,
+    questionId: number,
     answer: string
   ) => {
     try {
@@ -163,7 +162,7 @@ export const useQuizTaking = () => {
 
   const submitQuiz = async (submissionId: number) => {
     try {
-      const submission = await quizService.submitQuiz(submissionId);
+      const submission = await quizService.submitQuizOld(submissionId);
       toast.success("Nộp bài thành công!");
       return submission;
     } catch (error: any) {
@@ -174,10 +173,27 @@ export const useQuizTaking = () => {
     }
   };
 
+  const submitQuizWithAnswers = async (
+    quizId: number,
+    submitData: {
+      answers: Array<{
+        questionId: number;
+        userAnswer: string;
+        timeTaken?: number;
+      }>;
+      timeSpent?: number;
+    }
+  ) => {
+    const submission = await quizService.submitQuiz(quizId, submitData);
+    // Don't show toast here as the component handles the messages
+    return submission;
+  };
+
   return {
     startQuiz,
     saveAnswer,
     submitQuiz,
+    submitQuizWithAnswers,
   };
 };
 
@@ -208,7 +224,7 @@ export const useQuizSubmission = (submissionId: number | null) => {
 export const useMyQuizSubmissions = (params?: PaginationParams) => {
   const { data, error, isLoading } = useSWR(
     ["/quiz-submissions/my", params],
-    ([url, params]) => quizService.getMySubmissions(params),
+    () => quizService.getMySubmissions(params),
     {
       revalidateOnFocus: false,
     }
@@ -226,7 +242,7 @@ export const useMyQuizSubmissions = (params?: PaginationParams) => {
 };
 
 // Get quiz statistics
-export const useQuizStats = (quizid: number | null) => {
+export const useQuizStats = (quizId: number | null) => {
   const {
     data: stats,
     error,
@@ -241,6 +257,117 @@ export const useQuizStats = (quizid: number | null) => {
 
   return {
     stats,
+    isLoading,
+    error,
+  };
+};
+
+// Get detailed quiz statistics
+export const useDetailedQuizStats = (quizId: number | null) => {
+  const {
+    data: stats,
+    error,
+    isLoading,
+  } = useSWR(
+    quizId ? `/quizzes/${quizId}/detailed-stats` : null,
+    () => quizService.getDetailedQuizStats(quizId!),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    stats,
+    isLoading,
+    error,
+  };
+};
+
+// Get quiz with answers for teacher view
+export const useQuizWithAnswers = (id: number | null) => {
+  const {
+    data: quiz,
+    error,
+    isLoading,
+  } = useSWR(
+    id ? `/quizzes/${id}/with-answers` : null,
+    () => quizService.getQuizWithAnswers(id!),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    quiz,
+    isLoading,
+    error,
+    mutate: () => mutate(`/quizzes/${id}/with-answers`),
+  };
+};
+
+// Get quiz submission history
+export const useQuizSubmissionHistory = (quizId: number | null) => {
+  const {
+    data: submissionHistory,
+    error,
+    isLoading,
+  } = useSWR(
+    quizId ? `/quizzes/${quizId}/submission-history` : null,
+    () => quizService.getQuizSubmissionHistory(quizId!),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submissionHistory,
+    isLoading,
+    error,
+    mutate: () => mutate(`/quizzes/${quizId}/submission-history`),
+  };
+};
+
+// Get teacher statistics
+export const useTeacherStats = () => {
+  const {
+    data: stats,
+    error,
+    isLoading,
+  } = useSWR("/quizzes/teacher-stats", () => quizService.getTeacherStats(), {
+    revalidateOnFocus: false,
+  });
+
+  return {
+    stats: stats || {
+      totalQuizzes: 0,
+      publishedQuizzes: 0,
+      activeQuizzes: 0,
+      overdueQuizzes: 0,
+      totalSubmissions: 0,
+    },
+    isLoading,
+    error,
+  };
+};
+
+// Get student statistics
+export const useStudentStats = () => {
+  const {
+    data: stats,
+    error,
+    isLoading,
+  } = useSWR("/quizzes/student-stats", () => quizService.getStudentStats(), {
+    revalidateOnFocus: false,
+  });
+
+  return {
+    stats: stats || {
+      totalQuizzes: 0,
+      completedQuizzes: 0,
+      overdueQuizzes: 0,
+      averageScore: 0,
+      perfectCount: 0,
+    },
     isLoading,
     error,
   };

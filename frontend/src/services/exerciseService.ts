@@ -1,11 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../lib/api";
 import {
   Exercise,
   ExerciseSubmission,
   PaginationParams,
   PaginatedResult,
+  ExerciseStatus,
 } from "../types/api";
+
+// Type for updating exercises - only allowed fields
+type UpdateExerciseData = Pick<
+  Exercise,
+  | "name"
+  | "description"
+  | "subject"
+  | "grade"
+  | "deadline"
+  | "note"
+  | "content"
+  | "latexContent"
+  | "status"
+>;
 
 export const exerciseService = {
   async getExercises(
@@ -36,7 +50,28 @@ export const exerciseService = {
     id: number,
     exerciseData: Partial<Exercise>
   ): Promise<Exercise> {
-    const response = await api.put<Exercise>(`/exercises/${id}`, exerciseData);
+    // Only send fields that are allowed for updates
+    const allowedFields: (keyof UpdateExerciseData)[] = [
+      "name",
+      "description",
+      "subject",
+      "grade",
+      "deadline",
+      "note",
+      "content",
+      "latexContent",
+      "status",
+    ];
+
+    const updateData: Partial<UpdateExerciseData> = {};
+    allowedFields.forEach((field) => {
+      if (exerciseData[field] !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        updateData[field] = exerciseData[field] as any;
+      }
+    });
+
+    const response = await api.patch<Exercise>(`/exercises/${id}`, updateData);
     return response.data;
   },
 
@@ -44,13 +79,24 @@ export const exerciseService = {
     await api.delete(`/exercises/${id}`);
   },
 
+  async closeExercise(id: number): Promise<Exercise> {
+    const response = await api.patch<Exercise>(`/exercises/${id}/status`, {
+      status: ExerciseStatus.CLOSED,
+    });
+    return response.data;
+  },
+
   async publishExercise(id: number): Promise<Exercise> {
-    const response = await api.post<Exercise>(`/exercises/${id}/publish`);
+    const response = await api.patch<Exercise>(`/exercises/${id}/status`, {
+      status: ExerciseStatus.ACTIVE,
+    });
     return response.data;
   },
 
   async archiveExercise(id: number): Promise<Exercise> {
-    const response = await api.post<Exercise>(`/exercises/${id}/archive`);
+    const response = await api.patch<Exercise>(`/exercises/${id}/status`, {
+      status: ExerciseStatus.CLOSED,
+    });
     return response.data;
   },
 
@@ -139,12 +185,12 @@ export const exerciseService = {
   },
 
   // Statistics
-  async getExerciseStats(exerciseId: number): Promise<any> {
+  async getExerciseStats(exerciseId: number): Promise<unknown> {
     const response = await api.get(`/exercises/${exerciseId}/stats`);
     return response.data;
   },
 
-  async getMyExerciseStats(): Promise<any> {
+  async getMyExerciseStats(): Promise<unknown> {
     const response = await api.get("/exercise-submissions/stats");
     return response.data;
   },

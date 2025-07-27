@@ -12,7 +12,7 @@ import {
   GradeExerciseDto,
 } from './dto/exercise.dto';
 import { PaginatedResultDto } from '../common/dto/pagination.dto';
-import { $Enums } from '@prisma/client';
+import { $Enums, ExerciseStatus } from '@prisma/client';
 
 @Injectable()
 export class ExerciseService {
@@ -237,6 +237,38 @@ export class ExerciseService {
     return this.prisma.exercise.update({
       where: { id },
       data: updateData,
+    });
+  }
+
+  async updateStatus(id: number, status: ExerciseStatus, userId: number) {
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id },
+    });
+
+    if (!exercise) {
+      throw new NotFoundException('Không tìm thấy bài tập');
+    }
+
+    if (exercise.createdBy !== userId) {
+      throw new ForbiddenException(
+        'Không có quyền thay đổi trạng thái bài tập này',
+      );
+    }
+
+    return this.prisma.exercise.update({
+      where: { id },
+      data: {
+        status: status,
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
   }
 

@@ -11,8 +11,11 @@ import {
 
 export const quizService = {
   // Quiz Management
-  async getQuizzes(params?: PaginationParams): Promise<PaginatedResult<Quiz>> {
-    const response = await api.get<PaginatedResult<Quiz>>("/quizzes", {
+  async getQuizzes(
+    url: string,
+    params?: PaginationParams
+  ): Promise<PaginatedResult<Quiz>> {
+    const response = await api.get<PaginatedResult<Quiz>>(url, {
       params,
     });
     console.log("response.data", response.data);
@@ -54,13 +57,11 @@ export const quizService = {
   },
 
   async publishQuiz(id: number): Promise<Quiz> {
-    const response = await api.post<Quiz>(`/quizzes/${id}/publish`);
-    return response.data;
+    return this.updateQuizStatus(id, "ACTIVE");
   },
 
   async closeQuiz(id: number): Promise<Quiz> {
-    const response = await api.post<Quiz>(`/quizzes/${id}/close`);
-    return response.data;
+    return this.updateQuizStatus(id, "INACTIVE");
   },
 
   // Question Management

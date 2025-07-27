@@ -117,7 +117,7 @@ export class RegisterDto {
 
 export class LoginDto {
   @ApiProperty({
-    example: 'teacher@tutorplatform.com',
+    example: 'teacher@gmail.com',
     description: 'Email đăng nhập',
   })
   @IsEmail({}, { message: 'Email không hợp lệ' })

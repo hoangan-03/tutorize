@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Plus,
   Edit,
@@ -18,51 +18,25 @@ import {
 import { QuizForm } from "./QuizForm";
 import { QuizDashboard } from "./QuizDashboard";
 import { QuizPreview } from "./QuizPreview";
-import { quizService } from "../../services/quizService";
-import { Quiz } from "../../types/api";
+import { Quiz, QuizStatus, Question } from "../../types/api";
+import { getStatusColor, getStatusText } from "../utils";
+import { useQuizzes, useQuizManagement, useTeacherStats } from "../../hooks";
 
 export const QuizManagement: React.FC = () => {
   const [currentView, setCurrentView] = useState<
     "list" | "create" | "edit" | "dashboard" | "preview"
   >("list");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [teacherStats, setTeacherStats] = useState({
-    totalQuizzes: 0,
-    activeQuizzes: 0,
-    overdueQuizzes: 0,
-    totalSubmissions: 0,
-  });
 
-  useEffect(() => {
-    loadQuizzes();
-    loadTeacherStats();
-  }, []);
-
-  const loadQuizzes = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await quizService.getQuizzes({ limit: 100 });
-      setQuizzes(result.data);
-    } catch (err) {
-      console.error("Error loading quizzes:", err);
-      setError("Không thể tải danh sách quiz. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTeacherStats = async () => {
-    try {
-      const stats = await quizService.getTeacherStats();
-      setTeacherStats(stats);
-    } catch (err) {
-      console.error("Error loading teacher stats:", err);
-    }
-  };
+  const {
+    quizzes,
+    isLoading: loading,
+    error,
+    mutate: refetchQuizzes,
+  } = useQuizzes({ limit: 100 });
+  const { deleteQuiz, publishQuiz, closeQuiz, createQuiz, updateQuiz } =
+    useQuizManagement();
+  const { stats: teacherStats } = useTeacherStats();
 
   const handleCreateQuiz = () => {
     setCurrentView("create");
@@ -87,113 +61,68 @@ export const QuizManagement: React.FC = () => {
   const handleBack = () => {
     setCurrentView("list");
     setSelectedQuiz(null);
-    loadQuizzes(); // Refresh data when returning to list
+    refetchQuizzes(); // Refresh data when returning to list
   };
 
   const handleDeleteQuiz = async (quizId: number) => {
     if (!confirm("Bạn có chắc chắn muốn xóa quiz này?")) return;
 
-    try {
-      await quizService.deleteQuiz(quizId);
-      setQuizzes(quizzes.filter((q) => String(q.id) !== String(quizId)));
-    } catch (err) {
-      console.error("Error deleting quiz:", err);
-      alert("Không thể xóa quiz. Vui lòng thử lại.");
-    }
+    await deleteQuiz(quizId);
+    refetchQuizzes();
   };
 
   const handleUpdateQuizStatus = async (quizId: number, newStatus: string) => {
-    try {
-      await quizService.updateQuizStatus(quizId, newStatus);
-      setQuizzes(
-        quizzes.map((q) =>
-          q.id === quizId
-            ? ({
-                ...q,
-                status: newStatus,
-              } as Quiz)
-            : q
-        )
-      );
-    } catch (err) {
-      console.error("Error updating quiz status:", err);
-      alert("Không thể cập nhật trạng thái quiz. Vui lòng thử lại.");
+    if (newStatus === QuizStatus.ACTIVE) {
+      await publishQuiz(quizId);
+    } else if (newStatus === QuizStatus.INACTIVE) {
+      await closeQuiz(quizId);
     }
+    refetchQuizzes();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return "bg-green-100 text-green-800";
-      case "DRAFT":
-        return "bg-yellow-100 text-yellow-800";
-      case "INACTIVE":
-        return "bg-red-100 text-red-800";
-      case "OVERDUE":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return "Đang hoạt động";
-      case "DRAFT":
-        return "Bản nháp";
-      case "INACTIVE":
-        return "Tạm dừng";
-      case "OVERDUE":
-        return "Quá hạn";
-      default:
-        return status;
-    }
-  };
-
-  // Transform QuizForm data to API format
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformQuizData = (formData: any): Partial<Quiz> => {
-    // Filter out unwanted fields from questions and ensure order is set
-
-    const cleanQuestions = formData.questions?.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (question: any, index: number) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, quizId, createdAt, updatedAt, ...cleanQuestion } = question;
-        return {
-          ...cleanQuestion,
-          order: cleanQuestion.order || index + 1,
+    const cleanQuestions =
+      formData.questions?.map((question: Question, index: number) => {
+        const transformedQuestion = {
+          question: String(question.question || "").trim(),
+          type: question.type,
+          options: Array.isArray(question.options)
+            ? question.options
+                .filter((option: string) => option && option.trim())
+                .map((option: string) => option.trim())
+            : [],
+          correctAnswer: String(question.correctAnswer || "0"),
+          points: Number(question.points) || 1,
+          order: Number(question.order) || index + 1,
+          explanation: question.explanation
+            ? String(question.explanation).trim()
+            : undefined,
         };
-      }
-    );
 
-    return {
-      ...formData,
-      questions: cleanQuestions.map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (q: any) => ({
-          ...q,
-          // Convert frontend type to backend type
-          type:
-            q.type === "multiple-choice"
-              ? "MULTIPLE_CHOICE"
-              : q.type === "true-false"
-              ? "TRUE_FALSE"
-              : q.type === "short-answer"
-              ? "FILL_BLANK"
-              : q.type,
-        })
-      ),
-      status:
-        formData.status === "active"
-          ? "ACTIVE"
-          : formData.status === "draft"
-          ? "DRAFT"
-          : formData.status === "inactive"
-          ? "INACTIVE"
-          : formData.status,
+        return transformedQuestion;
+      }) || [];
+
+    const transformedData: Partial<Quiz> = {
+      title: String(formData.title || "").trim(),
+      description: String(formData.description || "").trim(),
+      subject: formData.subject,
+      grade: Number(formData.grade) || 1,
+      timeLimit: formData.timeLimit ? Number(formData.timeLimit) : undefined,
+      deadline: formData.deadline
+        ? new Date(formData.deadline).toISOString()
+        : undefined,
+      status: formData.status || QuizStatus.DRAFT,
+      questions: cleanQuestions,
     };
+
+    Object.keys(transformedData).forEach((key) => {
+      if (transformedData[key as keyof typeof transformedData] === undefined) {
+        delete transformedData[key as keyof typeof transformedData];
+      }
+    });
+
+    return transformedData;
   };
 
   // Calculate stats
@@ -337,7 +266,7 @@ export const QuizManagement: React.FC = () => {
             <div className="mb-6 p-6 bg-red-50 border border-red-200 rounded-xl">
               <p className="text-red-600">{error}</p>
               <button
-                onClick={loadQuizzes}
+                onClick={refetchQuizzes}
                 className="mt-2 text-red-600 hover:text-red-700 underline"
               >
                 Thử lại
@@ -582,15 +511,9 @@ export const QuizManagement: React.FC = () => {
               <QuizForm
                 onBack={handleBack}
                 onSave={async (quizData) => {
-                  try {
-                    const transformedData = transformQuizData(quizData);
-                    await quizService.createQuiz(transformedData);
-                    alert("Quiz đã được tạo thành công!");
-                    handleBack();
-                  } catch (err) {
-                    console.error("Error creating quiz:", err);
-                    alert("Không thể tạo quiz. Vui lòng thử lại.");
-                  }
+                  const transformedData = transformQuizData(quizData);
+                  await createQuiz(transformedData);
+                  handleBack();
                 }}
               />
             </div>
@@ -606,18 +529,9 @@ export const QuizManagement: React.FC = () => {
                 quiz={selectedQuiz}
                 onBack={handleBack}
                 onSave={async (quizData) => {
-                  try {
-                    const transformedData = transformQuizData(quizData);
-                    await quizService.updateQuiz(
-                      selectedQuiz.id,
-                      transformedData
-                    );
-                    alert("Quiz đã được cập nhật thành công!");
-                    handleBack();
-                  } catch (err) {
-                    console.error("Error updating quiz:", err);
-                    alert("Không thể cập nhật quiz. Vui lòng thử lại.");
-                  }
+                  const transformedData = transformQuizData(quizData);
+                  await updateQuiz(selectedQuiz.id, transformedData);
+                  handleBack();
                 }}
               />
             </div>

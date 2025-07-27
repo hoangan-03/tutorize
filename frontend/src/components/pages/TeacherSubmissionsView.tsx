@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   User,
-  Calendar,
   FileText,
   Star,
-  MessageSquare,
-  Download,
   Eye,
   Edit3,
   Save,
@@ -20,7 +17,10 @@ import {
   ExerciseSubmission,
   SubmissionStatus,
 } from "../../types/api";
-import { exerciseService } from "../../services/exerciseService";
+import {
+  useExerciseSubmissionsList,
+  useExerciseSubmissions,
+} from "../../hooks/useExercise";
 
 interface TeacherSubmissionsViewProps {
   exercise: Exercise;
@@ -32,8 +32,10 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
   onBack,
 }) => {
   const { t } = useTranslation();
-  const [submissions, setSubmissions] = useState<ExerciseSubmission[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { submissions, isLoading, mutate } = useExerciseSubmissionsList(
+    exercise.id!
+  );
+  const { gradeSubmission } = useExerciseSubmissions();
   const [gradingSubmission, setGradingSubmission] = useState<number | null>(
     null
   );
@@ -43,36 +45,17 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
     "ALL"
   );
 
-  useEffect(() => {
-    loadSubmissions();
-  }, [exercise.id]);
-
-  const loadSubmissions = async () => {
-    try {
-      setLoading(true);
-      const result = await exerciseService.getExerciseSubmissions(exercise.id!);
-      setSubmissions(result.data);
-    } catch (error) {
-      console.error("Error loading submissions:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGradeSubmission = async (submissionId: number) => {
-    try {
-      await exerciseService.gradeSubmission(
-        submissionId,
-        gradeScore,
-        gradeFeedback
-      );
+    const success = await gradeSubmission(
+      submissionId,
+      gradeScore,
+      gradeFeedback
+    );
+    if (success) {
       setGradingSubmission(null);
       setGradeScore(0);
       setGradeFeedback("");
-      await loadSubmissions();
-    } catch (error) {
-      console.error("Error grading submission:", error);
-      alert(t("teacherSubmissionsView.errorGrading"));
+      mutate(); // Refresh submissions data
     }
   };
 
@@ -267,7 +250,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
 
         {/* Submissions List */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             </div>
@@ -331,7 +314,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
-                                {submission.student?.name || "Unknown Student"}
+                                {submission.user?.name || "Unknown Student"}
                               </div>
                             </div>
                           </div>

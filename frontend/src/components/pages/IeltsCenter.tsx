@@ -1,15 +1,17 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ieltsService,
   IeltsTest,
   IeltsSkill,
   IeltsSubmission,
   IeltsLevel,
 } from "../../services/ieltsService";
 import { useAuth } from "../../hooks/useAuth";
+import {
+  useIeltsTests,
+  useIeltsSubmissions,
+  useIeltsTestManagement,
+} from "../../hooks/useIelts";
 import { IeltsTestForm } from "./IeltsTestForm";
 import { IeltsTestResult } from "./IeltsTestResult";
 import {
@@ -534,43 +536,23 @@ export const IeltsCenter: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [view, setView] = useState<"list" | "form" | "result">("list");
-  const [resources, setResources] = useState<IeltsTest[]>([]);
-  const [submissions, setSubmissions] = useState<IeltsSubmission[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentTestId, setCurrentTestId] = useState<number | null>(null);
   const [currentSubmissionId, setCurrentSubmissionId] = useState<number | null>(
     null
   );
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    loadIeltsResources();
-  }, [user]);
-
-  const loadIeltsResources = async () => {
-    setLoading(true);
-    try {
-      if (user?.role === "TEACHER") {
-        const fetchedResources = await ieltsService.getTests({ limit: 100 });
-        setResources(fetchedResources.data);
-      } else if (user?.role === "STUDENT") {
-        const fetchedResources = await ieltsService.getTests({});
-        setResources(fetchedResources.data);
-        const fetchedSubmissions = await ieltsService.getMySubmissions();
-        setSubmissions(fetchedSubmissions);
-      } else {
-        const fetchedResources = await ieltsService.getTests({});
-        const publicResources = fetchedResources.data.filter(
-          (test: IeltsTest & { isPublic?: boolean }) => test.isPublic
-        );
-        setResources(publicResources);
-      }
-    } catch (error) {
-      console.error("Failed to load IELTS resources:", error);
-    } finally {
-      setLoading(false);
+  // Determine pagination params based on user role
+  const testsParams = useMemo(() => {
+    if (user?.role === "TEACHER") {
+      return { limit: 100 };
     }
-  };
+    return {};
+  }, [user?.role]);
+
+  const { tests: resources, isLoading: loading } = useIeltsTests(testsParams);
+  const { submissions } = useIeltsSubmissions();
+  const { deleteTest } = useIeltsTestManagement();
+  const navigate = useNavigate();
 
   const handleCreate = () => {
     setCurrentTestId(null);
@@ -594,8 +576,7 @@ export const IeltsCenter: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm(t("ielts.teacher.confirmDelete"))) {
       try {
-        await ieltsService.deleteTest(id);
-        loadIeltsResources();
+        await deleteTest(id);
       } catch (error) {
         console.error("Failed to delete IELTS test:", error);
         // You might want to show a toast notification here
@@ -607,7 +588,6 @@ export const IeltsCenter: React.FC = () => {
     setView("list");
     setCurrentTestId(null);
     setCurrentSubmissionId(null);
-    loadIeltsResources();
   };
 
   if (view === "form") {

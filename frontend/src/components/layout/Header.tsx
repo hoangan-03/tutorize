@@ -4,7 +4,6 @@ import {
   BookOpen,
   Menu,
   X,
-  Home,
   FileText,
   Award,
   Library,
@@ -248,7 +247,7 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 /* Not logged in navigation */
                 <nav className="hidden lg:flex items-center space-x-1">
-                  <button
+                  {/* <button
                     onClick={() => handleNavigation("/")}
                     className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                       isActivePath("/")
@@ -270,7 +269,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <button className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                     <Library className="h-4 w-4 mr-2" />
                     Contact
-                  </button>
+                  </button> */}
                 </nav>
               )}
 
@@ -371,8 +370,8 @@ export const Header: React.FC<HeaderProps> = ({
                       )}
                     </>
                   ) : (
-                    <>
-                      <button
+                    <div>
+                      {/* <button
                         onClick={() => handleNavigation("/")}
                         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
@@ -390,8 +389,8 @@ export const Header: React.FC<HeaderProps> = ({
                       <button className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
                         <Library className="h-5 w-5 mr-3" />
                         Contact
-                      </button>
-                    </>
+                      </button> */}
+                    </div>
                   )}
 
                   <hr className="my-3" />

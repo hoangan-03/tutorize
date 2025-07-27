@@ -1,13 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../lib/api";
-import { Document, PaginationParams, PaginatedResult } from "../types/api";
+import {
+  Document,
+  PaginationParams,
+  PaginatedResult,
+  AccessAction,
+} from "../types/api";
 
 export const documentService = {
   // Document Management
   async getDocuments(
+    url: string,
     params?: PaginationParams
   ): Promise<PaginatedResult<Document>> {
-    const response = await api.get<PaginatedResult<Document>>("/documents", {
+    const response = await api.get<PaginatedResult<Document>>(url, {
       params,
     });
     return response.data;
@@ -64,7 +69,10 @@ export const documentService = {
     return `${api.defaults.baseURL}/documents/${id}/download`;
   },
 
-  async getAccessHistory(id: number, params?: PaginationParams): Promise<any> {
+  async getAccessHistory(
+    id: number,
+    params?: PaginationParams
+  ): Promise<AccessAction[]> {
     const response = await api.get(`/documents/${id}/access-history`, {
       params,
     });
@@ -78,6 +86,7 @@ export const documentService = {
 
   // Search and filter
   async searchDocuments(
+    url: string,
     query: string,
     filters?: {
       type?: string;
@@ -86,15 +95,9 @@ export const documentService = {
     }
   ): Promise<PaginatedResult<Document>> {
     const params = { search: query, ...filters };
-    const response = await api.get<PaginatedResult<Document>>("/documents", {
+    const response = await api.get<PaginatedResult<Document>>(url, {
       params,
     });
-    return response.data;
-  },
-
-  // Statistics
-  async getDocumentStats(): Promise<any> {
-    const response = await api.get("/documents/stats");
     return response.data;
   },
 };
