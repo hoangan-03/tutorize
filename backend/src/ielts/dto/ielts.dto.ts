@@ -95,20 +95,26 @@ export class CreateIeltsSectionDto {
   @IsString()
   title: string;
 
-  @ApiPropertyOptional({ description: 'Mô tả phần' })
+  @ApiPropertyOptional({ description: 'Hướng dẫn cho phần này' })
   @IsOptional()
   @IsString()
-  description?: string;
+  instructions?: string;
+
+  @ApiProperty({ description: 'Thời gian làm bài (phút)' })
+  @IsNumber()
+  @Min(1)
+  @Max(300)
+  timeLimit: number;
 
   @ApiProperty({ description: 'Thứ tự phần' })
   @IsNumber()
   @Min(1)
   order: number;
 
-  @ApiPropertyOptional({ description: 'Nội dung phần (đọc hiểu, nghe)' })
+  @ApiPropertyOptional({ description: 'Nội dung đoạn văn (đọc hiểu)' })
   @IsOptional()
   @IsString()
-  content?: string;
+  passageText?: string;
 
   @ApiPropertyOptional({ description: 'URL audio (cho Listening)' })
   @IsOptional()
@@ -137,10 +143,17 @@ export class UpdateIeltsSectionDto {
   @IsString()
   title?: string;
 
-  @ApiPropertyOptional({ description: 'Mô tả phần' })
+  @ApiPropertyOptional({ description: 'Hướng dẫn cho phần này' })
   @IsOptional()
   @IsString()
-  description?: string;
+  instructions?: string;
+
+  @ApiPropertyOptional({ description: 'Thời gian làm bài (phút)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(300)
+  timeLimit?: number;
 
   @ApiPropertyOptional({ description: 'Thứ tự phần' })
   @IsOptional()
@@ -148,10 +161,10 @@ export class UpdateIeltsSectionDto {
   @Min(1)
   order?: number;
 
-  @ApiPropertyOptional({ description: 'Nội dung phần (đọc hiểu, nghe)' })
+  @ApiPropertyOptional({ description: 'Nội dung đoạn văn (đọc hiểu)' })
   @IsOptional()
   @IsString()
-  content?: string;
+  passageText?: string;
 
   @ApiPropertyOptional({ description: 'URL audio (cho Listening)' })
   @IsOptional()
@@ -215,6 +228,11 @@ export class CreateIeltsQuestionDto {
   @IsOptional()
   @IsString()
   explanation?: string;
+
+  @ApiPropertyOptional({ description: 'URL hình ảnh cho câu hỏi' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 export class UpdateIeltsQuestionDto {
@@ -274,6 +292,11 @@ export class UpdateIeltsQuestionDto {
   @IsOptional()
   @IsString()
   explanation?: string;
+
+  @ApiPropertyOptional({ description: 'URL hình ảnh cho câu hỏi' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 export class SubmitIeltsDto {

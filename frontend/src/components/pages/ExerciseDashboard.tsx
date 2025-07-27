@@ -11,7 +11,7 @@ import {
   Target,
 } from "lucide-react";
 import { Exercise, ExerciseSubmission } from "../../types/api";
-import { useExerciseSubmissionsList } from "../../hooks/useExercise";
+import { useExerciseSubmissionsList } from "../../hooks";
 
 interface ExerciseDashboardProps {
   exercise: Exercise;
@@ -180,7 +180,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
               >
                 ← Quay lại
               </button>
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-base md:text-xl lg:text-3xl font-bold text-white mb-2">
                 Dashboard: {exercise.name}
               </h1>
               <p className="text-white/90 text-lg">
@@ -204,7 +204,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
                 <p className="text-sm font-medium text-gray-600">
                   Tỷ lệ nộp bài
                 </p>
-                <p className="text-3xl font-bold text-blue-600">
+                <p className="text-base md:text-xl lg:text-3xl font-bold text-blue-600">
                   {stats.submissionRate.toFixed(1)}%
                 </p>
               </div>
@@ -220,7 +220,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
                 <p className="text-sm font-medium text-gray-600">
                   Điểm trung bình
                 </p>
-                <p className="text-3xl font-bold text-green-600">
+                <p className="text-base md:text-xl lg:text-3xl font-bold text-green-600">
                   {stats.averageScore.toFixed(1)}
                 </p>
               </div>
@@ -236,7 +236,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
                 <p className="text-sm font-medium text-gray-600">
                   Đã chấm điểm
                 </p>
-                <p className="text-3xl font-bold text-purple-600">
+                <p className="text-base md:text-xl lg:text-3xl font-bold text-purple-600">
                   {stats.gradedSubmissions}
                 </p>
               </div>
@@ -250,7 +250,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Chờ chấm</p>
-                <p className="text-3xl font-bold text-orange-600">
+                <p className="text-base md:text-xl lg:text-3xl font-bold text-orange-600">
                   {stats.pendingSubmissions}
                 </p>
               </div>

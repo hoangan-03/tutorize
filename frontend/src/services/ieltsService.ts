@@ -47,7 +47,18 @@ export const ieltsService = {
   },
 
   async createTest(testData: Partial<IeltsTest>): Promise<IeltsTest> {
-    const response = await api.post<IeltsTest>("/ielts/tests", testData);
+    // Filter out fields that shouldn't be sent for creation
+    const createData = {
+      title: testData.title,
+      description: testData.description,
+      skill: testData.skill,
+      level: testData.level,
+      timeLimit: testData.timeLimit,
+      instructions: testData.instructions,
+      sections: testData.sections,
+    };
+
+    const response = await api.post<IeltsTest>("/ielts/tests", createData);
     return response.data;
   },
 
@@ -55,7 +66,20 @@ export const ieltsService = {
     id: number,
     testData: Partial<IeltsTest>
   ): Promise<IeltsTest> {
-    const response = await api.patch<IeltsTest>(`/ielts/tests/${id}`, testData);
+    // Filter out fields that shouldn't be sent for update
+    const updateData = {
+      title: testData.title,
+      description: testData.description,
+      skill: testData.skill,
+      level: testData.level,
+      timeLimit: testData.timeLimit,
+      instructions: testData.instructions,
+    };
+
+    const response = await api.patch<IeltsTest>(
+      `/ielts/tests/${id}`,
+      updateData
+    );
     return response.data;
   },
 
@@ -68,9 +92,21 @@ export const ieltsService = {
     testId: number,
     sectionData: Partial<IeltsSection>
   ): Promise<IeltsSection> {
+    // Filter out fields that shouldn't be sent for creation
+    const createData = {
+      title: sectionData.title,
+      instructions: sectionData.instructions,
+      timeLimit: sectionData.timeLimit,
+      order: sectionData.order,
+      passageText: sectionData.passageText,
+      audioUrl: sectionData.audioUrl,
+      imageUrl: sectionData.imageUrl,
+      questions: sectionData.questions,
+    };
+
     const response = await api.post<IeltsSection>(
       `/ielts/tests/${testId}/sections`,
-      sectionData
+      createData
     );
     return response.data;
   },
@@ -79,9 +115,20 @@ export const ieltsService = {
     sectionId: number,
     sectionData: Partial<IeltsSection>
   ): Promise<IeltsSection> {
+    // Filter out fields that shouldn't be sent for update
+    const updateData = {
+      title: sectionData.title,
+      instructions: sectionData.instructions,
+      timeLimit: sectionData.timeLimit,
+      order: sectionData.order,
+      passageText: sectionData.passageText,
+      audioUrl: sectionData.audioUrl,
+      imageUrl: sectionData.imageUrl,
+    };
+
     const response = await api.patch<IeltsSection>(
       `/ielts/sections/${sectionId}`,
-      sectionData
+      updateData
     );
     return response.data;
   },
@@ -95,9 +142,22 @@ export const ieltsService = {
     sectionId: number,
     questionData: Partial<IeltsQuestion>
   ): Promise<IeltsQuestion> {
+    // Filter out fields that shouldn't be sent for creation
+    const createData = {
+      question: questionData.question,
+      type: questionData.type,
+      subQuestions: questionData.subQuestions,
+      options: questionData.options,
+      correctAnswers: questionData.correctAnswers,
+      points: questionData.points,
+      order: questionData.order,
+      explanation: questionData.explanation,
+      imageUrl: questionData.imageUrl,
+    };
+
     const response = await api.post<IeltsQuestion>(
       `/ielts/sections/${sectionId}/questions`,
-      questionData
+      createData
     );
     return response.data;
   },
@@ -106,9 +166,22 @@ export const ieltsService = {
     questionId: number,
     questionData: Partial<IeltsQuestion>
   ): Promise<IeltsQuestion> {
+    // Filter out fields that shouldn't be sent for update
+    const updateData = {
+      question: questionData.question,
+      type: questionData.type,
+      subQuestions: questionData.subQuestions,
+      options: questionData.options,
+      correctAnswers: questionData.correctAnswers,
+      points: questionData.points,
+      order: questionData.order,
+      explanation: questionData.explanation,
+      imageUrl: questionData.imageUrl,
+    };
+
     const response = await api.patch<IeltsQuestion>(
       `/ielts/questions/${questionId}`,
-      questionData
+      updateData
     );
     return response.data;
   },

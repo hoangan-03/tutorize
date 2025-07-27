@@ -2,6 +2,7 @@ export {
   useQuizzes,
   useQuiz,
   useQuizWithAnswers,
+  useQuizSubmission,
   useQuizSubmissionHistory,
   useQuizTaking,
   useQuizManagement,

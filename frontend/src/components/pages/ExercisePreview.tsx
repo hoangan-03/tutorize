@@ -313,7 +313,9 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
             <ArrowLeft className="h-5 w-5 mr-1" />
             Quay lại
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Xem bài tập</h1>
+          <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
+            Xem bài tập
+          </h1>
         </div>
 
         <div className="flex space-x-3">
@@ -504,7 +506,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                 <div className="max-w-none">
                   <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 border border-blue-100">
                     <div className="bg-white rounded-lg p-8 shadow-sm">
-                      <div className="prose prose-lg max-w-none prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900">
+                      <div className="prose prose-lg max-w-none text-start prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900">
                         <div
                           className="content-text text-lg leading-loose"
                           style={{
@@ -521,7 +523,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                             __html: exercise.content
                               .replace(
                                 /<h1/g,
-                                '<h1 class="text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-4"'
+                                '<h1 class="text-base md:text-xl lg:text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-4"'
                               )
                               .replace(
                                 /<h2/g,

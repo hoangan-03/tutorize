@@ -17,7 +17,6 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-// Import KaTeX for LaTeX rendering
 import "katex/dist/katex.min.css";
 import { ExerciseForm } from "./ExerciseForm";
 import { ExercisePreview } from "./ExercisePreview";
@@ -26,7 +25,7 @@ import { TeacherSubmissionsView } from "./TeacherSubmissionsView";
 import { ExerciseDashboard } from "./ExerciseDashboard";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { useExercises, useExerciseManagement } from "../../hooks/useExercise";
+import { useExercises, useExerciseManagement } from "../../hooks";
 import { Exercise, Subject, ExerciseStatus, EditMode } from "../../types/api";
 import { Badge } from "../ui/Badge";
 import { getDefaultDeadline } from "../utils";
@@ -129,7 +128,7 @@ export const ExerciseEditor: React.FC = () => {
     try {
       const newStatus =
         exercise.status === ExerciseStatus.ACTIVE
-          ? ExerciseStatus.CLOSED
+          ? ExerciseStatus.INACTIVE
           : ExerciseStatus.ACTIVE;
       if (newStatus === ExerciseStatus.ACTIVE) {
         await publishExercise(exercise.id!);
@@ -162,7 +161,7 @@ export const ExerciseEditor: React.FC = () => {
       try {
         const newStatus =
           selectedExercise.status === ExerciseStatus.ACTIVE
-            ? ExerciseStatus.CLOSED
+            ? ExerciseStatus.INACTIVE
             : ExerciseStatus.ACTIVE;
 
         let updatedExercise;
@@ -320,14 +319,13 @@ export const ExerciseEditor: React.FC = () => {
                   <BookOpen className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
+                  <h1 className="text-base md:text-xl lg:text-3xl font-bold text-white">
                     Quản lý bài tập
                   </h1>
                 </div>
               </div>
-              <p className="text-white/90 text-lg leading-relaxed max-w-2xl text-start">
-                Tạo và quản lý bài tập cho học sinh. Hỗ trợ nhiều môn học và
-                hình thức bài tập.
+              <p className="text-white/90 text-lg leading-relaxed max-w-3xl text-start">
+                Tạo và quản lý bài tập cho học sinh.
               </p>
               <div className="flex items-center space-x-6 mt-4 text-sm text-white/80">
                 <div className="flex items-center space-x-1">
@@ -477,7 +475,7 @@ export const ExerciseEditor: React.FC = () => {
                               ? "bg-green-100 text-green-800"
                               : exercise.status === ExerciseStatus.DRAFT
                               ? "bg-yellow-100 text-yellow-800"
-                              : exercise.status === ExerciseStatus.CLOSED
+                              : exercise.status === ExerciseStatus.INACTIVE
                               ? "bg-gray-100 text-gray-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
@@ -486,12 +484,12 @@ export const ExerciseEditor: React.FC = () => {
                             ? t("status.active")
                             : exercise.status === ExerciseStatus.DRAFT
                             ? t("status.draft")
-                            : exercise.status === ExerciseStatus.CLOSED
-                            ? "Đã đóng"
+                            : exercise.status === ExerciseStatus.INACTIVE
+                            ? "Đã ngừng"
                             : t("status.inactive")}
                         </Badge>
                         <Badge variant="subject">
-                          {t(`subject.${exercise.subject.toLowerCase()}`)}
+                          {t(`subjects.${exercise.subject.toLowerCase()}`)}
                         </Badge>
                         <Badge variant="grade">
                           {t("exercises.class")} {exercise.grade}

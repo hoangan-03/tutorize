@@ -487,7 +487,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         <div className="flex justify-center">
           <div className="flex items-center">
             <BookOpen className="h-12 w-12 text-blue-600" />
-            <span className="ml-3 text-3xl font-bold text-gray-900">
+            <span className="ml-3 text-base md:text-xl lg:text-3xl font-bold text-gray-900">
               {t("common.appName")}
             </span>
           </div>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Edit,
@@ -16,15 +17,15 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { QuizForm } from "./QuizForm";
-import { QuizDashboard } from "./QuizDashboard";
 import { QuizPreview } from "./QuizPreview";
 import { Quiz, QuizStatus, Question } from "../../types/api";
 import { getStatusColor, getStatusText } from "../utils";
 import { useQuizzes, useQuizManagement, useTeacherStats } from "../../hooks";
 
 export const QuizManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<
-    "list" | "create" | "edit" | "dashboard" | "preview"
+    "list" | "create" | "edit" | "preview"
   >("list");
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
 
@@ -54,8 +55,7 @@ export const QuizManagement: React.FC = () => {
   };
 
   const handleViewDashboard = (quiz: Quiz) => {
-    setCurrentView("dashboard");
-    setSelectedQuiz(quiz);
+    navigate(`/quiz/dashboard/${quiz.id}`);
   };
 
   const handleBack = () => {
@@ -147,14 +147,13 @@ export const QuizManagement: React.FC = () => {
                     <BookOpen className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-white">
+                    <h1 className="text-base md:text-xl lg:text-3xl font-bold text-white">
                       Quản lý Quiz
                     </h1>
                   </div>
                 </div>
-                <p className="text-white/90 text-lg leading-relaxed max-w-2xl text-start">
-                  Tạo và quản lý các bài quiz trắc nghiệm cho học sinh. Hỗ trợ
-                  nhiều loại câu hỏi và chấm điểm tự động.
+                <p className="text-white/90 text-lg leading-relaxed max-w-3xl text-start">
+                  Tạo và quản lý các bài quiz trắc nghiệm cho học sinh.
                 </p>
                 <div className="flex items-center space-x-6 mt-4 text-sm text-white/80">
                   <div className="flex items-center space-x-1">
@@ -501,7 +500,7 @@ export const QuizManagement: React.FC = () => {
           {currentView === "create" && (
             <div className="p-8">
               <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   Tạo Quiz mới
                 </h1>
                 <p className="text-gray-600">
@@ -521,7 +520,7 @@ export const QuizManagement: React.FC = () => {
           {currentView === "edit" && selectedQuiz && (
             <div className="p-8">
               <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   Chỉnh sửa Quiz
                 </h1>
               </div>
@@ -536,23 +535,10 @@ export const QuizManagement: React.FC = () => {
               />
             </div>
           )}
-          {currentView === "dashboard" && selectedQuiz && (
-            <div className="p-8">
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Thống kê Quiz
-                </h1>
-                <p className="text-gray-600">
-                  Xem kết quả và phân tích chi tiết
-                </p>
-              </div>
-              <QuizDashboard quiz={selectedQuiz} onBack={handleBack} />
-            </div>
-          )}
           {currentView === "preview" && selectedQuiz && (
             <div className="p-8">
               <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   Xem trước Quiz
                 </h1>
                 <p className="text-gray-600">Kiểm tra giao diện và nội dung</p>

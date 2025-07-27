@@ -6,14 +6,13 @@ import {
   IeltsSubmission,
   IeltsLevel,
 } from "../../types/api";
-import { useAuth } from "../../hooks/useAuth";
 import {
+  useAuth,
   useIeltsTests,
   useIeltsSubmissions,
   useIeltsTestManagement,
-} from "../../hooks/useIelts";
+} from "../../hooks";
 import { IeltsTestForm } from "./IeltsTestForm";
-import { IeltsTestResult } from "./IeltsTestResult";
 import {
   BookOpen,
   Edit,
@@ -70,13 +69,13 @@ const StudentIeltsView: React.FC<{
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="p-4 md:px-12 lg:px-36 md:py-12">
         {/* Page Header */}
         <div className="relative bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
           <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-white">
+              <h1 className="text-xl md:text-2xl lg:text-4xl font-bold text-white">
                 {t("ielts.centerTitle")}
               </h1>
             </div>
@@ -352,12 +351,12 @@ const TeacherIeltsView: React.FC<{
                   <BookOpen className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
+                  <h1 className="text-base md:text-xl lg:text-3xl font-bold text-white">
                     {t("ielts.teacher.manageTitle")}
                   </h1>
                 </div>
               </div>
-              <p className="text-white/90 text-lg leading-relaxed max-w-2xl text-start">
+              <p className="text-white/90 text-lg leading-relaxed max-w-3xl text-start">
                 {t("ielts.teacher.manageDescription")}
               </p>
             </div>
@@ -537,11 +536,8 @@ const StatCard: React.FC<{
 export const IeltsCenter: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<"list" | "form" | "result">("list");
+  const [view, setView] = useState<"list" | "form">("list");
   const [currentTestId, setCurrentTestId] = useState<number | null>(null);
-  const [currentSubmissionId, setCurrentSubmissionId] = useState<number | null>(
-    null
-  );
 
   // Determine pagination params based on user role
   const testsParams = useMemo(() => {
@@ -571,8 +567,7 @@ export const IeltsCenter: React.FC = () => {
   };
 
   const handleViewResult = (submissionId: number) => {
-    setCurrentSubmissionId(submissionId);
-    setView("result");
+    navigate(`/ielts/result/${submissionId}`);
   };
 
   const handleDelete = async (id: number) => {
@@ -589,17 +584,10 @@ export const IeltsCenter: React.FC = () => {
   const handleBack = () => {
     setView("list");
     setCurrentTestId(null);
-    setCurrentSubmissionId(null);
   };
 
   if (view === "form") {
     return <IeltsTestForm testId={currentTestId} onBack={handleBack} />;
-  }
-
-  if (view === "result" && currentSubmissionId) {
-    return (
-      <IeltsTestResult submissionId={currentSubmissionId} onBack={handleBack} />
-    );
   }
 
   if (user?.role === "TEACHER") {

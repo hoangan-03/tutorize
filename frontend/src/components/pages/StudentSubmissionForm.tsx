@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Exercise, ExerciseSubmission } from "../../types/api";
-import { useExerciseSubmissions } from "../../hooks/useExercise";
+import { useExerciseSubmissions } from "../../hooks";
 
 interface StudentSubmissionFormProps {
   exercise: Exercise;

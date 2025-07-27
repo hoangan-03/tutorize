@@ -6,7 +6,6 @@ import {
   X,
   FileText,
   Award,
-  Library,
   Edit,
   User,
   Lock,
@@ -62,9 +61,9 @@ export const Header: React.FC<HeaderProps> = ({
         {t("navigation.exercises")}
       </button>
       <button
-        onClick={() => handleNavigation("/quizzes")}
+        onClick={() => handleNavigation("/quiz")}
         className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-          isActivePath("/quizzes")
+          isActivePath("/quiz")
             ? "text-blue-600 bg-blue-50"
             : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
         }`}
@@ -83,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
         <Award className="h-4 w-4 mr-2" />
         {t("navigation.ielts")}
       </button>
-      <button
+      {/* <button
         onClick={() => handleNavigation("/library")}
         className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
           isActivePath("/library")
@@ -93,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
       >
         <Library className="h-4 w-4 mr-2" />
         {t("navigation.documents")}
-      </button>
+      </button> */}
     </nav>
   );
 
@@ -133,7 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
         <Award className="h-4 w-4 mr-2" />
         {t("navigation.ielts")}
       </button>
-      <button
+      {/* <button
         onClick={() => handleNavigation("/library")}
         className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
           isActivePath("/library")
@@ -143,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
       >
         <Library className="h-4 w-4 mr-2" />
         {t("navigation.documents")}
-      </button>
+      </button> */}
     </nav>
   );
 
@@ -158,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
         {t("navigation.exercises")}
       </button>
       <button
-        onClick={() => handleNavigation("/quizzes")}
+        onClick={() => handleNavigation("/quiz")}
         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
       >
         <FileText className="h-5 w-5 mr-3" />
@@ -171,13 +170,13 @@ export const Header: React.FC<HeaderProps> = ({
         <Award className="h-5 w-5 mr-3" />
         {t("navigation.ielts")}
       </button>
-      <button
+      {/* <button
         onClick={() => handleNavigation("/library")}
         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
       >
         <Library className="h-5 w-5 mr-3" />
         {t("navigation.documents")}
-      </button>
+      </button> */}
     </>
   );
 
@@ -205,13 +204,13 @@ export const Header: React.FC<HeaderProps> = ({
         <Award className="h-5 w-5 mr-3" />
         {t("navigation.ielts")}
       </button>
-      <button
+      {/* <button
         onClick={() => handleNavigation("/library")}
         className="flex items-center w-full px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
       >
         <Library className="h-5 w-5 mr-3" />
         {t("navigation.documents")}
-      </button>
+      </button> */}
     </>
   );
 

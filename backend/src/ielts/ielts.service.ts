@@ -14,6 +14,7 @@ import {
   UpdateIeltsSectionDto,
   UpdateIeltsQuestionDto,
 } from './dto/ielts.dto';
+import { IeltsSkill, Role } from '@prisma/client';
 
 @Injectable()
 export class IeltsService {
@@ -164,7 +165,7 @@ export class IeltsService {
     });
 
     if (!ieltsTest) {
-      throw new NotFoundException('Không tìm thấy bài test IELTS');
+      throw new NotFoundException('IELTS test not found');
     }
 
     return ieltsTest;
@@ -176,8 +177,8 @@ export class IeltsService {
       where: { id: userId },
     });
 
-    if (user?.role !== 'TEACHER') {
-      throw new ForbiddenException('Không có quyền xem đáp án');
+    if (user?.role !== Role.TEACHER) {
+      throw new ForbiddenException('Forbidden');
     }
 
     const ieltsTest = await this.prisma.ieltsTest.findUnique({
@@ -202,7 +203,7 @@ export class IeltsService {
     });
 
     if (!ieltsTest) {
-      throw new NotFoundException('Không tìm thấy bài test IELTS');
+      throw new NotFoundException('IELTS test not found');
     }
 
     return ieltsTest;
@@ -218,11 +219,11 @@ export class IeltsService {
     });
 
     if (!ieltsTest) {
-      throw new NotFoundException('Không tìm thấy bài test IELTS');
+      throw new NotFoundException('IELTS test not found');
     }
 
     if (ieltsTest.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền cập nhật bài test này');
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsTest.update({
@@ -251,11 +252,11 @@ export class IeltsService {
     });
 
     if (!ieltsTest) {
-      throw new NotFoundException('Không tìm thấy bài test IELTS');
+      throw new NotFoundException('IELTS test not found');
     }
 
     if (ieltsTest.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xóa bài test này');
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsTest.delete({
@@ -274,21 +275,22 @@ export class IeltsService {
     });
 
     if (!ieltsTest) {
-      throw new NotFoundException('Không tìm thấy bài test IELTS');
+      throw new NotFoundException('IELTS test not found');
     }
 
     if (ieltsTest.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền thêm phần cho bài test này');
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsSection.create({
       data: {
         title: createSectionDto.title,
-        instructions: createSectionDto.description ?? '',
-        passageText: createSectionDto.content ?? '',
-        timeLimit: 30, // Default 30 minutes per section
+        instructions: createSectionDto.instructions ?? '',
+        passageText: createSectionDto.passageText ?? '',
+        timeLimit: createSectionDto.timeLimit ?? 30,
         order: createSectionDto.order,
         audioUrl: createSectionDto.audioUrl ?? '',
+        imageUrl: createSectionDto.imageUrl ?? '',
         test: {
           connect: { id: testId },
         },
@@ -311,19 +313,19 @@ export class IeltsService {
     }
 
     if (section.test.createdBy !== userId) {
-      throw new ForbiddenException(
-        'Không có quyền cập nhật phần cho bài test này',
-      );
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsSection.update({
       where: { id: sectionId },
       data: {
         title: updateSectionDto.title,
-        instructions: updateSectionDto.description,
-        passageText: updateSectionDto.content,
+        instructions: updateSectionDto.instructions,
+        passageText: updateSectionDto.passageText,
+        timeLimit: updateSectionDto.timeLimit,
         order: updateSectionDto.order,
         audioUrl: updateSectionDto.audioUrl,
+        imageUrl: updateSectionDto.imageUrl,
       },
     });
   }
@@ -335,11 +337,11 @@ export class IeltsService {
     });
 
     if (!section) {
-      throw new NotFoundException('Không tìm thấy phần');
+      throw new NotFoundException('Section not found');
     }
 
     if (section.test.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xóa phần cho bài test này');
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsSection.delete({
@@ -359,13 +361,11 @@ export class IeltsService {
     });
 
     if (!section) {
-      throw new NotFoundException('Không tìm thấy phần');
+      throw new NotFoundException('Section not found');
     }
 
     if (section.test.createdBy !== userId) {
-      throw new ForbiddenException(
-        'Không có quyền thêm câu hỏi cho bài test này',
-      );
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsQuestion.create({
@@ -387,13 +387,11 @@ export class IeltsService {
     });
 
     if (!question) {
-      throw new NotFoundException('Không tìm thấy câu hỏi');
+      throw new NotFoundException('Question not found');
     }
 
     if (question.section.test.createdBy !== userId) {
-      throw new ForbiddenException(
-        'Không có quyền cập nhật câu hỏi cho bài test này',
-      );
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsQuestion.update({
@@ -409,13 +407,11 @@ export class IeltsService {
     });
 
     if (!question) {
-      throw new NotFoundException('Không tìm thấy câu hỏi');
+      throw new NotFoundException('Question not found');
     }
 
     if (question.section.test.createdBy !== userId) {
-      throw new ForbiddenException(
-        'Không có quyền xóa câu hỏi cho bài test này',
-      );
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsQuestion.delete({
@@ -437,16 +433,20 @@ export class IeltsService {
     });
 
     if (!ieltsTest) {
-      throw new NotFoundException('Không tìm thấy bài test IELTS');
+      throw new NotFoundException('IELTS test not found');
     }
 
-    // Calculate score based on IELTS 9.0 band system
     let totalQuestions = 0;
     let correctAnswersCount = 0;
 
-    // Get all questions from all sections
     const allQuestions = ieltsTest.sections.flatMap((s) => s.questions);
-    totalQuestions = allQuestions.length;
+
+    totalQuestions = allQuestions.reduce((total, question) => {
+      if (question.subQuestions && question.subQuestions.length > 0) {
+        return total + question.subQuestions.length;
+      }
+      return total + 1;
+    }, 0);
 
     const isCorrect = (
       userAnswer: string,
@@ -458,7 +458,6 @@ export class IeltsService {
       if (correctAnswers.length === 1) {
         return userAnswer.trim() === correctAnswers[0].trim();
       }
-      // For multiple answers, assume comma-separated and order-insensitive
       const userAnswersSet = new Set(
         userAnswer.split(',').map((s) => s.trim()),
       );
@@ -474,20 +473,49 @@ export class IeltsService {
       return true;
     };
 
-    // Calculate correct answers
     for (const answer of submitIeltsDto.answers) {
       const question = allQuestions.find((q) => q.id === answer.questionId);
-      if (question && isCorrect(answer.answer, question.correctAnswers)) {
-        correctAnswersCount++;
+      if (question) {
+        if (question.subQuestions && question.subQuestions.length > 0) {
+          let userAnswers: string[] = [];
+
+          try {
+            const parsedAnswer = JSON.parse(answer.answer);
+            if (typeof parsedAnswer === 'object' && parsedAnswer !== null) {
+              userAnswers = Object.keys(parsedAnswer)
+                .sort((a, b) => parseInt(a) - parseInt(b))
+                .map((key) => (parsedAnswer[key] || '').toString().trim());
+            } else {
+              userAnswers = answer.answer.split(',').map((s) => s.trim());
+            }
+          } catch {
+            userAnswers = answer.answer.split(',').map((s) => s.trim());
+          }
+
+          const correctAnswers = question.correctAnswers || [];
+
+          for (let i = 0; i < question.subQuestions.length; i++) {
+            const userSubAnswer = userAnswers[i] || '';
+            const correctSubAnswer = correctAnswers[i] || '';
+
+            if (
+              userSubAnswer.toLowerCase() === correctSubAnswer.toLowerCase()
+            ) {
+              correctAnswersCount++;
+            }
+          }
+        } else {
+          if (isCorrect(answer.answer, question.correctAnswers)) {
+            correctAnswersCount++;
+          }
+        }
       }
     }
 
-    // Calculate percentage and convert to IELTS band score
     const percentage =
       totalQuestions > 0 ? (correctAnswersCount / totalQuestions) * 100 : 0;
     const bandScore = this.convertToIeltsBand(percentage);
 
-    // Create submission
     const submission = await this.prisma.ieltsSubmission.create({
       data: {
         testId,
@@ -504,14 +532,45 @@ export class IeltsService {
       },
     });
 
-    // Create answers
     for (const answer of submitIeltsDto.answers) {
       const question = allQuestions.find((q) => q.id === answer.questionId);
       if (question) {
-        const isAnswerCorrect = isCorrect(
-          answer.answer,
-          question.correctAnswers,
-        );
+        let isAnswerCorrect = false;
+
+        if (question.subQuestions && question.subQuestions.length > 0) {
+          let userAnswers: string[] = [];
+
+          try {
+            const parsedAnswer = JSON.parse(answer.answer);
+            if (typeof parsedAnswer === 'object' && parsedAnswer !== null) {
+              userAnswers = Object.keys(parsedAnswer)
+                .sort((a, b) => parseInt(a) - parseInt(b))
+                .map((key) => (parsedAnswer[key] || '').toString().trim());
+            } else {
+              userAnswers = answer.answer.split(',').map((s) => s.trim());
+            }
+          } catch {
+            userAnswers = answer.answer.split(',').map((s) => s.trim());
+          }
+
+          const correctAnswers = question.correctAnswers || [];
+
+          let correctSubAnswers = 0;
+          for (let i = 0; i < question.subQuestions.length; i++) {
+            const userSubAnswer = userAnswers[i] || '';
+            const correctSubAnswer = correctAnswers[i] || '';
+
+            if (
+              userSubAnswer.toLowerCase() === correctSubAnswer.toLowerCase()
+            ) {
+              correctSubAnswers++;
+            }
+          }
+
+          isAnswerCorrect = correctSubAnswers === question.subQuestions.length;
+        } else {
+          isAnswerCorrect = isCorrect(answer.answer, question.correctAnswers);
+        }
 
         await this.prisma.ieltsAnswer.create({
           data: {
@@ -555,17 +614,13 @@ export class IeltsService {
     return 2.0;
   }
 
-  /**
-   * Generate feedback based on band score and skill
-   */
-
-  private generateFeedback(bandScore: number, skill: string): string {
+  private generateFeedback(bandScore: number, skill: IeltsSkill): string {
     const skillName =
-      skill === 'READING'
+      skill === IeltsSkill.READING
         ? 'Reading'
-        : skill === 'LISTENING'
+        : skill === IeltsSkill.LISTENING
           ? 'Listening'
-          : skill === 'WRITING'
+          : skill === IeltsSkill.WRITING
             ? 'Writing'
             : 'Speaking';
 
@@ -590,11 +645,11 @@ export class IeltsService {
     });
 
     if (!ieltsTest) {
-      throw new NotFoundException('Không tìm thấy bài test IELTS');
+      throw new NotFoundException('IELTS test not found');
     }
 
     if (ieltsTest.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xem bài nộp');
+      throw new ForbiddenException('Forbidden');
     }
 
     return this.prisma.ieltsSubmission.findMany({
@@ -665,7 +720,7 @@ export class IeltsService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp.');
+      throw new NotFoundException('Submission not found');
     }
 
     const currentUser = await this.prisma.user.findUnique({
@@ -673,14 +728,12 @@ export class IeltsService {
     });
 
     const isOwner = submission.userId === userId;
-    // creator of the test
     const isCreator = submission.test.createdBy === userId;
 
-    if (!isOwner && !(isCreator && currentUser?.role === 'TEACHER')) {
-      throw new ForbiddenException('Bạn không có quyền xem kết quả này.');
+    if (!isOwner && !(isCreator && currentUser?.role === Role.TEACHER)) {
+      throw new ForbiddenException('Forbidden');
     }
 
-    // Restructure data for easier frontend consumption
     const testWithUserAnswers = {
       ...submission,
       test: {

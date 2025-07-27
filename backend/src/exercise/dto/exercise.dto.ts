@@ -14,7 +14,8 @@ import { SubjectGradeFilterDto } from '../../common/dto/pagination.dto';
 export enum ExerciseStatus {
   DRAFT = 'DRAFT',
   ACTIVE = 'ACTIVE',
-  CLOSED = 'CLOSED',
+  INACTIVE = 'INACTIVE',
+  OVERDUE = 'OVERDUE',
 }
 
 export class CreateExerciseDto {

@@ -27,9 +27,13 @@ import { AuthForm } from "./components/pages/AuthForm";
 import { DocumentLibrary } from "./components/pages/DocumentLibrary";
 import { IeltsCenter } from "./components/pages/IeltsCenter";
 import { OnlineQuizzes } from "./components/pages/OnlineQuizzes";
+import { QuizManagement } from "./components/pages/QuizManagement";
+import { QuizDashboardPage } from "./components/pages/QuizDashboardPage";
+import { QuizSubmissionView } from "./components/pages/QuizSubmissionView";
 import { WritingGrader } from "./components/pages/WritingGrader";
 import { ExerciseEditor } from "./components/pages/ExerciseEditor";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
+import { IeltsResultPage } from "./components/pages/IeltsResultPage";
 import { Role } from "./types/api";
 
 const RoleBasedRedirect = () => {
@@ -40,10 +44,10 @@ const RoleBasedRedirect = () => {
     isAuthenticated,
     isTeacher,
     user,
-    redirectTo: isTeacher ? "/exercises" : "/quizzes",
+    redirectTo: isTeacher ? "/quiz" : "/quizzes",
   });
 
-  return <Navigate to={isTeacher ? "/exercises" : "/quizzes"} replace />;
+  return <Navigate to={isTeacher ? "/quiz" : "/quizzes"} replace />;
 };
 
 function AppContent() {
@@ -176,10 +180,73 @@ function AppContent() {
           }
         />
 
+        {/* Quiz Management/Dashboard Route */}
+        <Route
+          path="/quiz"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <QuizManagement />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Individual Quiz Dashboard Route */}
+        <Route
+          path="/quiz/dashboard/:quizId"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <QuizDashboardPage />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Quiz Submission View Route */}
+        <Route
+          path="/quiz/submission/:submissionId"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <QuizSubmissionView />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/quiz/:quizId/play"
           element={
             <ProtectedRoute>
+              <main>
+                <OnlineQuizzes />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/quiz/:quizId"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
               <main>
                 <OnlineQuizzes />
               </main>
@@ -209,6 +276,17 @@ function AppContent() {
             <ProtectedRoute>
               <main>
                 <IeltsTestPlayer />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ielts/result/:submissionId"
+          element={
+            <ProtectedRoute>
+              <main>
+                <IeltsResultPage />
               </main>
             </ProtectedRoute>
           }
@@ -260,7 +338,7 @@ function AppContent() {
           path="/management/quizzes"
           element={
             <ProtectedRoute requireAdmin={true}>
-              <Navigate to="/quizzes" replace />
+              <Navigate to="/quiz" replace />
             </ProtectedRoute>
           }
         />

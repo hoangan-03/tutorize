@@ -38,7 +38,7 @@ export const DocumentLibrary: React.FC = () => {
     <div className="p-8">
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
             {t("documents.title")}
           </h1>
           <p className="text-gray-600 mt-2">{t("documents.description")}</p>
@@ -71,7 +71,7 @@ export const DocumentLibrary: React.FC = () => {
                   <option key={subject} value={subject}>
                     {subject === "All"
                       ? t("documents.allSubjects")
-                      : t(`subject.${subject.toLowerCase()}`)}
+                      : t(`subjects.${subject.toLowerCase()}`)}
                   </option>
                 ))}
               </select>
@@ -142,7 +142,7 @@ export const DocumentLibrary: React.FC = () => {
                         {t("documents.grade")} {doc.grade}
                       </Badge>
                       <Badge variant="subject" className="px-2 py-1 text-sm">
-                        {t(`subject.${doc.subject.toLowerCase()}`)}
+                        {t(`subjects.${doc.subject.toLowerCase()}`)}
                       </Badge>
                     </div>
                   </div>

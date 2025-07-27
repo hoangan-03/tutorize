@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Clock,
   BarChart3,
   TrendingUp,
   Download,
-  CheckCircle,
-  XCircle,
   Calendar,
+  Eye,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useDetailedQuizStats } from "../../hooks/useQuiz";
+import { useDetailedQuizStats } from "../../hooks";
 
 interface QuizDashboardProps {
   quiz: any;
@@ -51,6 +51,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   onBack,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { stats, isLoading: loading } = useDetailedQuizStats(quiz?.id);
   const [activeTab, setActiveTab] = useState<
     "overview" | "students" | "questions"
@@ -159,7 +160,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   };
 
   return (
-    <div className="max-w-8xl mx-auto">
+    <div className="max-w-8xl mx-auto px-4 md:px-12 lg:px-36">
       {/* Header */}
       <div className="flex items-center justify-end mb-2">
         <button
@@ -377,20 +378,20 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("quizzes.dashboard.student")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("quizzes.dashboard.score")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("quizzes.dashboard.time")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("quizzes.dashboard.submittedAt")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t("quizzes.dashboard.status")}
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t("quizzes.dashboard.action")}
                   </th>
                 </tr>
               </thead>
@@ -407,9 +408,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                         <span className="font-semibold">
                           {submission.score}
                         </span>
-                        <span className="text-gray-500">
-                          /{submission.totalPoints}
-                        </span>
+                        <span className="text-gray-500">/10</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -418,18 +417,16 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(submission.submittedAt).toLocaleString("vi-VN")}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {submission.score >= 5 ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          {t("quizzes.dashboard.passed")}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          {t("quizzes.dashboard.failed")}
-                        </span>
-                      )}
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() =>
+                          navigate(`/quiz/submission/${submission.id}`)
+                        }
+                        className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        {t("quizzes.dashboard.viewSubmission")}
+                      </button>
                     </td>
                   </tr>
                 ))}

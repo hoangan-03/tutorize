@@ -31,7 +31,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                 <Edit className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
                   {t("exerciseEditorUI.title")}
                 </h1>
               </div>

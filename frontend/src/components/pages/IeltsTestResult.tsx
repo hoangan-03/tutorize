@@ -157,7 +157,9 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
           <div className="flex justify-between items-start">
             <div className="flex flex-col text-start">
-              <h1 className="text-3xl font-bold text-gray-900">{test.title}</h1>
+              <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
+                {test.title}
+              </h1>
               <p className="mt-1 text-sm text-gray-500">
                 {t("ielts.result.submittedOn")}{" "}
                 {new Date(submission.submittedAt).toLocaleDateString("vi-VN", {
@@ -180,7 +182,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
               <p className="text-sm font-medium text-blue-800">
                 {t("ielts.result.bandScore")}
               </p>
-              <p className="mt-1 text-3xl font-bold text-blue-900">
+              <p className="mt-1 text-base md:text-xl lg:text-3xl font-bold text-blue-900">
                 {submission.score.toFixed(1)}
               </p>
             </div>

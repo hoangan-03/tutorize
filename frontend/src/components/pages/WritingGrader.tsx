@@ -62,7 +62,7 @@ export const WritingGrader: React.FC = () => {
     <div className="p-8">
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
             AI Writing Grader
           </h1>
           <p className="text-gray-600 mt-2">
@@ -177,7 +177,7 @@ export const WritingGrader: React.FC = () => {
               <div className="space-y-6">
                 {/* Overall Band Score */}
                 <div className="text-center p-6 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                  <div className="text-base md:text-xl lg:text-3xl font-bold text-blue-600 mb-2">
                     {analysisResult.overallBand}
                   </div>
                   <div className="text-gray-600">Điểm tổng IELTS Writing</div>

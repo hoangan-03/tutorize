@@ -1,11 +1,9 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import { useIeltsTest, useIeltsTestManagement } from "../../hooks/useIelts";
-import { IeltsQuestion, IeltsQuestionType } from "../../types/api";
+import { useParams, useNavigate } from "react-router-dom";
+import { IeltsQuestion, IeltsQuestionType, IeltsTest } from "../../types/api";
+import { useAuth, useIeltsTest, useIeltsTestManagement, useModal } from "../../hooks";
 
-// Store complex answers as a JSON string for simplicity
 export type Answer = string;
 export type AnswerState = Record<number, Answer>;
 
@@ -20,7 +18,7 @@ const QuestionRenderer: React.FC<{
     try {
       return userAnswer ? JSON.parse(userAnswer) : {};
     } catch {
-      return {}; // Handle cases where answer is not a valid JSON
+      return {};
     }
   }, [userAnswer]);
 
@@ -28,7 +26,7 @@ const QuestionRenderer: React.FC<{
 
   switch (question.type) {
     case IeltsQuestionType.MULTIPLE_CHOICE: {
-      // This type does not have sub-questions, it's a single question
+      // does not have sub-questions, it's a single question
       return (
         <div className="space-y-2 mt-2">
           <p className="font-semibold text-gray-800 text-start">
@@ -250,64 +248,196 @@ export const IeltsTestPlayer: React.FC = () => {
   const { t } = useTranslation();
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
+  const { showSuccess } = useModal();
   const { user } = useAuth();
+
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [answers, setAnswers] = useState<AnswerState>({});
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [testStartTime, setTestStartTime] = useState<number>(0);
+  const [currentTest, setCurrentTest] = useState<IeltsTest | null>(null);
+
   const {
     test,
     isLoading: loading,
     error,
   } = useIeltsTest(testId ? Number(testId) : null);
   const { submitTest } = useIeltsTestManagement();
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
 
-  // Key for localStorage
-  const storageKey = useMemo(
-    () => `ielts-attempt-${user?.id}-${testId}`,
-    [user?.id, testId]
-  );
+  const storageKey = useMemo(() => {
+    if (!user || !testId) return null;
+    return `ielts-attempt-${user?.id}-${testId}`;
+  }, [user, testId]);
 
-  // State initialization from localStorage
-  const [answers, setAnswers] = useState<AnswerState>(() => {
-    const savedState = localStorage.getItem(storageKey);
-    return savedState ? JSON.parse(savedState).answers : {};
-  });
-  const [timeLeft, setTimeLeft] = useState<number>(() => {
-    if (test) {
-      const savedState = localStorage.getItem(storageKey);
-      return savedState ? JSON.parse(savedState).timeLeft : test.timeLimit * 60;
+  useEffect(() => {
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const state = JSON.parse(saved);
+          const maxAge = 6 * 60 * 60 * 1000; // 6 hours
+          if (state.timestamp && Date.now() - state.timestamp < maxAge) {
+            setAnswers(state.answers || {});
+            setCurrentSectionIndex(state.currentSectionIndex || 0);
+            setTestStartTime(state.testStartTime || Date.now());
+
+            const elapsedSinceLastSave = Math.floor(
+              (Date.now() - state.timestamp) / 1000
+            );
+            const adjustedTimeLeft = Math.max(
+              0,
+              (state.timeLeft || 0) - elapsedSinceLastSave
+            );
+            setTimeLeft(adjustedTimeLeft);
+          } else {
+            localStorage.removeItem(storageKey);
+          }
+        } catch (error) {
+          console.error("Error parsing saved IELTS state:", error);
+          localStorage.removeItem(storageKey);
+        }
+      }
     }
-    return 0;
-  });
+  }, [storageKey]);
 
-  // Initialize timeLeft when test loads
-  React.useEffect(() => {
-    if (test && timeLeft === 0) {
-      const savedState = localStorage.getItem(storageKey);
-      setTimeLeft(
-        savedState ? JSON.parse(savedState).timeLeft : test.timeLimit * 60
-      );
-    }
-  }, [test, storageKey, timeLeft]);
-
-  // Persist state to localStorage on change
-  React.useEffect(() => {
-    if (test) {
-      // Only save if the test has loaded
-      const stateToSave = { answers, timeLeft };
+  useEffect(() => {
+    if (storageKey && currentTest) {
+      const stateToSave = {
+        answers,
+        timeLeft,
+        currentSectionIndex,
+        testStartTime,
+        testId: currentTest.id,
+        timestamp: Date.now(),
+      };
       localStorage.setItem(storageKey, JSON.stringify(stateToSave));
     }
-  }, [answers, timeLeft, storageKey, test]);
+  }, [
+    answers,
+    timeLeft,
+    currentSectionIndex,
+    storageKey,
+    currentTest,
+    testStartTime,
+  ]);
 
-  // Clean up localStorage on unload (navigate away, close tab, etc.)
-  useBeforeUnload(
-    useCallback(() => {
-      localStorage.removeItem(storageKey);
-    }, [storageKey])
-  );
+  useEffect(() => {
+    if (test && !currentTest) {
+      beginIeltsAttempt(test.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [test, currentTest]);
+
+  useEffect(() => {
+    if (!testId) {
+      setCurrentTest(null);
+      setCurrentSectionIndex(0);
+      setAnswers({});
+      setTimeLeft(0);
+    }
+  }, [testId]);
 
   const clearAttemptAndNavigate = useCallback(() => {
-    localStorage.removeItem(storageKey);
-    navigate("/ielts");
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+
+    setCurrentTest(null);
+    setCurrentSectionIndex(0);
+    setAnswers({});
+    setTimeLeft(0);
+
+    navigate("/ielts", { replace: true });
   }, [storageKey, navigate]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (currentTest && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setTimeout(async () => {
+              try {
+                showSuccess(
+                  "Hết giờ làm bài! Hệ thống đang tự động nộp bài...",
+                  {
+                    title: "Hết thời gian",
+                    autoClose: true,
+                    autoCloseDelay: 5000,
+                  }
+                );
+                await handleSubmit(true);
+              } catch (error) {
+                console.error("Error during auto-submit:", error);
+                clearAttemptAndNavigate();
+              }
+            }, 100);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTest, timeLeft]);
+
+  const beginIeltsAttempt = async (id: number) => {
+    try {
+      if (!id || id <= 0) {
+        console.error("Invalid test ID:", id);
+        return;
+      }
+      const detailedTest = test;
+      if (!detailedTest) {
+        console.log("No test data available, will retry when data loads");
+        return;
+      }
+
+      if (!detailedTest.sections || detailedTest.sections.length === 0) {
+        alert("This IELTS test has no sections to complete.");
+        clearAttemptAndNavigate();
+        return;
+      }
+
+      const savedState = storageKey ? localStorage.getItem(storageKey) : null;
+      let hasValidSavedState = false;
+
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState);
+          const maxAge = 6 * 60 * 60 * 1000;
+          if (
+            state.timestamp &&
+            Date.now() - state.timestamp < maxAge &&
+            state.testId === id
+          ) {
+            hasValidSavedState = true;
+            console.log(
+              "Found valid saved state, will preserve timer and progress"
+            );
+          }
+        } catch (error) {
+          console.error("Error checking saved state:", error);
+        }
+      }
+
+      setCurrentTest(detailedTest);
+
+      if (!hasValidSavedState) {
+        setTestStartTime(Date.now());
+        setTimeLeft((detailedTest.timeLimit || 15) * 60);
+        setCurrentSectionIndex(0);
+        setAnswers({});
+      }
+    } catch (error) {
+      console.error("Error beginning IELTS attempt:", error);
+    }
+  };
 
   const handleSubmit = useCallback(
     async (isAutoSubmit = false) => {
@@ -332,41 +462,18 @@ export const IeltsTestPlayer: React.FC = () => {
     [answers, testId, clearAttemptAndNavigate, t, submitTest]
   );
 
-  // Timer countdown effect
-  React.useEffect(() => {
-    if (timeLeft <= 0 || !test) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        const newTime = prev - 1;
-        if (newTime <= 0) {
-          // Auto-submit when time is up
-          handleSubmit(true);
-          return 0;
-        }
-        return newTime;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft, test, handleSubmit]);
-
   const handleExit = () => {
     if (window.confirm(t("ielts.player.exitConfirm"))) {
       clearAttemptAndNavigate();
-      if (timeLeft === 1) {
-        // Auto-submit when time is up
-        handleSubmit(true);
-      }
     }
   };
 
   const questionNumberOffsets = useMemo(() => {
-    if (!test) return [];
+    if (!currentTest) return [];
     const offsets = [0];
     let total = 0;
-    for (let i = 0; i < (test.sections?.length || 0) - 1; i++) {
-      const section = test.sections![i];
+    for (let i = 0; i < (currentTest.sections?.length || 0) - 1; i++) {
+      const section = currentTest.sections![i];
       let sectionQuestions = 0;
       (section.questions || []).forEach((q) => {
         sectionQuestions += Math.max(1, (q.subQuestions || []).length);
@@ -375,12 +482,12 @@ export const IeltsTestPlayer: React.FC = () => {
       offsets.push(total);
     }
     return offsets;
-  }, [test]);
+  }, [currentTest]);
 
   const currentSection = useMemo(() => {
-    if (!test || !test.sections) return null;
-    return test.sections[currentSectionIndex];
-  }, [test, currentSectionIndex]);
+    if (!currentTest || !currentTest.sections) return null;
+    return currentTest.sections[currentSectionIndex];
+  }, [currentTest, currentSectionIndex]);
 
   const handleAnswerChange = useCallback(
     (questionId: number, answer: Answer) => {
@@ -402,7 +509,7 @@ export const IeltsTestPlayer: React.FC = () => {
     return <div className="p-8 text-center text-red-600">{error}</div>;
   }
 
-  if (!test || !currentSection) {
+  if (!currentTest || !currentSection) {
     return <div className="p-8 text-center">{t("ielts.player.notFound")}</div>;
   }
 
@@ -415,14 +522,16 @@ export const IeltsTestPlayer: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 h-screen">
       {/* Header */}
       <div className="bg-white shadow-md rounded-lg p-4 mb-6 sticky top-0 z-10 flex justify-between items-center">
         <div className="text-start">
-          <h1 className="text-2xl font-bold text-gray-900">{test.title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {currentTest.title}
+          </h1>
           <p className="mt-1 text-sm text-gray-600">
             {t("ielts.player.section")} {currentSectionIndex + 1} /{" "}
-            {test.sections?.length || 0}: {currentSection.title}
+            {currentTest.sections?.length || 0}: {currentSection.title}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -447,7 +556,7 @@ export const IeltsTestPlayer: React.FC = () => {
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left side: Passage/Audio/Image */}
-        <div className="bg-white p-6 rounded-lg shadow-sm h-full max-h-[70vh] overflow-y-auto">
+        <div className="bg-white p-6 rounded-lg shadow-sm h-full max-h-[60vh] overflow-y-auto">
           <h2 className="text-lg font-semibold mb-4">{currentSection.title}</h2>
           {currentSection.audioUrl && (
             <div className="mb-4">
@@ -474,7 +583,7 @@ export const IeltsTestPlayer: React.FC = () => {
         </div>
 
         {/* Right side: Questions */}
-        <div className="bg-white p-6 rounded-lg shadow-sm h-full max-h-[70vh] overflow-y-auto">
+        <div className="bg-white p-6 rounded-lg shadow-sm h-full max-h-[60vh] overflow-y-auto">
           <div className="space-y-8">
             {(currentSection.questions || []).map((q, groupIndex) => {
               const offsetWithinSection = (currentSection.questions || [])
@@ -522,10 +631,12 @@ export const IeltsTestPlayer: React.FC = () => {
           <button
             onClick={() =>
               setCurrentSectionIndex((prev) =>
-                Math.min((test.sections?.length || 1) - 1, prev + 1)
+                Math.min((currentTest.sections?.length || 1) - 1, prev + 1)
               )
             }
-            disabled={currentSectionIndex === (test.sections?.length || 1) - 1}
+            disabled={
+              currentSectionIndex === (currentTest.sections?.length || 1) - 1
+            }
             className="ml-3 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
             {t("ielts.player.nextSection")}

@@ -262,6 +262,49 @@ export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
               />
             </div>
 
+            <div>
+              <label
+                htmlFor="imageUrl"
+                className="block text-sm font-medium text-gray-700"
+              >
+                URL Hình ảnh (Tùy chọn)
+              </label>
+              <input
+                type="text"
+                name="imageUrl"
+                id="imageUrl"
+                value={questionData.imageUrl || ""}
+                onChange={handleInputChange}
+                className={inputClass}
+                placeholder="https://example.com/question-image.jpg"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Hình ảnh đi kèm với câu hỏi (cho Diagram Labeling, Map, Chart,
+                etc.)
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="explanation"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Giải thích đáp án (Tùy chọn)
+              </label>
+              <textarea
+                name="explanation"
+                id="explanation"
+                value={questionData.explanation || ""}
+                onChange={handleInputChange}
+                rows={3}
+                className={textareaClass}
+                placeholder="Giải thích tại sao đáp án này là đúng..."
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Giúp học viên hiểu rõ lý do của đáp án đúng
+              </p>
+            </div>
+
             {/* Dynamic Fields based on Type */}
             <div className="space-y-6 pt-4 border-t border-gray-200">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">

@@ -17,19 +17,26 @@ import {
   ArrowLeft,
   RotateCw,
 } from "lucide-react";
+import { quizService } from "../../services/quizService";
+
 import {
-  useQuizzes,
-  useQuizTaking,
-  useStudentStats,
-  useQuiz,
-  useQuizSubmissionHistory,
-} from "../../hooks/useQuiz";
-import { Question, Quiz, QuizSubmission, Role } from "../../types/api";
+  Question,
+  Quiz,
+  QuizStatus,
+  QuizSubmission,
+  Role,
+} from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { Badge } from "../ui/Badge";
 
-import { useModal } from "../../hooks/useModal";
-import { QuizManagement } from "./QuizManagement";
+import {
+  useModal,
+  useQuiz,
+  useQuizSubmissionHistory,
+  useQuizTaking,
+  useQuizzes,
+  useStudentStats,
+} from "../../hooks";
 
 // Student Quiz Component
 const StudentQuizView: React.FC = () => {
@@ -56,13 +63,16 @@ const StudentQuizView: React.FC = () => {
 
   // Dynamic hooks for specific quiz
   const parsedQuizId = quizId ? parseInt(quizId) : null;
-  const { quiz: detailedQuizData, mutate: refetchQuiz } = useQuiz(
-    currentView === "quiz" || currentView === "teacher-view"
+  const isPlayRoute = window.location.pathname.includes("/play");
+
+  const { quiz: detailedQuizData } = useQuiz(
+    currentView === "quiz" || currentView === "teacher-view" || isPlayRoute
       ? parsedQuizId
       : null
   );
-  const { submissionHistory, mutate: refetchSubmissionHistory } =
-    useQuizSubmissionHistory(currentView === "result" ? parsedQuizId : null);
+  const { submissionHistory } = useQuizSubmissionHistory(
+    currentView === "result" || (quizId && !isPlayRoute) ? parsedQuizId : null
+  );
   const [quizResults, setQuizResults] = useState<{
     score?: number;
     totalQuestions?: number;
@@ -98,18 +108,22 @@ const StudentQuizView: React.FC = () => {
       if (saved) {
         try {
           const state = JSON.parse(saved);
-          // Check if saved state is not too old (max 6 hours)
-          const maxAge = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+          const maxAge = 6 * 60 * 60 * 1000; // 6 hours
           if (state.timestamp && Date.now() - state.timestamp < maxAge) {
             setSelectedAnswers(state.answers || []);
-            setTimeLeft(state.timeLeft || 0);
             setCurrentQuestionIndex(state.currentQuestionIndex || 0);
             setQuizStartTime(state.quizStartTime || Date.now());
-            console.log("Restored quiz state from localStorage:", state);
+
+            const elapsedSinceLastSave = Math.floor(
+              (Date.now() - state.timestamp) / 1000
+            );
+            const adjustedTimeLeft = Math.max(
+              0,
+              (state.timeLeft || 0) - elapsedSinceLastSave
+            );
+            setTimeLeft(adjustedTimeLeft);
           } else {
-            // State is too old, remove it
             localStorage.removeItem(storageKey);
-            console.log("Removed old quiz state from localStorage");
           }
         } catch (error) {
           console.error("Error parsing saved quiz state:", error);
@@ -143,10 +157,78 @@ const StudentQuizView: React.FC = () => {
   ]);
 
   useEffect(() => {
+    // Check if this is a play route (direct quiz taking)
+    const isPlayRoute = window.location.pathname.includes("/play");
+
     if (quizId && !currentQuiz) {
-      beginQuizAttempt(Number(quizId));
+      if (isPlayRoute) {
+        // Direct quiz taking - this will trigger beginQuizAttempt when detailedQuizData loads
+        console.log(
+          "Play route detected, will begin quiz attempt when data loads"
+        );
+      } else {
+        // Load quiz for history/results view - this will use the submission history hook
+        console.log("History route detected, will load submission history");
+      }
     }
   }, [quizId, currentQuiz]);
+
+  // Handle when quiz data loads for play route
+  useEffect(() => {
+    const isPlayRoute = window.location.pathname.includes("/play");
+
+    if (isPlayRoute && detailedQuizData && !currentQuiz) {
+      beginQuizAttempt(detailedQuizData.id);
+    }
+  }, [detailedQuizData, currentQuiz]);
+
+  // Handle when submission history loads for history route
+  useEffect(() => {
+    const isPlayRoute = window.location.pathname.includes("/play");
+
+    if (!isPlayRoute && quizId && submissionHistory && !currentQuiz) {
+      if (isTeacher) {
+        setCurrentQuiz(detailedQuizData || null);
+        setCurrentView("teacher-view");
+      } else if (
+        submissionHistory.submissions &&
+        submissionHistory.submissions.length > 0
+      ) {
+        // User has taken this quiz, show history view
+        setCurrentQuiz(submissionHistory.quiz);
+        setQuizResults({
+          ...submissionHistory,
+          passed: false, // Default value since this is submission history view
+          isSubmissionHistory: true,
+        });
+        setCurrentView("result");
+      } else {
+        // No submissions, redirect to play mode
+        navigate(`/quiz/${quizId}/play`);
+      }
+    }
+  }, [
+    submissionHistory,
+    quizId,
+    currentQuiz,
+    isTeacher,
+    navigate,
+    detailedQuizData,
+  ]);
+
+  // Load quiz list when no specific quiz is being viewed
+  useEffect(() => {
+    if (!quizId) {
+      // Load the list of quizzes when no specific quiz is selected
+      // Reset all quiz-related state when navigating back to quiz list
+      setCurrentView("list");
+      setCurrentQuiz(null);
+      setCurrentQuestionIndex(0);
+      setSelectedAnswers([]);
+      setQuizResults(null);
+      setTimeLeft(0);
+    }
+  }, [quizId]);
 
   const clearAttemptAndNavigate = useCallback(() => {
     if (storageKey) {
@@ -162,7 +244,7 @@ const StudentQuizView: React.FC = () => {
     setTimeLeft(0);
 
     // Navigate to quiz list
-    navigate("/quizzes");
+    navigate("/quizzes", { replace: true });
   }, [storageKey, navigate]);
 
   // Timer effect for countdown
@@ -176,7 +258,6 @@ const StudentQuizView: React.FC = () => {
             // Auto submit when time runs out - use setTimeout to avoid blocking the state update
             setTimeout(async () => {
               try {
-                console.log("Time's up! Showing auto-submit message...");
                 showSuccess(
                   "Hết giờ làm bài! Hệ thống đang tự động nộp bài...",
                   {
@@ -185,13 +266,9 @@ const StudentQuizView: React.FC = () => {
                     autoCloseDelay: 5000,
                   }
                 );
-                console.log(
-                  "Auto-submit message shown, now calling finishQuiz..."
-                );
                 await finishQuiz(true);
               } catch (error) {
                 console.error("Error during auto-submit:", error);
-                // Force navigation back on error - no alert needed as finishQuiz already handles it
                 clearAttemptAndNavigate();
               }
             }, 100);
@@ -275,11 +352,11 @@ const StudentQuizView: React.FC = () => {
 
       console.log("Beginning quiz attempt for ID:", id);
 
-      // Use the data from the hook if available, otherwise fetch
+      // Use the data from the hook if available
       const detailedQuiz = detailedQuizData;
       if (!detailedQuiz) {
-        refetchQuiz();
-        return; // Let the hook refetch trigger the data
+        console.log("No quiz data available, will retry when data loads");
+        return; // Let the hook load the data
       }
 
       if (!detailedQuiz.questions || detailedQuiz.questions.length === 0) {
@@ -288,13 +365,46 @@ const StudentQuizView: React.FC = () => {
         return;
       }
 
+      // Check if there's saved state to restore
+      const savedState = storageKey ? localStorage.getItem(storageKey) : null;
+      let hasValidSavedState = false;
+
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState);
+          const maxAge = 6 * 60 * 60 * 1000;
+          if (
+            state.timestamp &&
+            Date.now() - state.timestamp < maxAge &&
+            state.quizId === id
+          ) {
+            hasValidSavedState = true;
+            console.log(
+              "Found valid saved state, will preserve timer and progress"
+            );
+          }
+        } catch (error) {
+          console.error("Error checking saved state:", error);
+        }
+      }
+
       setCurrentQuiz(detailedQuiz);
       setCurrentView("quiz");
-      setQuizStartTime(Date.now());
-      setTimeLeft((detailedQuiz.timeLimit || 15) * 60);
-      setCurrentQuestionIndex(0);
-      setSelectedAnswers([]);
+
+      // Only reset timer and progress if there's no valid saved state
+      if (!hasValidSavedState) {
+        setQuizStartTime(Date.now());
+        setTimeLeft((detailedQuiz.timeLimit || 15) * 60);
+        setCurrentQuestionIndex(0);
+        setSelectedAnswers([]);
+        console.log("Starting fresh quiz attempt");
+      } else {
+        console.log("Preserving existing quiz state from localStorage");
+      }
+
       setQuizResults(null);
+
+      console.log("Quiz attempt started successfully for:", detailedQuiz.title);
     } catch (error: unknown) {
       console.error("Lỗi khi bắt đầu lượt làm bài mới:", error);
 
@@ -323,7 +433,9 @@ const StudentQuizView: React.FC = () => {
         return;
       }
 
-      // For students, navigate to show submission history or start quiz
+      // For students, check if they have submission history first
+      // This will be handled by navigating to the quiz route which will load the submission history
+      // If there are submissions, it will show history, if not, it will redirect to /play
       navigate(`/quiz/${quiz.id}`);
     } catch (error) {
       console.error("Lỗi khi tải chi tiết quiz:", error);
@@ -405,23 +517,18 @@ const StudentQuizView: React.FC = () => {
           submitData
         );
 
-        // Refresh submission history
-        refetchSubmissionHistory();
+        // Fetch fresh submission history directly from API (bypassing cache)
+        console.log("Fetching fresh submission history directly from API...");
+        const freshSubmissionHistory =
+          await quizService.getQuizSubmissionHistory(currentQuiz.id);
 
-        // Use the updated submission history from hook
-        const submissionHistoryData = submissionHistory || {
-          submissions: [],
-          canRetake: false,
-          remainingAttempts: 0,
-          currentAttempt: 1,
-          maxScore: null,
-          quiz: currentQuiz,
-        };
-
-        console.log("SubmissionHistory response:", submissionHistoryData);
         console.log(
-          "maxScore from submissionHistory:",
-          submissionHistoryData.maxScore
+          "Fresh SubmissionHistory response:",
+          freshSubmissionHistory
+        );
+        console.log(
+          "maxScore from fresh submissionHistory:",
+          freshSubmissionHistory.maxScore
         );
 
         // Calculate results from submission
@@ -431,13 +538,13 @@ const StudentQuizView: React.FC = () => {
           passed: submission.score / submission.totalPoints >= 0.7,
           submission: submission,
           isAutoSubmit: isAutoSubmit,
-          submissions: submissionHistoryData.submissions,
-          canRetake: submissionHistoryData.canRetake,
-          remainingAttempts: submissionHistoryData.remainingAttempts,
-          currentAttempt: submissionHistoryData.currentAttempt,
-          maxScore: submissionHistoryData.maxScore ?? undefined, // Convert null to undefined
+          submissions: freshSubmissionHistory.submissions,
+          canRetake: freshSubmissionHistory.canRetake,
+          remainingAttempts: freshSubmissionHistory.remainingAttempts,
+          currentAttempt: freshSubmissionHistory.currentAttempt,
+          maxScore: freshSubmissionHistory.maxScore ?? undefined, // Convert null to undefined
           isSubmissionHistory: true,
-          quiz: submissionHistoryData.quiz || currentQuiz, // Ensure quiz info is preserved
+          quiz: freshSubmissionHistory.quiz || currentQuiz, // Ensure quiz info is preserved
         };
 
         if (isAutoSubmit) {
@@ -1110,7 +1217,7 @@ const StudentQuizView: React.FC = () => {
           <div className="max-w-6xl mx-auto">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
               <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   {currentQuiz?.title}
                 </h1>
               </div>
@@ -1267,7 +1374,7 @@ const StudentQuizView: React.FC = () => {
               {quizResults.passed ? (
                 <div className="text-green-600">
                   <CheckCircle className="h-16 w-16 mx-auto mb-4" />
-                  <h1 className="text-3xl font-bold">
+                  <h1 className="text-base md:text-xl lg:text-3xl font-bold">
                     {t("quizzes.congratulations")}
                   </h1>
                   <p className="text-lg text-gray-600 mt-2">
@@ -1277,7 +1384,7 @@ const StudentQuizView: React.FC = () => {
               ) : (
                 <div className="text-red-600">
                   <XCircle className="h-16 w-16 mx-auto mb-4" />
-                  <h1 className="text-3xl font-bold">
+                  <h1 className="text-base md:text-xl lg:text-3xl font-bold">
                     {t("quizzes.tryHarder")}
                   </h1>
                   <p className="text-lg text-gray-600 mt-2">
@@ -1379,15 +1486,32 @@ const StudentQuizView: React.FC = () => {
     );
   }
 
+  // Show loading when there's a quizId but no quiz data or currentView is still "list"
+  if (quizId && !currentQuiz && currentView === "list") {
+    return (
+      <div className="p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              {t("common.loading")}
+            </h2>
+            <p className="text-gray-600">Đang tải quiz...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:px-12 lg:px-36 md:py-12">
       <div className="max-w-8xl mx-auto">
         {/* Page Header */}
         <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
           <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-white">
+              <h1 className="text-xl md:text-2xl lg:text-4xl font-bold text-white">
                 {isTeacher
                   ? t("quizzes.quizManagement")
                   : t("quizzes.onlineQuizzes")}
@@ -1572,7 +1696,11 @@ const StudentQuizView: React.FC = () => {
                       </div>
                       <div className="ml-2 flex flex-row items-center gap-2">
                         <p className="text-xl font-semibold text-gray-900">
-                          {quizzes.filter((q) => q.status === "ACTIVE").length}
+                          {
+                            quizzes.filter(
+                              (q) => q.status === QuizStatus.ACTIVE
+                            ).length
+                          }
                         </p>
                         <p className="text-base font-medium text-gray-600">
                           {t("quizzes.active")}
@@ -1608,7 +1736,10 @@ const StudentQuizView: React.FC = () => {
                       </div>
                       <div className="ml-2 flex flex-row items-center gap-2">
                         <p className="text-xl font-semibold text-gray-900">
-                          {quizzes.filter((q) => q.status === "DRAFT").length}
+                          {
+                            quizzes.filter((q) => q.status === QuizStatus.DRAFT)
+                              .length
+                          }
                         </p>
                         <p className="text-base font-medium text-gray-600">
                           {t("quizzes.draft")}
@@ -1640,7 +1771,7 @@ const StudentQuizView: React.FC = () => {
                         )}
                         <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
                           <Badge variant="subject">
-                            {t(`subject.${quiz.subject.toLowerCase()}`)}
+                            {t(`subjects.${quiz.subject.toLowerCase()}`)}
                           </Badge>
                           <Badge variant="grade">
                             {t("exercises.class")} {quiz.grade || "Chung"}
@@ -1648,20 +1779,21 @@ const StudentQuizView: React.FC = () => {
                           <Badge
                             variant="status"
                             className={`${
-                              (quiz.status as string) === "ACTIVE"
+                              (quiz.status as string) === QuizStatus.ACTIVE
                                 ? "bg-green-100 text-green-800"
-                                : (quiz.status as string) === "DRAFT"
+                                : (quiz.status as string) ===
+                                  QuizStatus.INACTIVE
                                 ? "bg-yellow-100 text-yellow-800"
-                                : (quiz.status as string) === "OVERDUE"
+                                : (quiz.status as string) === QuizStatus.OVERDUE
                                 ? "bg-orange-100 text-orange-800"
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >
-                            {(quiz.status as string) === "ACTIVE"
+                            {(quiz.status as string) === QuizStatus.ACTIVE
                               ? t("status.active")
-                              : (quiz.status as string) === "DRAFT"
+                              : (quiz.status as string) === QuizStatus.DRAFT
                               ? t("status.draft")
-                              : (quiz.status as string) === "OVERDUE"
+                              : (quiz.status as string) === QuizStatus.OVERDUE
                               ? t("status.overdue")
                               : t("status.inactive")}
                           </Badge>
@@ -1694,9 +1826,9 @@ const StudentQuizView: React.FC = () => {
 
                     <button
                       onClick={() => startQuiz(quiz)}
-                      disabled={quiz.status !== "ACTIVE" && !isTeacher}
+                      disabled={quiz.status !== QuizStatus.ACTIVE && !isTeacher}
                       className={`w-full flex text-sm items-center font-bold justify-center px-4 py-2 rounded-md transition-colors ${
-                        quiz.status !== "ACTIVE" && !isTeacher
+                        quiz.status !== QuizStatus.ACTIVE && !isTeacher
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                           : isTeacher
                           ? "bg-green-700 text-white hover:bg-green-800"
@@ -1732,16 +1864,7 @@ const StudentQuizView: React.FC = () => {
   );
 };
 
-// Main OnlineQuizzes component
 export const OnlineQuizzes: React.FC = () => {
-  const { user } = useAuth();
-  const isTeacher = user?.role === "TEACHER";
-
-  // If user is a teacher, show QuizManagement
-  if (isTeacher) {
-    return <QuizManagement />;
-  }
-
-  // If user is a student, show StudentQuizView
+  // Always show StudentQuizView - teachers will use the separate quiz dashboard route
   return <StudentQuizView />;
 };

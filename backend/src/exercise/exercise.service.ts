@@ -175,7 +175,7 @@ export class ExerciseService {
       user?.role === 'TEACHER' || exercise.createdBy === userId;
 
     if (!canSeeAnswers) {
-      throw new ForbiddenException('Không có quyền xem đáp án');
+      throw new ForbiddenException('Forbidden');
     }
 
     // Get exercise with all details including answers
@@ -365,7 +365,7 @@ export class ExerciseService {
     }
 
     if (user?.role !== $Enums.Role.TEACHER && exercise.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xem bài nộp');
+      throw new ForbiddenException('Forbidden');
     }
 
     const submissions = await this.prisma.exerciseSubmission.findMany({

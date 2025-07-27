@@ -61,7 +61,8 @@ export enum SubmissionStatus {
 export enum ExerciseStatus {
   DRAFT = "DRAFT",
   ACTIVE = "ACTIVE",
-  CLOSED = "CLOSED",
+  INACTIVE = "INACTIVE",
+  OVERDUE = "OVERDUE",
 }
 
 export enum DocumentType {
@@ -453,13 +454,20 @@ export interface IeltsQuestion {
   answers?: IeltsAnswer[];
 }
 
+export interface IeltsDetailedScores {
+  correctAnswers: number;
+  totalQuestions: number;
+  percentage: number;
+  sectionScores?: Record<string, number>;
+}
+
 export interface IeltsSubmission {
   id: number;
   testId: number;
   userId: number;
   skill: IeltsSkill;
   score: number;
-  detailedScores: Record<string, unknown>;
+  detailedScores: IeltsDetailedScores;
   feedback: string;
   submittedAt: string;
   gradedAt?: string;

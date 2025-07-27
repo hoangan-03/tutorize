@@ -81,7 +81,7 @@ export const exerciseService = {
 
   async closeExercise(id: number): Promise<Exercise> {
     const response = await api.patch<Exercise>(`/exercises/${id}/status`, {
-      status: ExerciseStatus.CLOSED,
+      status: ExerciseStatus.INACTIVE,
     });
     return response.data;
   },
@@ -95,7 +95,7 @@ export const exerciseService = {
 
   async archiveExercise(id: number): Promise<Exercise> {
     const response = await api.patch<Exercise>(`/exercises/${id}/status`, {
-      status: ExerciseStatus.CLOSED,
+      status: ExerciseStatus.INACTIVE,
     });
     return response.data;
   },

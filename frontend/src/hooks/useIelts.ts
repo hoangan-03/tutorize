@@ -162,31 +162,56 @@ export const useIeltsTestManagement = () => {
   const createTest = async (testData: Partial<IeltsTest>) => {
     const newTest = await ieltsService.createTest(testData);
     toast.success("Test created successfully!");
-    mutate(["/ielts/tests"]);
+    // Invalidate all test list caches with any params
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
     return newTest;
   };
 
   const updateTest = async (testId: number, testData: Partial<IeltsTest>) => {
     const updatedTest = await ieltsService.updateTest(testId, testData);
     toast.success("Test updated successfully!");
-    mutate(`/ielts/tests/${testId}`);
-    mutate(`/ielts/tests/${testId}/with-answers`);
-    mutate(["/ielts/tests"]);
+    // Invalidate specific test caches
+    mutate(`/ielts/tests/${testId}`, undefined, { revalidate: true });
+    mutate(`/ielts/tests/${testId}/with-answers`, undefined, {
+      revalidate: true,
+    });
+    // Invalidate all test list caches with any params
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
     return updatedTest;
   };
 
   const deleteTest = async (testId: number) => {
     await ieltsService.deleteTest(testId);
     toast.success("Test deleted successfully!");
-    mutate(["/ielts/tests"]);
+    // Invalidate all test list caches with any params
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
+    // Also invalidate the specific test cache
+    mutate(`/ielts/tests/${testId}`, undefined, { revalidate: false });
+    mutate(`/ielts/tests/${testId}/with-answers`, undefined, {
+      revalidate: false,
+    });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const submitTest = async (testId: number, submissionData: any) => {
     const result = await ieltsService.submitTest(testId, submissionData);
     toast.success("Test submitted successfully!");
-    mutate("/ielts/submissions/my");
-    mutate(`/ielts/tests/${testId}/submissions`);
+    mutate("/ielts/submissions/my", undefined, { revalidate: true });
+    mutate(`/ielts/tests/${testId}/submissions`, undefined, {
+      revalidate: true,
+    });
     return result;
   };
 
@@ -206,8 +231,17 @@ export const useIeltsSectionManagement = () => {
   ) => {
     const newSection = await ieltsService.createSection(testId, sectionData);
     toast.success("Section created successfully!");
-    mutate(`/ielts/tests/${testId}`);
-    mutate(`/ielts/tests/${testId}/with-answers`);
+    // Invalidate specific test caches
+    mutate(`/ielts/tests/${testId}`, undefined, { revalidate: true });
+    mutate(`/ielts/tests/${testId}/with-answers`, undefined, {
+      revalidate: true,
+    });
+    // Invalidate all test list caches
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
     return newSection;
   };
 
@@ -221,7 +255,17 @@ export const useIeltsSectionManagement = () => {
     );
     toast.success("Section updated successfully!");
     // Mutate all related test caches
-    mutate((key) => typeof key === "string" && key.includes("/ielts/tests/"));
+    mutate(
+      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      undefined,
+      { revalidate: true }
+    );
+    // Also invalidate test lists
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
     return updatedSection;
   };
 
@@ -229,7 +273,17 @@ export const useIeltsSectionManagement = () => {
     await ieltsService.removeSection(sectionId);
     toast.success("Section removed successfully!");
     // Mutate all related test caches
-    mutate((key) => typeof key === "string" && key.includes("/ielts/tests/"));
+    mutate(
+      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      undefined,
+      { revalidate: true }
+    );
+    // Also invalidate test lists
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
   };
 
   return {
@@ -251,7 +305,17 @@ export const useIeltsQuestionManagement = () => {
     );
     toast.success("Question created successfully!");
     // Mutate all related test caches
-    mutate((key) => typeof key === "string" && key.includes("/ielts/tests/"));
+    mutate(
+      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      undefined,
+      { revalidate: true }
+    );
+    // Also invalidate test lists
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
     return newQuestion;
   };
 
@@ -265,7 +329,17 @@ export const useIeltsQuestionManagement = () => {
     );
     toast.success("Question updated successfully!");
     // Mutate all related test caches
-    mutate((key) => typeof key === "string" && key.includes("/ielts/tests/"));
+    mutate(
+      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      undefined,
+      { revalidate: true }
+    );
+    // Also invalidate test lists
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
     return updatedQuestion;
   };
 
@@ -273,7 +347,17 @@ export const useIeltsQuestionManagement = () => {
     await ieltsService.removeQuestion(questionId);
     toast.success("Question removed successfully!");
     // Mutate all related test caches
-    mutate((key) => typeof key === "string" && key.includes("/ielts/tests/"));
+    mutate(
+      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      undefined,
+      { revalidate: true }
+    );
+    // Also invalidate test lists
+    mutate(
+      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      undefined,
+      { revalidate: true }
+    );
   };
 
   return {

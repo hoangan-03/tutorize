@@ -7,6 +7,7 @@ import {
   RegisterRequest,
   UpdateProfileRequest,
   AuthResponse,
+  Role,
 } from "../types/api";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -36,11 +37,9 @@ interface AuthContextType {
   }) => Promise<{ message: string }>;
   refreshUser: () => Promise<void>;
   clearError: () => void;
-  // Helper properties
-  isAdmin: boolean;
+
   isTeacher: boolean;
   isStudent: boolean;
-  // Legacy methods for backwards compatibility
   loginDemo: () => void;
 }
 
@@ -84,9 +83,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     clearError: auth.clearError,
 
     // Helper properties
-    isAdmin: auth.user?.role === "TEACHER", // Teachers are admins in our system
-    isTeacher: auth.user?.role === "TEACHER",
-    isStudent: auth.user?.role === "STUDENT",
+    isTeacher: auth.user?.role === Role.TEACHER,
+    isStudent: auth.user?.role === Role.STUDENT,
 
     // Legacy method
     loginDemo,

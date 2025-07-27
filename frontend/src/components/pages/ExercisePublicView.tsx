@@ -15,13 +15,12 @@ import {
 import { InlineMath } from "react-katex";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { useExercises } from "../../hooks/useExercise";
-import { Exercise } from "../../types/api";
+import { useExercises } from "../../hooks";
+import { Exercise, ExerciseStatus } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/Badge";
 
-// Import KaTeX CSS
 import "katex/dist/katex.min.css";
 
 export const ExercisePublicView: React.FC = () => {
@@ -370,9 +369,6 @@ export const ExercisePublicView: React.FC = () => {
 
   // Exercise Detail View
   if (currentView === "detail" && selectedExercise) {
-    const isNearDeadline =
-      new Date(selectedExercise.deadline || selectedExercise.createdAt) <=
-      new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
     const exerciseTitle = selectedExercise.name;
 
     return (
@@ -380,14 +376,16 @@ export const ExercisePublicView: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header Section with Gradient */}
           <div className="bg-gradient-to-r from-sky-700 to-sky-900 rounded-2xl shadow-xl text-white p-4 md:p-8 mb-6">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <FileText className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold">{exerciseTitle}</h1>
+                    <h1 className="text-base md:text-xl lg:text-3xl font-bold">
+                      {exerciseTitle}
+                    </h1>
                   </div>
                 </div>
 
@@ -395,31 +393,41 @@ export const ExercisePublicView: React.FC = () => {
                 <div className="flex items-center space-x-3 mb-6">
                   <Badge
                     variant="subject"
-                    className="bg-white/20 text-white rounded-full backdrop-blur-sm border-0"
+                    className="bg-white/20 text-white text-xs md:text-sm rounded-full backdrop-blur-sm border-0"
                   >
-                    {t(`subject.${selectedExercise.subject.toLowerCase()}`)}
+                    {t(`subjects.${selectedExercise.subject.toLowerCase()}`)}
                   </Badge>
                   <Badge
                     variant="grade"
-                    className="bg-white/20 text-white rounded-full backdrop-blur-sm border-0"
+                    className="bg-white/20 text-white text-xs md:text-sm rounded-full backdrop-blur-sm border-0"
                   >
                     {t("exercises.class")} {selectedExercise.grade}
                   </Badge>
-                  {selectedExercise.status === "ACTIVE" && (
-                    <span className="px-3 py-1 bg-green-700/30 rounded-full text-sm font-medium backdrop-blur-sm">
-                      {t("exercises.open")}
+                  {selectedExercise.status === ExerciseStatus.ACTIVE && (
+                    <span className="px-3 py-1 bg-green-700/30 rounded-full text-xs md:text-sm font-medium backdrop-blur-sm">
+                      {t("exercises.active")}
                     </span>
                   )}
-                  {isNearDeadline && (
-                    <span className="px-3 py-1 bg-red-700/30 rounded-full text-sm font-medium backdrop-blur-sm animate-pulse">
-                      {t("exercises.nearDeadline")}
+                  {selectedExercise.status === ExerciseStatus.INACTIVE && (
+                    <span className="px-3 py-1 bg-red-700/30 rounded-full text-xs md:text-sm font-medium backdrop-blur-sm">
+                      {t("exercises.inactive")}
+                    </span>
+                  )}
+                  {selectedExercise.status === ExerciseStatus.DRAFT && (
+                    <span className="px-3 py-1 bg-yellow-700/30 rounded-full text-xs md:text-sm font-medium backdrop-blur-sm">
+                      {t("exercises.draft")}
+                    </span>
+                  )}
+                  {selectedExercise.status === ExerciseStatus.OVERDUE && (
+                    <span className="px-3 py-1 bg-gray-700/30 rounded-full text-xs md:text-sm font-medium backdrop-blur-sm">
+                      {t("exercises.overdue")}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col space-y-3">
+              {/* Action Buttons - Hidden on small screens, shown on md+ in column */}
+              <div className="hidden md:flex flex-col space-y-3">
                 <button
                   onClick={() => downloadAsPDF(selectedExercise)}
                   className="flex items-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all duration-200 backdrop-blur-sm border border-white/20"
@@ -434,6 +442,23 @@ export const ExercisePublicView: React.FC = () => {
                   ← {t("common.back")}
                 </button>
               </div>
+            </div>
+
+            {/* Action Buttons Row - Shown on small screens only */}
+            <div className="flex md:hidden flex-row gap-3">
+              <button
+                onClick={() => downloadAsPDF(selectedExercise)}
+                className="flex-1 flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all duration-200 backdrop-blur-sm border border-white/20"
+              >
+                <Download className="h-5 w-5 mr-2" />
+                {t("exercises.downloadPDF")}
+              </button>
+              <button
+                onClick={handleBackToList}
+                className="flex-1 flex items-center justify-center px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-white/20"
+              >
+                ← {t("common.back")}
+              </button>
             </div>
 
             {/* Info Cards */}
@@ -610,7 +635,7 @@ export const ExercisePublicView: React.FC = () => {
                     <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 md:p-8 border border-blue-100">
                       <div className="bg-white rounded-lg p-4 md:p-8 shadow-sm">
                         <div
-                          className="prose prose-lg max-w-none prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900 content-text text-lg leading-loose"
+                          className="prose prose-lg max-w-none text-start prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900 content-text text-lg leading-loose"
                           style={{
                             fontFamily:
                               popularFonts.find(
@@ -625,7 +650,7 @@ export const ExercisePublicView: React.FC = () => {
                             __html: selectedExercise.content
                               .replace(
                                 /<h1/g,
-                                '<h1 class="text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-4"'
+                                '<h1 class="text-base md:text-xl lg:text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-4"'
                               )
                               .replace(
                                 /<h2/g,
@@ -675,13 +700,13 @@ export const ExercisePublicView: React.FC = () => {
                   </div>
                 ) : previewMode === "content" ? (
                   <div
-                    className="prose prose-lg max-w-none"
+                    className="prose prose-lg max-w-none text-start"
                     dangerouslySetInnerHTML={{
                       __html: selectedExercise.content,
                     }}
                   />
                 ) : (
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-start">
                     <div className="space-y-4">
                       {selectedExercise.latexContent &&
                         selectedExercise.latexContent
@@ -726,17 +751,31 @@ export const ExercisePublicView: React.FC = () => {
                   </div>
                   <div className="flex flex-col gap-2 text-start">
                     <h4 className="text-lg font-semibold text-gray-900">
-                      {isTeacher ? "" : t("exercises.readyToSubmit")}
+                      {isTeacher
+                        ? ""
+                        : selectedExercise.status === ExerciseStatus.ACTIVE
+                        ? t("exercises.readyToSubmit")
+                        : t("exercises.unavailable")}
                     </h4>
                     <p className="text-gray-600">
-                      {isTeacher ? "" : t("exercises.completeAndSubmit")}
+                      {isTeacher
+                        ? ""
+                        : selectedExercise.status === ExerciseStatus.ACTIVE
+                        ? t("exercises.completeAndSubmit")
+                        : t("exercises.contactAdministrator")}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-4">
                   {!isTeacher && (
-                    <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
+                    <button
+                      className={`${
+                        selectedExercise.status === ExerciseStatus.ACTIVE
+                          ? "block"
+                          : "hidden"
+                      } px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold`}
+                    >
                       {t("exercises.submitExercise")}
                     </button>
                   )}
@@ -762,14 +801,14 @@ export const ExercisePublicView: React.FC = () => {
 
   // Exercise List View
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:px-12 lg:px-36 md:py-12">
       <div className="max-w-8xl mx-auto">
         {/* Page Header */}
         <div className="relative bg-gradient-to-r from-teal-500 to-blue-600 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
           <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-white">
+              <h1 className="text-xl md:text-2xl lg:text-4xl font-bold text-white">
                 {isTeacher
                   ? t("exercises.teacher_title")
                   : t("exercises.student_title")}
@@ -929,7 +968,7 @@ export const ExercisePublicView: React.FC = () => {
                     </p>
                     <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
                       <Badge variant="subject">
-                        {t(`subject.${exercise.subject.toLowerCase()}`)}
+                        {t(`subjects.${exercise.subject.toLowerCase()}`)}
                       </Badge>
                       <Badge variant="grade">
                         {t("exercises.class")} {exercise.grade}

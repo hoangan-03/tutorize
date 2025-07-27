@@ -183,7 +183,7 @@ export class QuizController {
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Lấy danh sách bài nộp (Teacher only)' })
   @ApiResponse({ status: 200, description: 'Danh sách bài nộp' })
-  @ApiResponse({ status: 403, description: 'Không có quyền xem bài nộp' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy quiz' })
   getSubmissions(
     @Param('id', ParseIntPipe) id: number,
@@ -249,5 +249,17 @@ export class QuizSubmissionController {
   @ApiResponse({ status: 200, description: 'Danh sách bài nộp của user' })
   getMySubmissions(@Query() query: any, @CurrentUser() user: any) {
     return this.quizService.getMySubmissions(user.id, query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Lấy chi tiết bài nộp' })
+  @ApiResponse({ status: 200, description: 'Chi tiết bài nộp' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
+  @ApiResponse({ status: 403, description: 'Không có quyền xem bài nộp' })
+  getSubmission(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.quizService.getSubmissionById(id, userId);
   }
 }

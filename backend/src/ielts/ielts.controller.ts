@@ -220,7 +220,7 @@ export class IeltsController {
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Lấy danh sách bài nộp (Teacher only)' })
   @ApiResponse({ status: 200, description: 'Danh sách bài nộp' })
-  @ApiResponse({ status: 403, description: 'Không có quyền xem bài nộp' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài test' })
   getSubmissions(
     @Param('id', ParseIntPipe) id: number,

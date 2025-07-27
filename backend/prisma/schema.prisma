@@ -306,7 +306,8 @@ model GradingRubric {
 enum ExerciseStatus {
   DRAFT
   ACTIVE
-  CLOSED
+  INACTIVE
+  OVERDUE
 }
 
 // ============================================================================

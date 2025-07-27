@@ -18,7 +18,17 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
   const [sectionData, setSectionData] = useState<Partial<IeltsSection>>({});
 
   useEffect(() => {
-    setSectionData(section || { title: "", order: 1 });
+    setSectionData(
+      section || {
+        title: "",
+        order: 1,
+        timeLimit: 30, // Default 30 minutes
+        instructions: "",
+        passageText: "",
+        audioUrl: "",
+        imageUrl: "",
+      }
+    );
   }, [section]);
 
   if (!isOpen) return null;
@@ -32,7 +42,14 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
 
   const handleNumericInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSectionData((prev) => ({ ...prev, [name]: parseInt(value, 10) || 0 }));
+    let numericValue = parseInt(value, 10) || 0;
+
+    // Special validation for timeLimit
+    if (name === "timeLimit") {
+      numericValue = Math.max(1, Math.min(300, numericValue)); // Ensure 1-300 range
+    }
+
+    setSectionData((prev) => ({ ...prev, [name]: numericValue }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,12 +82,40 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
 
           {/* Body */}
           <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            {/* Help section with hints */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h3 className="text-sm font-medium text-blue-800 mb-2">
+                💡 Hướng dẫn tạo phần thi IELTS
+              </h3>
+              <ul className="text-xs text-blue-700 space-y-1">
+                <li>
+                  • <strong>Reading:</strong> Thêm đoạn văn vào "Nội dung/Đoạn
+                  văn" để học viên đọc
+                </li>
+                <li>
+                  • <strong>Listening:</strong> Thêm URL audio để học viên nghe
+                </li>
+                <li>
+                  • <strong>Writing:</strong> Chỉ cần hướng dẫn, không cần nội
+                  dung
+                </li>
+                <li>
+                  • <strong>Speaking:</strong> Thêm hướng dẫn chi tiết cho câu
+                  hỏi nói
+                </li>
+                <li>
+                  • <strong>Thời gian:</strong> 1-300 phút (khuyến nghị: Reading
+                  20 phút, Listening 30 phút)
+                </li>
+              </ul>
+            </div>
+
             <div>
               <label
                 htmlFor="title"
                 className="block text-sm font-medium text-gray-700"
               >
-                Tiêu đề
+                Tiêu đề <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -79,6 +124,7 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
                 value={sectionData.title || ""}
                 onChange={handleInputChange}
                 className={inputClass}
+                placeholder="Ví dụ: Reading Section 1 - Academic Passages"
                 required
               />
             </div>
@@ -97,24 +143,54 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
                 onChange={handleInputChange}
                 rows={3}
                 className={textareaClass}
+                placeholder="Hướng dẫn cho học viên về cách làm bài phần này..."
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Tùy chọn - hướng dẫn chi tiết cho học viên
+              </p>
             </div>
-            <div>
-              <label
-                htmlFor="order"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Thứ tự
-              </label>
-              <input
-                type="number"
-                name="order"
-                id="order"
-                value={sectionData.order || 0}
-                onChange={handleNumericInputChange}
-                className={inputClass}
-                required
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="order"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Thứ tự <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="order"
+                  id="order"
+                  value={sectionData.order || 0}
+                  onChange={handleNumericInputChange}
+                  className={inputClass}
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="timeLimit"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Thời gian (phút) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="timeLimit"
+                  id="timeLimit"
+                  value={sectionData.timeLimit || 30}
+                  onChange={handleNumericInputChange}
+                  className={inputClass}
+                  min="1"
+                  max="300"
+                  placeholder="30"
+                  required
+                />
+                <p className="mt-1 text-xs text-gray-500">1-300 phút</p>
+              </div>
             </div>
             <div>
               <label
@@ -130,8 +206,13 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
                 onChange={handleInputChange}
                 rows={6}
                 className={textareaClass}
+                placeholder="Nhập đoạn văn cho Reading Section... (Chỉ áp dụng cho Reading)"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Dành cho Reading Section - đoạn văn mà học viên sẽ đọc
+              </p>
             </div>
+
             <div>
               <label
                 htmlFor="audioUrl"
@@ -146,8 +227,13 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
                 value={sectionData.audioUrl || ""}
                 onChange={handleInputChange}
                 className={inputClass}
+                placeholder="https://example.com/audio.mp3"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Dành cho Listening Section - URL file audio học viên sẽ nghe
+              </p>
             </div>
+
             <div>
               <label
                 htmlFor="imageUrl"
@@ -162,7 +248,11 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
                 value={sectionData.imageUrl || ""}
                 onChange={handleInputChange}
                 className={inputClass}
+                placeholder="https://example.com/diagram.jpg"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Cho câu hỏi Diagram Labeling - hình ảnh mà học viên cần gắn nhãn
+              </p>
             </div>
           </div>
 

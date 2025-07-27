@@ -26,7 +26,10 @@
     "remaining": "Remaining",
     "good": "Good",
     "or": "Or",
-    "appName": "Tutorize"
+    "appName": "Tutorize",
+    "pleaseWait": "Please wait...",
+    "goBack": "Go Back",
+    "unknown": "Unknown"
   },
   "errors": {
     "loginFailed": "Login failed. Please check your credentials.",
@@ -62,35 +65,19 @@
     "civics": "Civics",
     "career_guidance": "Career Guidance",
     "local_studies": "Local Studies",
-    "economics_law": "Economics Law",
+    "economics_law": "Economic & Law",
     "technology": "Technology",
     "art": "Art",
     "music": "Music"
   },
   "status": {
     "active": "Active",
+    "inactive": "Inactive",
     "draft": "Draft",
     "closed": "Closed",
     "overdue": "Overdue"
   },
-  "subject": {
-    "math": "Mathematics",
-    "physics": "Physics",
-    "literature": "Literature",
-    "chemistry": "Chemistry",
-    "biology": "Biology",
-    "naturalScience": "Natural Science",
-    "english": "English",
-    "history": "History",
-    "geography": "Geography",
-    "civics": "Civics",
-    "careerGuidance": "Career Guidance",
-    "localStudies": "Local Studies",
-    "economicsLaw": "Economics Law",
-    "technology": "Technology",
-    "art": "Art",
-    "music": "Music"
-  },
+
   "navigation": {
     "dashboard": "Dashboard",
     "exercises": "Exercises",
@@ -253,6 +240,7 @@
     "createdAt": "Created at",
     "submissions": "Submissions",
     "status": "Status",
+    "total": "Total",
     "active": "Active",
     "inactive": "Inactive",
     "viewDetails": "View details",
@@ -270,7 +258,9 @@
     "noContent": "Exercise has no content yet",
     "importantNote": "Important Note",
     "readyToSubmit": "Ready to submit?",
+    "unavailable": "This exercise is currently unavailable",
     "completeAndSubmit": "Complete the exercise and submit before deadline",
+    "contactAdministrator": "Contact administrator if you need assistance",
     "fromTeachers": "Exercises from Teachers",
     "viewAndComplete": "View and complete exercises assigned by teachers",
     "open": "Open",
@@ -369,7 +359,7 @@
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard",
-    "startQuiz": "Start quiz",
+    "startQuiz": "Start",
     "viewResults": "View Results",
     "quizResults": "Quiz Results",
     "score": "Score",
@@ -440,6 +430,7 @@
     "lessThan3Minutes": "Less than 3 minutes!",
     "lessThan5Minutes": "Less than 5 minutes!",
     "dashboard": {
+      "action": "Action",
       "title": "Quiz Dashboard",
       "exportResults": "Export Results",
       "timeLimit": "Time Limit",
@@ -472,7 +463,28 @@
       "correctAnswers": "Correct Answers",
       "points": "Points",
       "cannotLoadStats": "Cannot load quiz statistics.",
-      "goBack": "Go Back"
+      "goBack": "Go Back",
+      "viewSubmission": "View Submission"
+    },
+    "submission": {
+      "title": "Submission Details",
+      "quizTitle": "Quiz",
+      "loading": "Loading submission details",
+      "notFound": "Submission not found",
+      "notFoundDesc": "This submission does not exist or you don't have permission to access it.",
+      "student": "Student",
+      "score": "Score",
+      "timeSpent": "Time Spent",
+      "submittedAt": "Submitted At",
+      "answers": "Answer Details",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "question": "Question",
+      "studentAnswer": "Student Answer",
+      "correctAnswer": "Correct Answer",
+      "explanation": "Explanation",
+      "noAnswer": "No Answer",
+      "points": "Points"
     }
   },
   "writing": {
@@ -614,6 +626,7 @@
       "notAnswered": "Not Answered",
       "loading": "Loading results...",
       "errorTitle": "Error",
+      "error": "Failed to load result. Please try again.",
       "back": "Back",
       "noSubmission": "No submission data found.",
       "title": "Test Result",
@@ -623,7 +636,24 @@
       "section": "Section",
       "readingPassage": "Reading Passage",
       "listeningAudio": "Listening Audio",
-      "question": "Question"
+      "question": "Question",
+      "testInfo": "Test Information",
+      "performance": "Performance",
+      "correct": "Correct",
+      "points": "points",
+      "passage": "Passage",
+      "questionImage": "Question Image",
+      "noAnswer": "No Answer",
+      "yourAnswer": "Your Answer"
+    },
+    "bands": {
+      "expert": "Expert User",
+      "veryGood": "Very Good User",
+      "good": "Good User",
+      "competent": "Competent User",
+      "modest": "Modest User",
+      "limited": "Limited User",
+      "basic": "Extremely Limited User"
     }
   },
   "documents": {

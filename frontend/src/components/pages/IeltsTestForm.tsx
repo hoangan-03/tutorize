@@ -5,7 +5,7 @@ import {
   useIeltsTestManagement,
   useIeltsSectionManagement,
   useIeltsQuestionManagement,
-} from "../../hooks/useIelts";
+} from "../../hooks";
 import {
   IeltsTest,
   IeltsSection,
@@ -107,7 +107,15 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
 
   // Section Handlers
   const handleAddSection = () => {
-    setCurrentSection({ title: "", order: (test.sections?.length || 0) + 1 });
+    setCurrentSection({
+      title: "",
+      order: (test.sections?.length || 0) + 1,
+      timeLimit: 30, // Default 30 minutes
+      instructions: "",
+      passageText: "",
+      audioUrl: "",
+      imageUrl: "",
+    });
     setIsModalOpen(true);
   };
 
@@ -152,6 +160,11 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
       order:
         (test.sections?.find((s) => s.id === sectionId)?.questions?.length ||
           0) + 1,
+      options: [],
+      correctAnswers: [],
+      subQuestions: [],
+      imageUrl: "",
+      explanation: "",
     });
     setIsQuestionModalOpen(true);
   };

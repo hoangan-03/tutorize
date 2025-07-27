@@ -29,7 +29,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Role } from '@prisma/client';
+import { ExerciseStatus, Role } from '@prisma/client';
 
 @ApiTags('Exercises')
 @ApiBearerAuth()
@@ -58,7 +58,7 @@ export class ExerciseController {
   @ApiQuery({
     name: 'status',
     required: false,
-    enum: ['DRAFT', 'ACTIVE', 'CLOSED'],
+    enum: ['DRAFT', 'ACTIVE', 'CLOSED', 'OVERDUE'],
   })
   @ApiQuery({ name: 'createdBy', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
@@ -102,7 +102,7 @@ export class ExerciseController {
   })
   @ApiResponse({ status: 200, description: 'Chi tiết bài tập với đáp án' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
-  @ApiResponse({ status: 403, description: 'Không có quyền xem đáp án' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   findOneWithAnswers(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('sub') userId: number,
@@ -135,7 +135,7 @@ export class ExerciseController {
   })
   toggleStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { status: 'ACTIVE' | 'CLOSED' },
+    @Body() body: { status: ExerciseStatus },
     @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.updateStatus(id, body.status, userId);
@@ -176,7 +176,7 @@ export class ExerciseController {
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Lấy danh sách bài nộp (Teacher only)' })
   @ApiResponse({ status: 200, description: 'Danh sách bài nộp' })
-  @ApiResponse({ status: 403, description: 'Không có quyền xem bài nộp' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
   getSubmissions(
     @Param('id', ParseIntPipe) id: number,

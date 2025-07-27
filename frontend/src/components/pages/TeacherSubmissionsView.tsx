@@ -20,7 +20,7 @@ import {
 import {
   useExerciseSubmissionsList,
   useExerciseSubmissions,
-} from "../../hooks/useExercise";
+} from "../../hooks";
 
 interface TeacherSubmissionsViewProps {
   exercise: Exercise;
@@ -132,7 +132,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
               >
                 ← {t("teacherSubmissionsView.back")}
               </button>
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-base md:text-xl lg:text-3xl font-bold text-white mb-2">
                 {t("teacherSubmissionsView.submissionsFor")} {exercise.name}
               </h1>
               <p className="text-white/90 text-lg">

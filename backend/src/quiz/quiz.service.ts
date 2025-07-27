@@ -657,7 +657,7 @@ export class QuizService {
     }
 
     if (user?.role !== 'TEACHER' && quiz.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xem bài nộp');
+      throw new ForbiddenException('Forbidden');
     }
 
     const submissions = await this.prisma.quizSubmission.findMany({
@@ -880,6 +880,81 @@ export class QuizService {
     };
   }
 
+  async getSubmissionById(submissionId: number, userId: number) {
+    const submission = await this.prisma.quizSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        quiz: {
+          select: {
+            id: true,
+            title: true,
+            subject: true,
+            grade: true,
+            totalQuestions: true,
+            timeLimit: true,
+            createdBy: true,
+            creator: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        answers: {
+          include: {
+            question: {
+              select: {
+                id: true,
+                question: true,
+                type: true,
+                options: true,
+                correctAnswer: true,
+                explanation: true,
+                points: true,
+                order: true,
+                imageUrl: true,
+                audioUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            question: {
+              order: 'asc',
+            },
+          },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Không tìm thấy bài nộp');
+    }
+
+    // Check permission: user can view their own submission or teacher can view submissions for their quizzes
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    const canView =
+      submission.userId === userId || // User's own submission
+      (user?.role === Role.TEACHER && submission.quiz.createdBy === userId); // Teacher viewing submission for their quiz
+
+    if (!canView) {
+      throw new ForbiddenException('Bạn không có quyền xem bài nộp này');
+    }
+
+    return submission;
+  }
+
   async getQuizSubmissionHistory(quizId: number, userId: number) {
     const submissions = await this.prisma.quizSubmission.findMany({
       where: {
@@ -903,17 +978,6 @@ export class QuizService {
       },
     });
 
-    console.log('Submissions found:', submissions.length);
-    console.log(
-      'Submissions data:',
-      submissions.map((s) => ({
-        id: s.id,
-        score: s.score,
-        totalPoints: s.totalPoints,
-        calculatedScore: (s.score / s.totalPoints) * 10,
-      })),
-    );
-
     const quiz = await this.prisma.quiz.findUnique({
       where: { id: quizId },
     });
@@ -930,9 +994,6 @@ export class QuizService {
             ),
           )
         : 0;
-
-    console.log('Calculated maxScore:', maxScore);
-
     return {
       quiz,
       submissions,
