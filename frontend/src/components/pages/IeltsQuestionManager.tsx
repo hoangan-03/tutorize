@@ -1,5 +1,5 @@
 import React from "react";
-import { IeltsQuestion } from "../../services/ieltsService";
+import { IeltsQuestion } from "../../types/api";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface IeltsQuestionManagerProps {

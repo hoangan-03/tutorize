@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { IeltsSection, IeltsQuestion } from "../../services/ieltsService";
+import { IeltsSection, IeltsQuestion } from "../../types/api";
 import {
   PencilIcon,
   TrashIcon,

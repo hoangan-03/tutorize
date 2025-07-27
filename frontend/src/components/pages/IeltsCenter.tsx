@@ -5,7 +5,7 @@ import {
   IeltsSkill,
   IeltsSubmission,
   IeltsLevel,
-} from "../../services/ieltsService";
+} from "../../types/api";
 import { useAuth } from "../../hooks/useAuth";
 import {
   useIeltsTests,
@@ -37,13 +37,15 @@ const StudentIeltsView: React.FC<{
   onViewResult: (id: number) => void;
 }> = ({ tests, submissions, loading, onStartTest, onViewResult }) => {
   const { t } = useTranslation();
-  const [activeSkill, setActiveSkill] = useState<IeltsSkill>("READING");
+  const [activeSkill, setActiveSkill] = useState<IeltsSkill>(
+    IeltsSkill.READING
+  );
 
   const SKILLS: { name: IeltsSkill; label: string }[] = [
-    { name: "READING", label: t("ielts.reading") },
-    { name: "LISTENING", label: t("ielts.listening") },
-    { name: "WRITING", label: t("ielts.writing") },
-    { name: "SPEAKING", label: t("ielts.speaking") },
+    { name: IeltsSkill.READING, label: t("ielts.reading") },
+    { name: IeltsSkill.LISTENING, label: t("ielts.listening") },
+    { name: IeltsSkill.WRITING, label: t("ielts.writing") },
+    { name: IeltsSkill.SPEAKING, label: t("ielts.speaking") },
   ];
 
   const filteredTests = useMemo(() => {

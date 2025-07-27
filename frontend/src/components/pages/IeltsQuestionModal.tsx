@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
-import type {
-  IeltsQuestion,
-  IeltsQuestionType,
-} from "../../services/ieltsService";
+import { IeltsQuestion, IeltsQuestionType } from "../../types/api";
 import { X } from "lucide-react";
 
 interface IeltsQuestionModalProps {
@@ -13,11 +10,11 @@ interface IeltsQuestionModalProps {
 }
 
 const QUESTION_TYPES: IeltsQuestionType[] = [
-  "MULTIPLE_CHOICE",
-  "IDENTIFYING_INFORMATION",
-  "MATCHING",
-  "COMPLETION",
-  "SHORT_ANSWER",
+  IeltsQuestionType.MULTIPLE_CHOICE,
+  IeltsQuestionType.IDENTIFYING_INFORMATION,
+  IeltsQuestionType.MATCHING,
+  IeltsQuestionType.COMPLETION,
+  IeltsQuestionType.SHORT_ANSWER,
 ];
 
 const typeConfigs: Record<
@@ -28,7 +25,7 @@ const typeConfigs: Record<
     correctAnswers: { label: string; placeholder: string; helpText: string };
   }
 > = {
-  MULTIPLE_CHOICE: {
+  [IeltsQuestionType.MULTIPLE_CHOICE]: {
     subQuestions: { show: false },
     options: {
       show: true,
@@ -41,11 +38,12 @@ const typeConfigs: Record<
       helpText: "Nếu có nhiều đáp án đúng, mỗi đáp án một dòng.",
     },
   },
-  IDENTIFYING_INFORMATION: {
+  [IeltsQuestionType.IDENTIFYING_INFORMATION]: {
     subQuestions: {
       show: true,
       label: "Các nhận định cần xác minh",
-      placeholder: "Ví dụ:\nNhận định 1: The author is a biologist.\nNhận định 2: The study was conducted in Africa.",
+      placeholder:
+        "Ví dụ:\nNhận định 1: The author is a biologist.\nNhận định 2: The study was conducted in Africa.",
     },
     options: {
       show: true,
@@ -58,11 +56,12 @@ const typeConfigs: Record<
       helpText: "Số lượng đáp án phải khớp với số lượng nhận định.",
     },
   },
-  MATCHING: {
+  [IeltsQuestionType.MATCHING]: {
     subQuestions: {
       show: true,
       label: "Các mục cần nối (Câu hỏi)",
-      placeholder: "Ví dụ:\nCâu 1: A reference to a past study\nCâu 2: A description of the methodology",
+      placeholder:
+        "Ví dụ:\nCâu 1: A reference to a past study\nCâu 2: A description of the methodology",
     },
     options: {
       show: true,
@@ -75,11 +74,12 @@ const typeConfigs: Record<
       helpText: "Số lượng đáp án phải khớp với số lượng câu hỏi.",
     },
   },
-  SHORT_ANSWER: {
+  [IeltsQuestionType.SHORT_ANSWER]: {
     subQuestions: {
       show: true,
       label: "Danh sách câu hỏi",
-      placeholder: "Ví dụ:\nCâu 1: What was the primary reason?\nCâu 2: In what year...?",
+      placeholder:
+        "Ví dụ:\nCâu 1: What was the primary reason?\nCâu 2: In what year...?",
     },
     options: { show: false },
     correctAnswers: {
@@ -88,7 +88,7 @@ const typeConfigs: Record<
       helpText: "Số lượng đáp án phải khớp với số lượng câu hỏi.",
     },
   },
-  COMPLETION: {
+  [IeltsQuestionType.COMPLETION]: {
     subQuestions: {
       show: true,
       label: "Các câu/mục cần hoàn thành",
@@ -101,40 +101,6 @@ const typeConfigs: Record<
       helpText: "Số lượng đáp án phải khớp với số lượng câu.",
     },
   },
-  WRITING: {
-    subQuestions: {
-      show: false,
-      label: undefined,
-      placeholder: undefined
-    },
-    options: {
-      show: false,
-      label: undefined,
-      placeholder: undefined
-    },
-    correctAnswers: {
-      label: "",
-      placeholder: "",
-      helpText: ""
-    }
-  },
-  DIAGRAM_LABELING: {
-    subQuestions: {
-      show: false,
-      label: undefined,
-      placeholder: undefined
-    },
-    options: {
-      show: false,
-      label: undefined,
-      placeholder: undefined
-    },
-    correctAnswers: {
-      label: "",
-      placeholder: "",
-      helpText: ""
-    }
-  }
 };
 
 export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
@@ -150,7 +116,7 @@ export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
 
   useEffect(() => {
     const initialData = question || {
-      type: "MULTIPLE_CHOICE",
+      type: IeltsQuestionType.MULTIPLE_CHOICE,
       points: 1,
       options: [],
       correctAnswers: [],

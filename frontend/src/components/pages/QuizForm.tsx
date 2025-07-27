@@ -56,8 +56,6 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
     }
   };
 
-  // Helper function to get default datetime (tomorrow at 23:59)
-
   const formatDateForAPI = (dateString: string): string => {
     if (!dateString) return "";
     try {

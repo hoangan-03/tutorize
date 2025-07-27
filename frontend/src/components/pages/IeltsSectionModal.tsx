@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import type { IeltsSection } from "../../services/ieltsService";
+import { IeltsSection } from "../../types/api";
 import { X } from "lucide-react";
 
 interface IeltsSectionModalProps {
@@ -93,7 +93,7 @@ export const IeltsSectionModal: React.FC<IeltsSectionModalProps> = ({
               <textarea
                 name="instructions"
                 id="instructions"
-                value={sectionData.description || ""}
+                value={sectionData.instructions || ""}
                 onChange={handleInputChange}
                 rows={3}
                 className={textareaClass}

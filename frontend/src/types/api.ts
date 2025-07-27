@@ -93,7 +93,6 @@ export enum IeltsLevel {
 
 export enum IeltsQuestionType {
   MULTIPLE_CHOICE = "MULTIPLE_CHOICE",
-  TRUE_FALSE_NOT_GIVEN = "TRUE_FALSE_NOT_GIVEN",
   IDENTIFYING_INFORMATION = "IDENTIFYING_INFORMATION", // True/False/Not Given, Yes/No/Not Given
   MATCHING = "MATCHING", // Matching headings, features, sentence endings
   COMPLETION = "COMPLETION", // Sentence, summary, note, table, flow-chart completion
@@ -407,11 +406,13 @@ export interface IeltsTest {
   skill: IeltsSkill;
   level: IeltsLevel;
   timeLimit: number;
-  createdBy: number;
   isActive: boolean;
+  createdBy: number;
+  instructions?: string;
   createdAt: string;
   updatedAt: string;
 
+  creator?: User;
   sections?: IeltsSection[];
   submissions?: IeltsSubmission[];
 }
@@ -425,6 +426,7 @@ export interface IeltsSection {
   order: number;
   passageText?: string;
   audioUrl?: string;
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
 
@@ -437,10 +439,13 @@ export interface IeltsQuestion {
   sectionId: number;
   question: string;
   type: IeltsQuestionType;
+  subQuestions?: string[];
   options: string[];
-  correctAnswer: string;
+  correctAnswers: string[];
   order: number;
   imageUrl?: string;
+  points: number;
+  explanation?: string;
   createdAt: string;
   updatedAt: string;
 

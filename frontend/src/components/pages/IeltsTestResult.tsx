@@ -227,7 +227,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
               )}
 
               <div className="space-y-6">
-                {section.questions.map((question, groupIndex) => {
+                {(section.questions || []).map((question, groupIndex) => {
                   const offsetWithinSection = (section.questions || [])
                     .slice(0, groupIndex)
                     .reduce(

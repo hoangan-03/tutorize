@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useIeltsTest, useIeltsTestManagement } from "../../hooks/useIelts";
-import { IeltsQuestion } from "../../services/ieltsService";
+import { IeltsQuestion, IeltsQuestionType } from "../../types/api";
 
 // Store complex answers as a JSON string for simplicity
 export type Answer = string;
@@ -27,7 +27,7 @@ const QuestionRenderer: React.FC<{
   const hasSubQuestions = (question.subQuestions || []).length > 0;
 
   switch (question.type) {
-    case "MULTIPLE_CHOICE": {
+    case IeltsQuestionType.MULTIPLE_CHOICE: {
       // This type does not have sub-questions, it's a single question
       return (
         <div className="space-y-2 mt-2">
@@ -61,9 +61,9 @@ const QuestionRenderer: React.FC<{
         </div>
       );
     }
-    case "IDENTIFYING_INFORMATION":
-    case "SHORT_ANSWER":
-    case "COMPLETION": {
+    case IeltsQuestionType.IDENTIFYING_INFORMATION:
+    case IeltsQuestionType.SHORT_ANSWER:
+    case IeltsQuestionType.COMPLETION: {
       if (!hasSubQuestions) {
         // Fallback for single questions of these types
         return (
@@ -86,7 +86,7 @@ const QuestionRenderer: React.FC<{
       }
 
       const choices =
-        question.type === "IDENTIFYING_INFORMATION"
+        question.type === IeltsQuestionType.IDENTIFYING_INFORMATION
           ? question.options && question.options.length > 0
             ? question.options
             : ["True", "False", "Not Given"]
@@ -121,7 +121,8 @@ const QuestionRenderer: React.FC<{
                     className="text-gray-700"
                     dangerouslySetInnerHTML={{ __html: subQ }}
                   />
-                  {question.type === "IDENTIFYING_INFORMATION" ? (
+                  {question.type ===
+                  IeltsQuestionType.IDENTIFYING_INFORMATION ? (
                     <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
                       {choices.map((option, optIndex) => (
                         <div key={optIndex} className="flex items-center">
@@ -160,7 +161,7 @@ const QuestionRenderer: React.FC<{
         </div>
       );
     }
-    case "MATCHING": {
+    case IeltsQuestionType.MATCHING: {
       if (!hasSubQuestions) return null;
       const options = question.options || [];
 
@@ -364,8 +365,8 @@ export const IeltsTestPlayer: React.FC = () => {
     if (!test) return [];
     const offsets = [0];
     let total = 0;
-    for (let i = 0; i < test.sections.length - 1; i++) {
-      const section = test.sections[i];
+    for (let i = 0; i < (test.sections?.length || 0) - 1; i++) {
+      const section = test.sections![i];
       let sectionQuestions = 0;
       (section.questions || []).forEach((q) => {
         sectionQuestions += Math.max(1, (q.subQuestions || []).length);
@@ -421,7 +422,7 @@ export const IeltsTestPlayer: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">{test.title}</h1>
           <p className="mt-1 text-sm text-gray-600">
             {t("ielts.player.section")} {currentSectionIndex + 1} /{" "}
-            {test.sections.length}: {currentSection.title}
+            {test.sections?.length || 0}: {currentSection.title}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -521,10 +522,10 @@ export const IeltsTestPlayer: React.FC = () => {
           <button
             onClick={() =>
               setCurrentSectionIndex((prev) =>
-                Math.min(test.sections.length - 1, prev + 1)
+                Math.min((test.sections?.length || 1) - 1, prev + 1)
               )
             }
-            disabled={currentSectionIndex === test.sections.length - 1}
+            disabled={currentSectionIndex === (test.sections?.length || 1) - 1}
             className="ml-3 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
             {t("ielts.player.nextSection")}

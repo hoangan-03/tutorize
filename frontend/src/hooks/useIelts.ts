@@ -1,11 +1,11 @@
 import useSWR, { mutate } from "swr";
+import { ieltsService } from "../services/ieltsService";
 import {
-  ieltsService,
+  PaginationParams,
   IeltsTest,
   IeltsSection,
   IeltsQuestion,
-} from "../services/ieltsService";
-import { PaginationParams } from "../types/api";
+} from "../types/api";
 import { toast } from "react-toastify";
 
 // Get all IELTS tests with pagination

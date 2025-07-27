@@ -1,74 +1,12 @@
 import api from "../lib/api";
-import { PaginationParams, PaginatedResult } from "../types/api";
-
-export type IeltsSkill = "READING" | "WRITING" | "LISTENING" | "SPEAKING";
-export type IeltsLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-export type IeltsQuestionType =
-  | "MULTIPLE_CHOICE"
-  | "IDENTIFYING_INFORMATION"
-  | "MATCHING"
-  | "COMPLETION"
-  | "DIAGRAM_LABELING"
-  | "SHORT_ANSWER"
-  | "WRITING";
-
-export interface IeltsTest {
-  id: number;
-  title: string;
-  description?: string;
-  skill: IeltsSkill;
-  level: IeltsLevel;
-  timeLimit: number;
-  instructions?: string;
-  createdBy: number;
-  createdAt: string;
-  updatedAt: string;
-  creator: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  sections: IeltsSection[];
-}
-
-export interface IeltsSection {
-  id: number;
-  title: string;
-  description?: string;
-  order: number;
-  passageText?: string;
-  audioUrl?: string;
-  imageUrl?: string;
-  questions: IeltsQuestion[];
-}
-
-export interface IeltsQuestion {
-  id: number;
-  question: string;
-  isCorrect?: boolean;
-  type: IeltsQuestionType;
-  subQuestions?: string[];
-  options?: string[];
-  correctAnswers?: string[];
-  points: number;
-  order: number;
-  explanation?: string;
-}
-
-export interface IeltsSubmission {
-  id: number;
-  testId: number;
-  userId: number;
-  skill: IeltsSkill;
-  score: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  detailedScores: any;
-  feedback: string;
-  submittedAt: string;
-  gradedAt?: string;
-  test?: Partial<IeltsTest>;
-  answers: IeltsAnswer[];
-}
+import {
+  PaginationParams,
+  PaginatedResult,
+  IeltsTest,
+  IeltsSection,
+  IeltsQuestion,
+  IeltsSubmission,
+} from "../types/api";
 
 export interface IeltsSubmissionResult extends IeltsSubmission {
   test: IeltsTest & {
@@ -79,16 +17,6 @@ export interface IeltsSubmissionResult extends IeltsSubmission {
       })[];
     })[];
   };
-}
-
-export interface IeltsAnswer {
-  id: number;
-  submissionId: number;
-  questionId: number;
-  userAnswer: string;
-  isCorrect: boolean;
-  pointsEarned: number;
-  question: IeltsQuestion;
 }
 
 export const ieltsService = {
@@ -127,7 +55,7 @@ export const ieltsService = {
     id: number,
     testData: Partial<IeltsTest>
   ): Promise<IeltsTest> {
-    const response = await api.put<IeltsTest>(`/ielts/tests/${id}`, testData);
+    const response = await api.patch<IeltsTest>(`/ielts/tests/${id}`, testData);
     return response.data;
   },
 
@@ -151,7 +79,7 @@ export const ieltsService = {
     sectionId: number,
     sectionData: Partial<IeltsSection>
   ): Promise<IeltsSection> {
-    const response = await api.put<IeltsSection>(
+    const response = await api.patch<IeltsSection>(
       `/ielts/sections/${sectionId}`,
       sectionData
     );
@@ -178,7 +106,7 @@ export const ieltsService = {
     questionId: number,
     questionData: Partial<IeltsQuestion>
   ): Promise<IeltsQuestion> {
-    const response = await api.put<IeltsQuestion>(
+    const response = await api.patch<IeltsQuestion>(
       `/ielts/questions/${questionId}`,
       questionData
     );

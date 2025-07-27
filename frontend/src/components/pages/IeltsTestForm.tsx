@@ -6,11 +6,14 @@ import {
   useIeltsSectionManagement,
   useIeltsQuestionManagement,
 } from "../../hooks/useIelts";
-import type {
+import {
   IeltsTest,
   IeltsSection,
   IeltsQuestion,
-} from "../../services/ieltsService";
+  IeltsSkill,
+  IeltsLevel,
+  IeltsQuestionType,
+} from "../../types/api";
 import { IeltsSectionManager } from "./IeltsSectionManager";
 import { IeltsSectionModal } from "./IeltsSectionModal";
 import { IeltsQuestionModal } from "./IeltsQuestionModal";
@@ -40,8 +43,8 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   const [test, setTest] = useState<Partial<IeltsTest>>({
     title: "",
     description: "",
-    skill: "READING",
-    level: "INTERMEDIATE",
+    skill: IeltsSkill.READING,
+    level: IeltsLevel.INTERMEDIATE,
     timeLimit: 60,
     instructions: "",
     sections: [],
@@ -144,7 +147,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
     setCurrentSectionIdForNewQuestion(sectionId);
     setCurrentQuestion({
       question: "",
-      type: "MULTIPLE_CHOICE",
+      type: IeltsQuestionType.MULTIPLE_CHOICE,
       points: 1,
       order:
         (test.sections?.find((s) => s.id === sectionId)?.questions?.length ||
