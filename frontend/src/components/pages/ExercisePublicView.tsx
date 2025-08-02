@@ -92,7 +92,8 @@ export const ExercisePublicView: React.FC = () => {
       const exerciseDeadline =
         exercise.deadline || exercise.createdAt || new Date().toISOString();
       const exerciseTeacher = (
-        exercise.creator?.name || t("exercisePublicView.defaultTeacher")
+        exercise.creator?.profile?.firstName ||
+        t("exercisePublicView.defaultTeacher")
       ).toString();
       const exerciseNote = (exercise.note || "").toString();
 
@@ -298,7 +299,8 @@ export const ExercisePublicView: React.FC = () => {
           exercise.grade || t("exercisePublicView.defaultGrade")
         ).toString();
         const fallbackTeacher = (
-          exercise.creator?.name || t("exercisePublicView.defaultTeacher")
+          exercise.creator?.profile?.firstName ||
+          t("exercisePublicView.defaultTeacher")
         ).toString();
         const fallbackDeadline =
           exercise.deadline || exercise.createdAt || new Date().toISOString();
@@ -526,7 +528,7 @@ export const ExercisePublicView: React.FC = () => {
                       {t("exercises.teacher")}
                     </p>
                     <p className="text-white font-semibold">
-                      {selectedExercise.creator?.name ||
+                      {selectedExercise.creator?.profile?.firstName ||
                         t("exercisePublicView.defaultTeacher")}
                     </p>
                   </div>
@@ -1017,7 +1019,7 @@ export const ExercisePublicView: React.FC = () => {
                     <div className="text-sm text-gray-500 text-start flex items-center">
                       <Users className="h-4 w-4 mr-1" />
                       <span>
-                        {exercise.creator?.name ||
+                        {exercise.creator?.profile?.firstName ||
                           t("exercisePublicView.defaultTeacher")}
                       </span>
                     </div>

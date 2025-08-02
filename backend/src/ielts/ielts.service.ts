@@ -50,7 +50,7 @@ export class IeltsService {
         creator: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -97,7 +97,7 @@ export class IeltsService {
           creator: {
             select: {
               id: true,
-              name: true,
+
               email: true,
             },
           },
@@ -139,7 +139,7 @@ export class IeltsService {
         creator: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -187,7 +187,7 @@ export class IeltsService {
         creator: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -233,7 +233,7 @@ export class IeltsService {
         creator: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -658,7 +658,7 @@ export class IeltsService {
         user: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -694,7 +694,7 @@ export class IeltsService {
       where: { id: submissionId },
       include: {
         user: {
-          select: { id: true, name: true, role: true },
+          select: { id: true, role: true },
         },
         test: {
           include: {

@@ -28,11 +28,17 @@ export class CreateUserDto {
   })
   password: string;
 
-  @ApiProperty({ example: 'Nguyễn Văn A', description: 'Họ và tên' })
+  @ApiProperty({ example: 'Nguyễn', description: 'Họ' })
   @IsString()
-  @MinLength(2, { message: 'Tên phải có ít nhất 2 ký tự' })
-  @MaxLength(100, { message: 'Tên không được quá 100 ký tự' })
-  name: string;
+  @MinLength(1, { message: 'Họ phải có ít nhất 1 ký tự' })
+  @MaxLength(50, { message: 'Họ không được quá 50 ký tự' })
+  firstName: string;
+
+  @ApiProperty({ example: 'Văn A', description: 'Tên' })
+  @IsString()
+  @MinLength(1, { message: 'Tên phải có ít nhất 1 ký tự' })
+  @MaxLength(50, { message: 'Tên không được quá 50 ký tự' })
+  lastName: string;
 
   @ApiProperty({ enum: $Enums.Role, description: 'Vai trò người dùng' })
   @IsEnum($Enums.Role, { message: 'Vai trò không hợp lệ' })
@@ -53,15 +59,62 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   subject?: $Enums.Subject;
+
+  @ApiPropertyOptional({ example: '0123456789', description: 'Số điện thoại' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional({
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+    description: 'Địa chỉ',
+  })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional({
+    example: 'Trường THPT ABC',
+    description: 'Trường học',
+  })
+  @IsOptional()
+  @IsString()
+  school?: string;
+
+  @ApiPropertyOptional({
+    example: '01-01-2000',
+    description: 'Ngày sinh (DD-MM-YYYY)',
+    pattern: '^\\d{2}-\\d{2}-\\d{4}$',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{2}-\d{2}-\d{4}$/, {
+    message: 'Ngày sinh phải có định dạng DD-MM-YYYY',
+  })
+  @Transform(({ value }) => {
+    // If empty string or null, return undefined to skip validation
+    if (!value || value.trim() === '') {
+      return undefined;
+    }
+    return value;
+  })
+  dateOfBirth?: string;
 }
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({ description: 'Họ và tên' })
+  @ApiPropertyOptional({ description: 'Họ' })
   @IsOptional()
   @IsString()
-  @MinLength(2)
-  @MaxLength(100)
-  name?: string;
+  @MinLength(1)
+  @MaxLength(50)
+  firstName?: string;
+
+  @ApiPropertyOptional({ description: 'Tên' })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  lastName?: string;
 
   @ApiPropertyOptional({ enum: $Enums.Role, description: 'Vai trò người dùng' })
   @IsOptional()
@@ -78,15 +131,43 @@ export class UpdateUserDto {
   @IsString()
   subject?: $Enums.Subject;
 
+  @ApiPropertyOptional({ description: 'Số điện thoại' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional({ description: 'Địa chỉ' })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional({ description: 'Trường học' })
+  @IsOptional()
+  @IsString()
+  school?: string;
+
+  @ApiPropertyOptional({
+    description: 'Ngày sinh (DD-MM-YYYY)',
+    pattern: '^\\d{2}-\\d{2}-\\d{4}$',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{2}-\d{2}-\d{4}$/, {
+    message: 'Ngày sinh phải có định dạng DD-MM-YYYY',
+  })
+  @Transform(({ value }) => {
+    // If empty string or null, return undefined to skip validation
+    if (!value || value.trim() === '') {
+      return undefined;
+    }
+    return value;
+  })
+  dateOfBirth?: string;
+
   @ApiPropertyOptional({ description: 'Trạng thái hoạt động' })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
-
-  @ApiPropertyOptional({ description: 'Trạng thái xác thực' })
-  @IsOptional()
-  @IsBoolean()
-  isVerified?: boolean;
 
   @ApiPropertyOptional({ description: 'Mật khẩu mới' })
   @IsOptional()

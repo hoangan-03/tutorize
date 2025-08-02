@@ -77,7 +77,7 @@ class AuthService {
     message: string;
     profile: User;
   }> {
-    const response = await api.patch<{
+    const response = await api.put<{
       message: string;
       profile: User;
     }>("/auth/profile", data);
@@ -89,7 +89,7 @@ class AuthService {
     currentPassword: string;
     newPassword: string;
   }): Promise<{ message: string }> {
-    const response = await api.patch<{ message: string }>(
+    const response = await api.post<{ message: string }>(
       "/auth/change-password",
       data
     );
@@ -146,7 +146,7 @@ class AuthService {
 
   getUserName(): string | null {
     const user = this.getUser();
-    return user?.name || null;
+    return user?.profile?.lastName + " " + user?.profile?.firstName || null;
   }
 
   // Check if user has permission for certain actions

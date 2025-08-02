@@ -49,15 +49,14 @@ async function main() {
     data: {
       email: 'teacher@gmail.com',
       password: teacherPassword,
-      name: 'An Nguyen',
       role: Role.TEACHER,
-      subject: Subject.MATH,
+
       isActive: true,
-      isVerified: true,
       profile: {
         create: {
           firstName: 'An',
           lastName: 'Nguyen',
+          subject: Subject.MATH,
           phone: '0932669566',
           school: 'PTNK',
           preferences: {
@@ -79,16 +78,15 @@ async function main() {
     data: {
       email: 'student1@gmail.com',
       password: studentPassword,
-      name: 'Nguyen Thuy Thu Khanh',
       role: Role.STUDENT,
-      grade: 10,
       isActive: true,
-      isVerified: true,
       profile: {
         create: {
           firstName: 'Thu Khanh',
           lastName: 'Nguyen Thuy',
           phone: '0987654321',
+
+          grade: 10,
           school: 'PTNK',
           preferences: {
             language: 'vi',
@@ -106,16 +104,14 @@ async function main() {
     data: {
       email: 'student2@gmail.com',
       password: studentPassword,
-      name: 'Nguyen Thu Bao Khanh',
       role: Role.STUDENT,
-      grade: 8,
       isActive: true,
-      isVerified: true,
       profile: {
         create: {
           firstName: 'Khanh',
           lastName: 'Nguyen Thu Bao',
           phone: '0912345678',
+          grade: 8,
           school: 'THCS Le Anh Xuan',
           preferences: {
             language: 'vi',

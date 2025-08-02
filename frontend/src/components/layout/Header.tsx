@@ -283,7 +283,7 @@ export const Header: React.FC<HeaderProps> = ({
                       <button className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                         <User className="h-4 w-4" />
                         <span>
-                          {user.name}{" "}
+                          {user.profile?.firstName} {user.profile?.lastName}{" "}
                           {isTeacher && (
                             <span className="text-blue-600 font-medium">
                               (Teacher)
@@ -397,7 +397,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {user ? (
                     <>
                       <div className="px-3 py-2 text-sm text-gray-500 border-b border-gray-100">
-                        {user.name}{" "}
+                        {user.profile?.firstName} {user.profile?.lastName}{" "}
                         {isTeacher && (
                           <span className="text-blue-600 font-medium">
                             (Teacher)

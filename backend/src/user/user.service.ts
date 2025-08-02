@@ -15,7 +15,8 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { email, password, name, role, grade, subject } = createUserDto;
+    const { email, password, firstName, lastName, role, grade, subject } =
+      createUserDto;
 
     // Check if email exists
     const existingUser = await this.prisma.user.findUnique({
@@ -29,18 +30,18 @@ export class UserService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user with profile
     const user = await this.prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        name,
-        role,
-        grade: role === $Enums.Role.STUDENT ? grade : null,
-        subject:
-          role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
         profile: {
           create: {
+            firstName,
+            lastName,
+            grade: role === $Enums.Role.STUDENT ? grade : null,
+            subject:
+              role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
             preferences: {
               language: 'vi',
               theme: 'light',
@@ -68,7 +69,7 @@ export class UserService {
     const where: any = {};
 
     if (role) {
-      where.role = role;
+      where.profile = { role };
     }
 
     if (typeof isActive === 'boolean') {
@@ -77,7 +78,8 @@ export class UserService {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
+        { profile: { firstName: { contains: search, mode: 'insensitive' } } },
+        { profile: { lastName: { contains: search, mode: 'insensitive' } } },
         { email: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -88,12 +90,7 @@ export class UserService {
         select: {
           id: true,
           email: true,
-          name: true,
-          role: true,
-          grade: true,
-          subject: true,
           isActive: true,
-          isVerified: true,
           lastLoginAt: true,
           createdAt: true,
           profile: true,
@@ -159,9 +156,10 @@ export class UserService {
     // Only admin can update other users, users can update themselves
     const currentUser = await this.prisma.user.findUnique({
       where: { id: currentUserId },
+      include: { profile: true },
     });
 
-    if (currentUser.role !== $Enums.Role.TEACHER && currentUserId !== id) {
+    if (currentUser?.role !== $Enums.Role.TEACHER && currentUserId !== id) {
       throw new ForbiddenException('Không có quyền cập nhật người dùng này');
     }
 
@@ -205,9 +203,8 @@ export class UserService {
       select: {
         id: true,
         email: true,
-        name: true,
-        role: true,
         isActive: true,
+        profile: true,
       },
     });
 
@@ -226,10 +223,15 @@ export class UserService {
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,
-            name: true,
             email: true,
-            role: true,
             createdAt: true,
+            role: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         }),
       ]);

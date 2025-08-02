@@ -29,7 +29,6 @@ interface AuthFormProps {
   mode: "login" | "signup" | "forgot-password" | "change-password" | "profile";
 }
 
-// Validation requirements for password
 interface PasswordRequirements {
   minLength: boolean;
   hasLowercase: boolean;
@@ -38,7 +37,6 @@ interface PasswordRequirements {
   validChars: boolean;
 }
 
-// Component to show password validation requirements
 const PasswordValidation: React.FC<{
   password: string;
   showValidation: boolean;
@@ -102,21 +100,18 @@ const PasswordValidation: React.FC<{
 
 export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
     role: Role.STUDENT,
     grade: 10,
     subject: Subject.MATH,
-    // Profile fields
-    firstName: "",
-    lastName: "",
     phone: "",
     address: "",
     school: "",
     dateOfBirth: "",
-    // Change password fields
     currentPassword: "",
     newPassword: "",
   });
@@ -130,6 +125,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [tempPassword, setTempPassword] = useState("");
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   const {
     user,
@@ -138,6 +134,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     updateProfile,
     changePassword,
     forgotPassword,
+    refreshUser,
     isAuthenticated,
   } = useAuth();
   const navigate = useNavigate();
@@ -147,8 +144,23 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    // Load user profile data if in profile mode
-    if (mode === "profile" && user) {
+    if (mode === "profile" && user?.profile) {
+      let formattedDateOfBirth = "";
+
+      if (user.profile.dateOfBirth) {
+        const dateStr = user.profile.dateOfBirth;
+        if (dateStr.includes("-")) {
+          const parts = dateStr.split("-");
+          if (parts.length === 3) {
+            if (parts[0].length === 2) {
+              formattedDateOfBirth = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            } else {
+              formattedDateOfBirth = dateStr;
+            }
+          }
+        }
+      }
+
       setFormData((prev) => ({
         ...prev,
         firstName: user.profile?.firstName || "",
@@ -156,29 +168,29 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         phone: user.profile?.phone || "",
         address: user.profile?.address || "",
         school: user.profile?.school || "",
-        dateOfBirth: user.profile?.dateOfBirth || "",
+        dateOfBirth: formattedDateOfBirth,
       }));
     }
-  }, [mode, user]);
+  }, [mode, user?.profile]);
 
-  // Check authentication status and auto-redirect
   useEffect(() => {
-    console.log("AuthForm: Authentication check:", {
-      isAuthenticated,
-      user,
-      mode,
-      from,
-      location: location.pathname,
-    });
+    if (mode === "profile" && isAuthenticated && !user?.profile) {
+      setIsLoadingProfile(true);
+      refreshUser()
+        .then(() => {
+          setIsLoadingProfile(false);
+        })
+        .catch(() => {
+          setIsLoadingProfile(false);
+        });
+    }
+  }, [mode, isAuthenticated, user?.profile, refreshUser]);
 
+  useEffect(() => {
     if (isAuthenticated && (mode === "login" || mode === "signup")) {
-      console.log(
-        "AuthForm: User already authenticated, redirecting to:",
-        from
-      );
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, user, mode, navigate, from, location.pathname]);
+  }, [isAuthenticated, mode, navigate, from]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
@@ -195,32 +207,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     setError("");
 
     try {
-      console.log("🚀 Attempting login with:", {
-        email: formData.email,
-        password: "***masked***",
-      });
-
-      const result = await login({
+      await login({
         email: formData.email,
         password: formData.password,
       });
 
-      console.log("✅ Login successful:", result);
-      console.log("📍 Navigation target:", from);
-
-      // Check localStorage immediately after login
-      console.log("💾 LocalStorage check:", {
-        token: localStorage.getItem("auth_token") ? "present" : "absent",
-        user: localStorage.getItem("auth_user") ? "present" : "absent",
-      });
-
-      // Small delay to ensure state updates
       setTimeout(() => {
-        console.log("🔄 Navigating after delay...");
         navigate(from, { replace: true });
       }, 100);
     } catch (err: any) {
-      // Handle different error response structures
       let errorMessage = t("errors.loginFailed");
 
       if (err.response?.data) {
@@ -253,7 +248,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
       await register({
         email: formData.email,
         password: formData.password,
-        name: formData.name,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         role: formData.role,
         grade: formData.role === Role.STUDENT ? formData.grade : undefined,
         subject: formData.role === Role.TEACHER ? formData.subject : undefined,
@@ -261,14 +257,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
 
       navigate(from, { replace: true });
     } catch (err: any) {
-      // Handle different error response structures
       let errorMessage = t("errors.registerFailed");
 
       if (err.response?.data) {
         if (typeof err.response.data.message === "string") {
           errorMessage = err.response.data.message;
         } else if (Array.isArray(err.response.data.message)) {
-          // Join multiple validation errors
           errorMessage = err.response.data.message.join(", ");
         } else if (err.response.data.error) {
           errorMessage = err.response.data.error;
@@ -291,7 +285,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
       const response = await forgotPassword(formData.email);
       setSuccess(response.message);
 
-      // For demo purposes, show the temporary password
       if (response.tempPassword) {
         setTempPassword(response.tempPassword);
       }
@@ -327,7 +320,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         confirmPassword: "",
       }));
     } catch (err: any) {
-      // Handle different error response structures
       let errorMessage = t("errors.changePasswordFailed");
 
       if (err.response?.data) {
@@ -353,18 +345,60 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     setSuccess("");
 
     try {
-      await updateProfile({
+      let formattedDateOfBirth: string | undefined = undefined;
+
+      // Only include dateOfBirth if it has a valid value
+      if (formData.dateOfBirth && formData.dateOfBirth.trim() !== "") {
+        const parts = formData.dateOfBirth.split("-");
+        if (parts.length === 3 && parts[0].length === 4) {
+          // Convert from YYYY-MM-DD (HTML date input) to DD-MM-YYYY (backend format)
+          formattedDateOfBirth = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        } else if (parts.length === 3 && parts[0].length === 2) {
+          // Already in DD-MM-YYYY format
+          formattedDateOfBirth = formData.dateOfBirth;
+        }
+      }
+
+      const profileData: any = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
         address: formData.address,
         school: formData.school,
-        dateOfBirth: formData.dateOfBirth,
-      });
+      };
+
+      // Only include dateOfBirth if it's properly formatted
+      if (formattedDateOfBirth) {
+        profileData.dateOfBirth = formattedDateOfBirth;
+      }
+
+      await updateProfile(profileData);
 
       setSuccess(t("auth.profileUpdateSuccess"));
     } catch (err: any) {
-      setError(err.response?.data?.message || t("errors.profileUpdateFailed"));
+      let errorMessage = t("errors.profileUpdateFailed");
+
+      if (err.response?.data) {
+        const data = err.response.data;
+
+        if (data.error && Array.isArray(data.error.message)) {
+          errorMessage = data.error.message.join(", ");
+        } else if (data.error && typeof data.error.message === "string") {
+          errorMessage = data.error.message;
+        } else if (Array.isArray(data.message)) {
+          errorMessage = data.message.join(", ");
+        } else if (typeof data.message === "string") {
+          errorMessage = data.message;
+        } else if (data.error && typeof data.error === "string") {
+          errorMessage = data.error;
+        } else {
+          errorMessage = JSON.stringify(data);
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -477,7 +511,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         {(mode === "profile" || mode === "change-password") && (
           <button
             onClick={() => navigate(-1)}
-            className="mb-4 flex items-center text-blue-600 hover:text-blue-500"
+            className="mb-4 flex items-center text-blue-600 hover:text-blue-500 pl-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t("common.back")}
@@ -611,26 +645,52 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
               <>
                 <div>
                   <label
-                    htmlFor="name"
+                    htmlFor="firstName"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    {t("auth.fullName")}
+                    {t("auth.firstName")}
                   </label>
                   <div className="mt-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <User className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
-                      id="name"
-                      name="name"
+                      id="firstName"
+                      name="firstName"
                       type="text"
                       required
-                      value={formData.name}
+                      value={formData.firstName}
                       onChange={(e) =>
-                        handleInputChange("name", e.target.value)
+                        handleInputChange("firstName", e.target.value)
                       }
                       className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterFullName")}
+                      placeholder={t("auth.enterFirstName")}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    {t("auth.lastName")}
+                  </label>
+                  <div className="mt-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      required
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
+                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={t("auth.enterLastName")}
                     />
                   </div>
                 </div>
@@ -988,6 +1048,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             {/* Profile Form */}
             {mode === "profile" && (
               <>
+                {isLoadingProfile && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    <p className="text-sm text-blue-600">
+                      {t("auth.loadingProfile")}
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
                     <label
@@ -1147,7 +1216,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || (mode === "profile" && isLoadingProfile)}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {mode === "profile" && <Save className="h-5 w-5 mr-2" />}

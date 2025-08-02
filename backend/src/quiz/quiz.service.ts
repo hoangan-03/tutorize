@@ -72,7 +72,13 @@ export class QuizService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -139,7 +145,13 @@ export class QuizService {
           creator: {
             select: {
               id: true,
-              name: true,
+              profile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+
               email: true,
             },
           },
@@ -177,7 +189,13 @@ export class QuizService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -257,7 +275,13 @@ export class QuizService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -383,7 +407,12 @@ export class QuizService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
             email: true,
           },
         },
@@ -467,7 +496,13 @@ export class QuizService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -666,7 +701,13 @@ export class QuizService {
         user: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -724,7 +765,7 @@ export class QuizService {
         user: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -854,7 +895,13 @@ export class QuizService {
               creator: {
                 select: {
                   id: true,
-                  name: true,
+                  email: true,
+                  profile: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
                 },
               },
             },
@@ -887,7 +934,13 @@ export class QuizService {
         user: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -903,7 +956,13 @@ export class QuizService {
             creator: {
               select: {
                 id: true,
-                name: true,
+                profile: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+
                 email: true,
               },
             },
@@ -1189,7 +1248,13 @@ export class QuizService {
         user: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },

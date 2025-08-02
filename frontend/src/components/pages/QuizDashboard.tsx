@@ -53,6 +53,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { stats, isLoading: loading } = useDetailedQuizStats(quiz?.id);
+  console.log("Quiz stats:", stats);
   const [activeTab, setActiveTab] = useState<
     "overview" | "students" | "questions"
   >("overview");
@@ -69,7 +70,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
         t("quizzes.dashboard.status"),
       ],
       ...stats.submissions.map((submission: any) => [
-        submission.user?.name || "Không xác định",
+        submission.user?.profile?.firstName || "Không xác định",
         submission.score.toString(),
         formatTime(submission.timeSpent || 0),
         new Date(submission.submittedAt).toLocaleString("vi-VN"),
@@ -177,7 +178,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="flex items-center space-x-3">
             <Clock className="h-5 w-5 text-blue-600" />
-            <div>
+            <div className="text-start">
               <p className="text-sm text-gray-500">
                 {t("quizzes.dashboard.timeLimit")}
               </p>
@@ -188,7 +189,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
           </div>
           <div className="flex items-center space-x-3">
             <Calendar className="h-5 w-5 text-red-600" />
-            <div>
+            <div className="text-start">
               <p className="text-sm text-gray-500">
                 {t("quizzes.dashboard.deadline")}
               </p>
@@ -199,7 +200,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
           </div>
           <div className="flex items-center space-x-3">
             <Users className="h-5 w-5 text-purple-600" />
-            <div>
+            <div className="text-start">
               <p className="text-sm text-gray-500">
                 {t("quizzes.dashboard.totalQuestions")}
               </p>
@@ -207,8 +208,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <BarChart3 className="h-5 w-5 text-green-600" />
-            <div>
+            <div className="text-start">
               <p className="text-sm text-gray-500">
                 {t("quizzes.dashboard.status")}
               </p>
@@ -400,7 +400,10 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                   <tr key={submission.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {submission.user?.name || "Không xác định"}
+                        {submission.user?.profile?.lastName +
+                          " " +
+                          submission.user?.profile?.firstName ||
+                          "Không xác định"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

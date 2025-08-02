@@ -566,6 +566,14 @@ const StudentQuizView: React.FC = () => {
           // For manual submit, show results page
           setQuizResults(results);
           setCurrentView("result");
+
+          // Clear localStorage since quiz is completed
+          if (storageKey) {
+            localStorage.removeItem(storageKey);
+          }
+
+          // Navigate to the result URL to update the address bar
+          navigate(`/quiz/${currentQuiz.id}`, { replace: true });
         }
 
         setTimeLeft(0); // Stop the timer
@@ -1328,7 +1336,8 @@ const StudentQuizView: React.FC = () => {
                   <span>{t("quizzes.back")}</span>
                 </button>
                 <div className="flex items-center space-x-4 w-full md:w-auto">
-                  {(quizResults.currentAttempt ?? 0) > 0 ? (
+                  {quizResults.canRetake &&
+                  (quizResults.remainingAttempts ?? 0) > 0 ? (
                     <button
                       onClick={() => {
                         const quizIdToRetake =
@@ -1336,6 +1345,10 @@ const StudentQuizView: React.FC = () => {
                           quizResults.quiz?.id ||
                           Number(quizId);
                         if (quizIdToRetake) {
+                          // Clear localStorage before retaking
+                          if (storageKey) {
+                            localStorage.removeItem(storageKey);
+                          }
                           navigate(`/quiz/${quizIdToRetake}/play`);
                         } else {
                           showError(
@@ -1347,7 +1360,7 @@ const StudentQuizView: React.FC = () => {
                     >
                       <RotateCw className="h-4 w-4" />
                       <span>
-                        {t("quizzes.retake")} ({quizResults.currentAttempt}{" "}
+                        {t("quizzes.retake")} ({quizResults.remainingAttempts}{" "}
                         {t("quizzes.attemptsLeft")})
                       </span>
                     </button>
@@ -1470,6 +1483,10 @@ const StudentQuizView: React.FC = () => {
                     quizIdToRetake
                   );
                   if (quizIdToRetake) {
+                    // Clear localStorage before retaking
+                    if (storageKey) {
+                      localStorage.removeItem(storageKey);
+                    }
                     navigate(`/quiz/${quizIdToRetake}/play`);
                   } else {
                     showError("Không thể làm lại quiz. Vui lòng thử lại.");
@@ -1819,7 +1836,10 @@ const StudentQuizView: React.FC = () => {
                         </div>
                         <div className="text-sm text-gray-500 text-start flex items-center">
                           <Users className="h-4 w-4 mr-1" />
-                          <span>{quiz.creator?.name || "Không xác định"}</span>
+                          <span>
+                            {quiz.creator?.profile?.firstName ||
+                              "Không xác định"}
+                          </span>
                         </div>
                       </div>
                     </div>

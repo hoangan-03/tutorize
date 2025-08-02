@@ -117,11 +117,8 @@ export interface User {
   id: number;
   email: string;
   password: string;
-  name: string;
   role: Role;
-  avatar?: string;
-  grade?: number;
-  subject?: string;
+
   isActive: boolean;
   isVerified: boolean;
   lastLoginAt?: string;
@@ -148,6 +145,9 @@ export interface UserProfile {
   lastName?: string;
   phone?: string;
   dateOfBirth?: string;
+  avatar?: string;
+  grade?: number;
+  subject?: string;
   address?: string;
   school?: string;
   preferences: Record<string, unknown>;
@@ -166,7 +166,8 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   role: Role;
   grade?: number;
   subject?: string;

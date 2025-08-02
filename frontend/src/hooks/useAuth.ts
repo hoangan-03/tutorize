@@ -54,6 +54,7 @@ export const useAuth = (): UseAuthReturn => {
         setUser(currentUser);
         setToken(token);
         authService.saveUser(currentUser);
+        console.log("User initialized:", currentUser);
       }
     };
 

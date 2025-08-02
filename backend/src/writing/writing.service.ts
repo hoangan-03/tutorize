@@ -59,7 +59,7 @@ export class WritingService {
         user: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -99,7 +99,7 @@ export class WritingService {
           user: {
             select: {
               id: true,
-              name: true,
+
               email: true,
             },
           },
@@ -126,7 +126,7 @@ export class WritingService {
         user: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -246,9 +246,7 @@ export class WritingService {
           type: true,
           submittedAt: true,
           user: {
-            select: {
-              name: true,
-            },
+            select: {},
           },
         },
       }),
@@ -284,6 +282,7 @@ export class WritingService {
   private async callAIAssessment(
     content: string,
     type: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     prompt?: string,
   ): Promise<WritingAssessmentResultDto> {
     // Mock AI assessment - replace with actual AI service call
@@ -351,6 +350,7 @@ export class WritingService {
 
   private calculateCoherenceScore(
     content: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     complexSentences: number,
   ): number {
     let score = 5.0;
@@ -477,7 +477,7 @@ export class WritingService {
         user: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },

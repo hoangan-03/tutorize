@@ -82,11 +82,17 @@ export class RegisterDto {
   @Validate(PasswordStrengthValidator)
   password: string;
 
-  @ApiProperty({ example: 'Nguyễn Văn A', description: 'Họ và tên' })
+  @ApiProperty({ example: 'An', description: 'Tên' })
   @IsString()
   @MinLength(2, { message: 'Tên phải có ít nhất 2 ký tự' })
   @MaxLength(100, { message: 'Tên không được quá 100 ký tự' })
-  name: string;
+  firstName: string;
+
+  @ApiProperty({ example: 'Nguyễn', description: 'Họ' })
+  @IsString()
+  @MinLength(2, { message: 'Họ phải có ít nhất 2 ký tự' })
+  @MaxLength(100, { message: 'Họ không được quá 100 ký tự' })
+  lastName: string;
 
   @ApiProperty({ enum: $Enums.Role, description: 'Vai trò người dùng' })
   @IsEnum($Enums.Role, { message: 'Vai trò không hợp lệ' })
@@ -197,6 +203,13 @@ export class UpdateProfileDto {
   @IsString()
   @Matches(/^\d{2}-\d{2}-\d{4}$/, {
     message: 'Ngày sinh phải có định dạng DD-MM-YYYY (ví dụ: 01-01-2000)',
+  })
+  @Transform(({ value }) => {
+    // If empty string or null, return undefined to skip validation
+    if (!value || value.trim() === '') {
+      return undefined;
+    }
+    return value;
   })
   dateOfBirth?: string;
 }

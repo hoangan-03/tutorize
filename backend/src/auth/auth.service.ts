@@ -30,9 +30,9 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, name, role, grade, subject } = registerDto;
+    const { email, password, firstName, lastName, role, grade, subject } =
+      registerDto;
 
-    // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -41,21 +41,19 @@ export class AuthService {
       throw new ConflictException('Email đã được sử dụng');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user with profile
     const user = await this.prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        name,
-        role,
-        grade: role === $Enums.Role.STUDENT ? grade : null,
-        subject:
-          role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
         profile: {
           create: {
+            firstName,
+            lastName,
+            grade: role === $Enums.Role.STUDENT ? grade : null,
+            subject:
+              role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
             preferences: {
               language: 'vi',
               theme: 'light',
@@ -70,10 +68,8 @@ export class AuthService {
       },
     });
 
-    // Generate JWT token
     const tokens = await this.generateTokens(user);
 
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
     return {

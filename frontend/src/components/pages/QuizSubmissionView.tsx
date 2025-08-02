@@ -43,6 +43,10 @@ export const QuizSubmissionView: React.FC = () => {
     }
   };
 
+  console.log("Submission Data:", submission);
+  console.log("Answers array:", submission?.answers);
+  console.log("Answers length:", submission?.answers?.length);
+
   if (isLoading) {
     return (
       <div className="p-8">
@@ -177,7 +181,9 @@ export const QuizSubmissionView: React.FC = () => {
                   {t("quizzes.submission.student")}
                 </p>
                 <p className="font-semibold">
-                  {submission.user?.name || t("common.unknown")}
+                  {submission.user?.profile?.lastName +
+                    " " +
+                    submission.user?.profile?.firstName || t("common.unknown")}
                 </p>
               </div>
             </div>
@@ -239,108 +245,125 @@ export const QuizSubmissionView: React.FC = () => {
             </h3>
           </div>
           <div className="p-6">
-            <div className="space-y-6">
-              {submission.answers?.map(
-                (answer: AnswerDetail, index: number) => (
-                  <div
-                    key={answer.id}
-                    className={`border rounded-lg p-6 ${
-                      answer.isCorrect
-                        ? "border-green-200 bg-green-50"
-                        : "border-red-200 bg-red-50"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <h4 className="font-medium text-gray-900">
-                        {t("quizzes.question")} {index + 1}
-                      </h4>
-                      <div className="flex items-center">
-                        {answer.isCorrect ? (
-                          <div className="flex items-center text-green-600">
-                            <CheckCircle className="h-5 w-5 mr-1" />
-                            <span className="text-sm font-medium">
-                              {t("quizzes.submission.correct")}
-                            </span>
+            {!submission.answers || submission.answers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 text-lg">
+                  {t("quizzes.submission.noAnswersFound")}
+                </p>
+                <p className="text-gray-400 text-sm mt-2">
+                  This submission appears to have no saved answers. This could
+                  happen if:
+                </p>
+                <ul className="text-gray-400 text-sm mt-2 list-disc list-inside">
+                  <li>The quiz was submitted without answering questions</li>
+                  <li>The answers were not properly saved during submission</li>
+                  <li>There was a database issue during submission</li>
+                </ul>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {submission.answers?.map(
+                  (answer: AnswerDetail, index: number) => (
+                    <div
+                      key={answer.id}
+                      className={`border rounded-lg p-6 ${
+                        answer.isCorrect
+                          ? "border-green-200 bg-green-50"
+                          : "border-red-200 bg-red-50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <h4 className="font-medium text-gray-900">
+                          {t("quizzes.question")} {index + 1}
+                        </h4>
+                        <div className="flex items-center">
+                          {answer.isCorrect ? (
+                            <div className="flex items-center text-green-600">
+                              <CheckCircle className="h-5 w-5 mr-1" />
+                              <span className="text-sm font-medium">
+                                {t("quizzes.submission.correct")}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-red-600">
+                              <XCircle className="h-5 w-5 mr-1" />
+                              <span className="text-sm font-medium">
+                                {t("quizzes.submission.incorrect")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <p className="text-gray-700 mb-2">
+                          <strong>{t("quizzes.submission.question")}:</strong>{" "}
+                          {answer.question?.question}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-1">
+                            {t("quizzes.submission.studentAnswer")}:
+                          </p>
+                          <div
+                            className={`p-3 rounded-lg ${
+                              answer.isCorrect ? "bg-green-100" : "bg-red-100"
+                            }`}
+                          >
+                            <p className="text-sm">
+                              {formatMultipleChoiceAnswer(
+                                answer.userAnswer ||
+                                  t("quizzes.submission.noAnswer"),
+                                answer.question?.options || [],
+                                answer.question?.type || ""
+                              )}
+                            </p>
                           </div>
-                        ) : (
-                          <div className="flex items-center text-red-600">
-                            <XCircle className="h-5 w-5 mr-1" />
-                            <span className="text-sm font-medium">
-                              {t("quizzes.submission.incorrect")}
-                            </span>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-1">
+                            {t("quizzes.submission.correctAnswer")}:
+                          </p>
+                          <div className="p-3 bg-blue-100 rounded-lg">
+                            <p className="text-sm">
+                              {formatMultipleChoiceAnswer(
+                                answer.question?.correctAnswer || "",
+                                answer.question?.options || [],
+                                answer.question?.type || ""
+                              )}
+                            </p>
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <p className="text-gray-700 mb-2">
-                        <strong>{t("quizzes.submission.question")}:</strong>{" "}
-                        {answer.question?.question}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 mb-1">
-                          {t("quizzes.submission.studentAnswer")}:
-                        </p>
-                        <div
-                          className={`p-3 rounded-lg ${
-                            answer.isCorrect ? "bg-green-100" : "bg-red-100"
-                          }`}
-                        >
-                          <p className="text-sm">
-                            {formatMultipleChoiceAnswer(
-                              answer.userAnswer ||
-                                t("quizzes.submission.noAnswer"),
-                              answer.question?.options || [],
-                              answer.question?.type || ""
-                            )}
-                          </p>
                         </div>
                       </div>
 
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 mb-1">
-                          {t("quizzes.submission.correctAnswer")}:
-                        </p>
-                        <div className="p-3 bg-blue-100 rounded-lg">
-                          <p className="text-sm">
-                            {formatMultipleChoiceAnswer(
-                              answer.question?.correctAnswer || "",
-                              answer.question?.options || [],
-                              answer.question?.type || ""
-                            )}
+                      {answer.question?.explanation && (
+                        <div className="mt-4">
+                          <p className="text-sm font-medium text-gray-700 mb-1">
+                            {t("quizzes.submission.explanation")}:
                           </p>
+                          <div className="p-3 bg-blue-50 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                              {answer.question.explanation}
+                            </p>
+                          </div>
                         </div>
+                      )}
+
+                      <div className="mt-4 text-right">
+                        <span className="text-sm text-gray-600">
+                          {t("quizzes.submission.points")}:{" "}
+                          {answer.isCorrect ? answer.question?.points || 1 : 0}{" "}
+                          / {answer.question?.points || 1}
+                        </span>
                       </div>
                     </div>
-
-                    {answer.question?.explanation && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-700 mb-1">
-                          {t("quizzes.submission.explanation")}:
-                        </p>
-                        <div className="p-3 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-gray-700">
-                            {answer.question.explanation}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="mt-4 text-right">
-                      <span className="text-sm text-gray-600">
-                        {t("quizzes.submission.points")}:{" "}
-                        {answer.isCorrect ? answer.question?.points || 1 : 0} /{" "}
-                        {answer.question?.points || 1}
-                      </span>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
+                  )
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

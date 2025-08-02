@@ -36,7 +36,13 @@ export class ExerciseService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -93,7 +99,13 @@ export class ExerciseService {
           creator: {
             select: {
               id: true,
-              name: true,
+              profile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+
               email: true,
             },
           },
@@ -125,8 +137,14 @@ export class ExerciseService {
         creator: {
           select: {
             id: true,
-            name: true,
+
             email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         },
         _count: {
@@ -185,7 +203,13 @@ export class ExerciseService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -199,7 +223,7 @@ export class ExerciseService {
             user: {
               select: {
                 id: true,
-                name: true,
+
                 email: true,
               },
             },
@@ -264,7 +288,13 @@ export class ExerciseService {
         creator: {
           select: {
             id: true,
-            name: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+
             email: true,
           },
         },
@@ -374,7 +404,7 @@ export class ExerciseService {
         user: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -435,7 +465,7 @@ export class ExerciseService {
         user: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -469,7 +499,7 @@ export class ExerciseService {
           exercise: {
             select: {
               id: true,
-              name: true,
+
               subject: true,
               grade: true,
               status: true,
@@ -477,7 +507,12 @@ export class ExerciseService {
               creator: {
                 select: {
                   id: true,
-                  name: true,
+                  profile: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
                 },
               },
             },
@@ -528,7 +563,7 @@ export class ExerciseService {
             exercise: {
               select: {
                 id: true,
-                name: true,
+
                 subject: true,
               },
             },

@@ -78,7 +78,7 @@ export class DocumentService {
           uploader: {
             select: {
               id: true,
-              name: true,
+
               email: true,
             },
           },
@@ -105,7 +105,7 @@ export class DocumentService {
         uploader: {
           select: {
             id: true,
-            name: true,
+
             email: true,
           },
         },
@@ -248,7 +248,7 @@ export class DocumentService {
           user: {
             select: {
               id: true,
-              name: true,
+
               email: true,
             },
           },
