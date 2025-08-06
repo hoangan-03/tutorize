@@ -11,6 +11,7 @@ import { ExerciseModule } from './exercise/exercise.module';
 import { DocumentModule } from './document/document.module';
 import { WritingModule } from './writing/writing.module';
 import { IeltsModule } from './ielts/ielts.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { IeltsModule } from './ielts/ielts.module';
     DocumentModule,
     WritingModule,
     IeltsModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

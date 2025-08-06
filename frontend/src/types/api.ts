@@ -51,10 +51,8 @@ export enum QuestionType {
 }
 
 export enum SubmissionStatus {
-  DRAFT = "DRAFT",
   SUBMITTED = "SUBMITTED",
   GRADED = "GRADED",
-  IN_PROGRESS = "IN_PROGRESS",
   LATE = "LATE",
 }
 
@@ -322,7 +320,7 @@ export interface ExerciseSubmission {
   id: number;
   exerciseId: number;
   userId: number;
-  content: string;
+  submissionUrl: JSON;
   score?: number;
   feedback?: string;
   submittedAt: string;
@@ -333,20 +331,6 @@ export interface ExerciseSubmission {
 
   exercise?: Exercise;
   user?: User;
-  attachments?: SubmissionAttachment[];
-}
-
-export interface SubmissionAttachment {
-  id: number;
-  submissionId: number;
-  fileName: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-  url: string;
-  uploadedAt: string;
-
-  submission?: ExerciseSubmission;
 }
 
 export interface GradingRubric {

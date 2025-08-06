@@ -28,7 +28,7 @@ import { useTranslation } from "react-i18next";
 import { useExercises, useExerciseManagement } from "../../hooks";
 import { Exercise, Subject, ExerciseStatus, EditMode } from "../../types/api";
 import { Badge } from "../ui/Badge";
-import { getDefaultDeadline } from "../utils";
+import { formatDate, getDefaultDeadline } from "../utils";
 
 export const ExerciseEditor: React.FC = () => {
   const { isTeacher, user } = useAuth();
@@ -327,27 +327,7 @@ export const ExerciseEditor: React.FC = () => {
               <p className="text-white/90 text-lg leading-relaxed max-w-3xl text-start">
                 Tạo và quản lý bài tập cho học sinh.
               </p>
-              <div className="flex items-center space-x-6 mt-4 text-sm text-white/80">
-                <div className="flex items-center space-x-1">
-                  <BookOpen className="h-4 w-4" />
-                  <span>{teacherStats.totalExercises} bài tập</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="h-4 w-4" />
-                  <span>{teacherStats.totalSubmissions} bài nộp</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    Cập nhật gần nhất:{" "}
-                    {new Date().toLocaleDateString("vi-VN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-              </div>
+            
             </div>
 
             <div className="flex flex-col items-end space-y-3">
@@ -373,13 +353,14 @@ export const ExerciseEditor: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center">
+            <div className="flex items-start">
               <div className="p-3 bg-purple-100 rounded-xl">
                 <BookOpen className="h-6 w-6 text-purple-600" />
               </div>
-              <div className="ml-4">
+              <div className="ml-4 flex flex-col items-start">
+                {" "}
                 <p className="text-sm font-medium text-gray-600">
                   Tổng bài tập
                 </p>
@@ -391,11 +372,12 @@ export const ExerciseEditor: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center">
+            <div className="flex items-start">
               <div className="p-3 bg-green-100 rounded-xl">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
-              <div className="ml-4">
+              <div className="ml-4 flex flex-col items-start">
+                {" "}
                 <p className="text-sm font-medium text-gray-600">Đang mở</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {teacherStats.activeExercises}
@@ -405,11 +387,11 @@ export const ExerciseEditor: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center">
+            <div className="flex items-start">
               <div className="p-3 bg-yellow-100 rounded-xl">
                 <FileText className="h-6 w-6 text-yellow-600" />
               </div>
-              <div className="ml-4">
+              <div className="ml-4 flex flex-col items-start">
                 <p className="text-sm font-medium text-gray-600">Bản nháp</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {teacherStats.draftExercises}
@@ -419,11 +401,11 @@ export const ExerciseEditor: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center">
+            <div className="flex items-start">
               <div className="p-3 bg-blue-100 rounded-xl">
                 <UserCheck className="h-6 w-6 text-blue-600" />
               </div>
-              <div className="ml-4">
+              <div className="ml-4 flex flex-col items-start">
                 <p className="text-sm font-medium text-gray-600">Bài nộp</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {teacherStats.totalSubmissions}
@@ -503,9 +485,7 @@ export const ExerciseEditor: React.FC = () => {
                       <div className="flex items-center space-x-6 text-sm text-gray-500">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-2" />
-                          {new Date(exercise.deadline).toLocaleDateString(
-                            "vi-VN"
-                          )}
+                          {formatDate(exercise.deadline)}
                         </div>
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-2" />
@@ -517,7 +497,7 @@ export const ExerciseEditor: React.FC = () => {
                         </div>
                         <div className="flex items-center">
                           <FileText className="h-4 w-4 mr-2" />
-                          {exercise.creator?.name || "Bạn"}
+                          {exercise.creator?.profile?.firstName || "Bạn"}
                         </div>
                       </div>
                     </div>

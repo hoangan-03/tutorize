@@ -158,10 +158,7 @@ export const QuizSubmissionView: React.FC = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {t("quizzes.submission.title")}
-              </h1>
+            <div className="flex flex-col text-start">
               <p className="text-gray-600">
                 {submission.quiz?.title || t("quizzes.submission.quizTitle")}
               </p>

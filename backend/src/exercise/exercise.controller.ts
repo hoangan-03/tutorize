@@ -22,7 +22,6 @@ import {
   CreateExerciseDto,
   UpdateExerciseDto,
   ExerciseFilterDto,
-  SubmitExerciseDto,
   GradeExerciseDto,
 } from './dto/exercise.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -166,10 +165,14 @@ export class ExerciseController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
   async submitExercise(
     @Param('id', ParseIntPipe) id: number,
-    @Body() submitExerciseDto: SubmitExerciseDto,
+    @Body() body: { googleDriveLinks: string[] },
     @CurrentUser() user: any,
   ) {
-    return this.exerciseService.submitExercise(+id, user.id, submitExerciseDto);
+    return this.exerciseService.submitExercise(
+      +id,
+      user.id,
+      body.googleDriveLinks,
+    );
   }
 
   @Get(':id/submissions')

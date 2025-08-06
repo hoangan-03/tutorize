@@ -121,7 +121,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
       .slice(0, 5)
       .map((s) => ({
         userId: s.userId,
-        userName: s.user?.name || `User ${s.userId}`,
+        userName: s.user?.profile?.firstName || `User ${s.userId}`,
         score: s.score!,
       }));
 

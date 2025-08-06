@@ -12,10 +12,10 @@ import {
   Users,
   BarChart3,
   BookOpen,
-  BookCheck,
   AlertTriangle,
   ArrowLeft,
   RotateCw,
+  CalendarClock,
 } from "lucide-react";
 import { quizService } from "../../services/quizService";
 
@@ -37,8 +37,9 @@ import {
   useQuizzes,
   useStudentStats,
 } from "../../hooks";
+import { formatDate } from "../utils";
+import { StatCard } from "../ui";
 
-// Student Quiz Component
 const StudentQuizView: React.FC = () => {
   const { user } = useAuth();
   const isTeacher = user?.role === Role.TEACHER;
@@ -47,7 +48,6 @@ const StudentQuizView: React.FC = () => {
   const navigate = useNavigate();
   const { showError, showSuccess } = useModal();
 
-  // State declarations first
   const [currentView, setCurrentView] = useState<
     "list" | "quiz" | "result" | "teacher-view"
   >("list");
@@ -61,7 +61,6 @@ const StudentQuizView: React.FC = () => {
   const { stats: userStats } = useStudentStats();
   const { submitQuizWithAnswers } = useQuizTaking();
 
-  // Dynamic hooks for specific quiz
   const parsedQuizId = quizId ? parseInt(quizId) : null;
   const isPlayRoute = window.location.pathname.includes("/play");
 
@@ -79,7 +78,6 @@ const StudentQuizView: React.FC = () => {
     correctAnswers?: number;
     percentage?: number;
     passed: boolean;
-    // For submission history
     correct?: number;
     total?: number;
     submission?: QuizSubmission;
@@ -101,7 +99,6 @@ const StudentQuizView: React.FC = () => {
     return `quiz-attempt-${user.id}-${quizId}`;
   }, [user, quizId]);
 
-  // Load state from localStorage on refresh
   useEffect(() => {
     if (storageKey) {
       const saved = localStorage.getItem(storageKey);
@@ -133,7 +130,6 @@ const StudentQuizView: React.FC = () => {
     }
   }, [storageKey]);
 
-  // Persist state to localStorage
   useEffect(() => {
     if (storageKey && currentView === "quiz" && currentQuiz) {
       const stateToSave = {
@@ -157,24 +153,6 @@ const StudentQuizView: React.FC = () => {
   ]);
 
   useEffect(() => {
-    // Check if this is a play route (direct quiz taking)
-    const isPlayRoute = window.location.pathname.includes("/play");
-
-    if (quizId && !currentQuiz) {
-      if (isPlayRoute) {
-        // Direct quiz taking - this will trigger beginQuizAttempt when detailedQuizData loads
-        console.log(
-          "Play route detected, will begin quiz attempt when data loads"
-        );
-      } else {
-        // Load quiz for history/results view - this will use the submission history hook
-        console.log("History route detected, will load submission history");
-      }
-    }
-  }, [quizId, currentQuiz]);
-
-  // Handle when quiz data loads for play route
-  useEffect(() => {
     const isPlayRoute = window.location.pathname.includes("/play");
 
     if (isPlayRoute && detailedQuizData && !currentQuiz) {
@@ -182,7 +160,6 @@ const StudentQuizView: React.FC = () => {
     }
   }, [detailedQuizData, currentQuiz]);
 
-  // Handle when submission history loads for history route
   useEffect(() => {
     const isPlayRoute = window.location.pathname.includes("/play");
 
@@ -194,16 +171,14 @@ const StudentQuizView: React.FC = () => {
         submissionHistory.submissions &&
         submissionHistory.submissions.length > 0
       ) {
-        // User has taken this quiz, show history view
         setCurrentQuiz(submissionHistory.quiz);
         setQuizResults({
           ...submissionHistory,
-          passed: false, // Default value since this is submission history view
+          passed: false,
           isSubmissionHistory: true,
         });
         setCurrentView("result");
       } else {
-        // No submissions, redirect to play mode
         navigate(`/quiz/${quizId}/play`);
       }
     }
@@ -216,11 +191,8 @@ const StudentQuizView: React.FC = () => {
     detailedQuizData,
   ]);
 
-  // Load quiz list when no specific quiz is being viewed
   useEffect(() => {
     if (!quizId) {
-      // Load the list of quizzes when no specific quiz is selected
-      // Reset all quiz-related state when navigating back to quiz list
       setCurrentView("list");
       setCurrentQuiz(null);
       setCurrentQuestionIndex(0);
@@ -235,7 +207,6 @@ const StudentQuizView: React.FC = () => {
       localStorage.removeItem(storageKey);
     }
 
-    // Reset all quiz state
     setCurrentView("list");
     setCurrentQuiz(null);
     setCurrentQuestionIndex(0);
@@ -243,7 +214,6 @@ const StudentQuizView: React.FC = () => {
     setQuizResults(null);
     setTimeLeft(0);
 
-    // Navigate to quiz list
     navigate("/quizzes", { replace: true });
   }, [storageKey, navigate]);
 
@@ -255,7 +225,6 @@ const StudentQuizView: React.FC = () => {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            // Auto submit when time runs out - use setTimeout to avoid blocking the state update
             setTimeout(async () => {
               try {
                 showSuccess(
@@ -284,25 +253,31 @@ const StudentQuizView: React.FC = () => {
     };
   }, [currentView, timeLeft]);
 
-  // Auto-submit with score 0 when closing/navigating away
   const autoSubmitWithZeroScore = async () => {
     if (!currentQuiz || !currentQuiz.questions || isTeacher) return;
 
     try {
       const submitData = {
-        answers: [], // Submit empty answers for score 0
+        answers: [],
         timeSpent: Math.floor((Date.now() - quizStartTime) / 1000),
       };
 
       await submitQuizWithAnswers(currentQuiz.id, submitData);
 
-      // Clear storage
       if (storageKey) {
         localStorage.removeItem(storageKey);
       }
     } catch (error) {
       console.error("Error auto-submitting quiz:", error);
     }
+  };
+
+  const handleQuizExit = async () => {
+    if (currentView === "quiz" && currentQuiz && !isTeacher) {
+      console.log("Quiz exit requested - auto-submitting with score 0");
+      await autoSubmitWithZeroScore();
+    }
+    clearAttemptAndNavigate();
   };
 
   useEffect(() => {
@@ -341,9 +316,26 @@ const StudentQuizView: React.FC = () => {
     };
   }, [currentView, currentQuiz, isTeacher]);
 
+  // Handle browser navigation (back button, etc.)
+  useEffect(() => {
+    const handlePopState = async () => {
+      if (currentView === "quiz" && currentQuiz && !isTeacher) {
+        console.log(
+          "Browser navigation detected during quiz - auto-submitting with score 0"
+        );
+        await autoSubmitWithZeroScore();
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [currentView, currentQuiz, isTeacher, autoSubmitWithZeroScore]);
+
   const beginQuizAttempt = async (id: number) => {
     try {
-      // Validation
       if (!id || id <= 0) {
         console.error("Invalid quiz ID:", id);
         showError("ID quiz không hợp lệ.");
@@ -352,7 +344,6 @@ const StudentQuizView: React.FC = () => {
 
       console.log("Beginning quiz attempt for ID:", id);
 
-      // Use the data from the hook if available
       const detailedQuiz = detailedQuizData;
       if (!detailedQuiz) {
         console.log("No quiz data available, will retry when data loads");
@@ -365,7 +356,6 @@ const StudentQuizView: React.FC = () => {
         return;
       }
 
-      // Check if there's saved state to restore
       const savedState = storageKey ? localStorage.getItem(storageKey) : null;
       let hasValidSavedState = false;
 
@@ -391,7 +381,6 @@ const StudentQuizView: React.FC = () => {
       setCurrentQuiz(detailedQuiz);
       setCurrentView("quiz");
 
-      // Only reset timer and progress if there's no valid saved state
       if (!hasValidSavedState) {
         setQuizStartTime(Date.now());
         setTimeLeft((detailedQuiz.timeLimit || 15) * 60);
@@ -428,14 +417,9 @@ const StudentQuizView: React.FC = () => {
   const startQuiz = async (quiz: Quiz) => {
     try {
       if (isTeacher) {
-        // For teacher view, navigate to a specific URL to trigger the hook
         navigate(`/quiz/${quiz.id}?view=teacher`);
         return;
       }
-
-      // For students, check if they have submission history first
-      // This will be handled by navigating to the quiz route which will load the submission history
-      // If there are submissions, it will show history, if not, it will redirect to /play
       navigate(`/quiz/${quiz.id}`);
     } catch (error) {
       console.error("Lỗi khi tải chi tiết quiz:", error);
@@ -477,10 +461,8 @@ const StudentQuizView: React.FC = () => {
 
     const questions = currentQuiz.questions;
 
-    // Submit quiz if not teacher
     if (!isTeacher) {
       try {
-        // Filter out unanswered questions
         const validAnswers = selectedAnswers
           .map((answer, index) => {
             const userAnswer =
@@ -517,21 +499,9 @@ const StudentQuizView: React.FC = () => {
           submitData
         );
 
-        // Fetch fresh submission history directly from API (bypassing cache)
-        console.log("Fetching fresh submission history directly from API...");
         const freshSubmissionHistory =
           await quizService.getQuizSubmissionHistory(currentQuiz.id);
 
-        console.log(
-          "Fresh SubmissionHistory response:",
-          freshSubmissionHistory
-        );
-        console.log(
-          "maxScore from fresh submissionHistory:",
-          freshSubmissionHistory.maxScore
-        );
-
-        // Calculate results from submission
         const results = {
           correct: submission.answers?.filter((a) => a.isCorrect).length || 0,
           total: questions.length,
@@ -542,13 +512,12 @@ const StudentQuizView: React.FC = () => {
           canRetake: freshSubmissionHistory.canRetake,
           remainingAttempts: freshSubmissionHistory.remainingAttempts,
           currentAttempt: freshSubmissionHistory.currentAttempt,
-          maxScore: freshSubmissionHistory.maxScore ?? undefined, // Convert null to undefined
+          maxScore: freshSubmissionHistory.maxScore ?? undefined,
           isSubmissionHistory: true,
-          quiz: freshSubmissionHistory.quiz || currentQuiz, // Ensure quiz info is preserved
+          quiz: freshSubmissionHistory.quiz || currentQuiz,
         };
 
         if (isAutoSubmit) {
-          // For auto-submit, show message and navigate back to quiz list
           showSuccess(
             `Hết giờ làm bài! Quiz đã được nộp với ${validAnswers.length}/${
               questions.length
@@ -563,25 +532,20 @@ const StudentQuizView: React.FC = () => {
             clearAttemptAndNavigate();
           }, 8500);
         } else {
-          // For manual submit, show results page
           setQuizResults(results);
           setCurrentView("result");
 
-          // Clear localStorage since quiz is completed
           if (storageKey) {
             localStorage.removeItem(storageKey);
           }
 
-          // Navigate to the result URL to update the address bar
           navigate(`/quiz/${currentQuiz.id}`, { replace: true });
         }
 
-        setTimeLeft(0); // Stop the timer
-        // Stats will be automatically refreshed via SWR hooks
+        setTimeLeft(0);
       } catch (error: unknown) {
         console.error("Error submitting quiz:", error);
 
-        // Handle specific error cases
         if (error && typeof error === "object" && "response" in error) {
           const httpError = error as {
             response?: { status?: number; data?: { message?: string } };
@@ -603,7 +567,6 @@ const StudentQuizView: React.FC = () => {
           }
         }
 
-        // For auto-submit, don't show error - just navigate back
         if (isAutoSubmit) {
           console.error("Auto-submit failed, navigating back to quiz list");
           clearAttemptAndNavigate();
@@ -614,7 +577,6 @@ const StudentQuizView: React.FC = () => {
     }
   };
 
-  // Teacher View for Quiz with Answers
   if (currentView === "teacher-view" && currentQuiz) {
     const questions = currentQuiz.questions || [];
 
@@ -888,7 +850,7 @@ const StudentQuizView: React.FC = () => {
                   <button
                     onClick={() => {
                       setShowTestModal(false);
-                      clearAttemptAndNavigate();
+                      handleQuizExit();
                     }}
                     className="px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border border-blue-400 hover:border-indigo-500"
                     autoFocus
@@ -1377,8 +1339,6 @@ const StudentQuizView: React.FC = () => {
       );
     }
 
-    // Original single submission result view
-
     return (
       <div className="p-8">
         <div className="max-w-4xl mx-auto">
@@ -1503,7 +1463,6 @@ const StudentQuizView: React.FC = () => {
     );
   }
 
-  // Show loading when there's a quizId but no quiz data or currentView is still "list"
   if (quizId && !currentQuiz && currentView === "list") {
     return (
       <div className="p-8">
@@ -1524,17 +1483,15 @@ const StudentQuizView: React.FC = () => {
     <div className="p-4 md:px-12 lg:px-36 md:py-12">
       <div className="max-w-8xl mx-auto">
         {/* Page Header */}
-        <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
+        <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-2 md:p-12 mb-3 lg:mb-8 overflow-hidden shadow-xl h-[70px] lg:h-[120px]">
           <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
-            <div className="flex-1">
-              <h1 className="text-xl md:text-2xl lg:text-4xl font-bold text-white">
-                {isTeacher
-                  ? t("quizzes.quizManagement")
-                  : t("quizzes.onlineQuizzes")}
-              </h1>
-            </div>
-
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-center md:justify-between w-full h-full">
+            <div></div>
+            <h1 className="text-xl md:text-2xl lg:text-4xl font-bold text-white">
+              {isTeacher
+                ? t("quizzes.quizManagement")
+                : t("quizzes.onlineQuizzes")}
+            </h1>
             {/* Decorative Quiz Elements */}
             <div className="hidden md:block relative">
               <div className="relative">
@@ -1594,96 +1551,41 @@ const StudentQuizView: React.FC = () => {
             <div className="max-w-8xl mx-auto">
               {/* Stats Cards - Student view */}
               {!isTeacher && (
-                <div className="flex flex-wrap gap-3 md:gap-6 mb-8">
-                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
-                    {/* Blue ribbon */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
-                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <FileText className="h-6 w-6 text-blue-600" />
-                      </div>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center">
-                      <p className="text-xl font-semibold text-gray-900">
-                        {userStats.totalQuizzes}
-                      </p>
-                      <p className="text-base font-medium text-gray-600">
-                        {t("quizzes.totalQuizzes")}
-                      </p>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                  <StatCard
+                    icon={<FileText className="h-6 w-6 text-blue-600" />}
+                    bgColor="bg-blue-100"
+                    label={t("quizzes.totalQuizzes")}
+                    value={userStats.totalQuizzes}
+                  />
 
-                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
-                    {/* Green ribbon */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
-                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <CheckCircle className="h-6 w-6 text-green-600" />
-                      </div>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center">
-                      <p className="text-xl font-semibold text-gray-900">
-                        {userStats.completedQuizzes}
-                      </p>
-                      <p className="ml-2 text-base font-medium text-gray-600">
-                        {t("quizzes.completed")}
-                      </p>
-                    </div>
-                  </div>
+                  <StatCard
+                    icon={<CheckCircle className="h-6 w-6 text-green-600" />}
+                    bgColor="bg-green-100"
+                    label={t("quizzes.completed")}
+                    value={userStats.completedQuizzes}
+                  />
 
-                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
-                    {/* Red ribbon */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600"></div>
-                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
-                      <div className="p-2 bg-red-100 rounded-lg">
-                        <AlertTriangle className="h-6 w-6 text-red-600" />
-                      </div>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center">
-                      <p className="text-lg font-semibold text-gray-900">
-                        {userStats.overdueQuizzes}
-                      </p>
-                      <p className="text-sm font-medium text-gray-600">
-                        {t("quizzes.overdue")}
-                      </p>
-                    </div>
-                  </div>
+                  <StatCard
+                    icon={<Clock className="h-6 w-6 text-red-600" />}
+                    bgColor="bg-red-100"
+                    label={t("quizzes.overdue")}
+                    value={userStats.overdueQuizzes}
+                  />
 
-                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
-                    {/* Purple ribbon */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-purple-600"></div>
-                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Trophy className="h-6 w-6 text-purple-600" />
-                      </div>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center">
-                      <p className="text-xl font-semibold text-gray-900">
-                        {userStats.perfectCount}
-                      </p>
-                      <p className="text-base font-medium text-gray-600">
-                        {t("quizzes.perfect")}
-                      </p>
-                    </div>
-                  </div>
+                  <StatCard
+                    icon={<Trophy className="h-6 w-6 text-purple-600" />}
+                    bgColor="bg-purple-100"
+                    label={t("quizzes.perfect")}
+                    value={userStats.perfectCount}
+                  />
 
-                  <div className="bg-white px-3 py-2 md:px-5 md:py-2 rounded-lg shadow-sm border border-gray-200 flex items-center w-full sm:w-[calc(50%-6px)] md:w-[180px] lg:flex-1 lg:min-w-0 relative overflow-hidden">
-                    {/* Orange ribbon */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-orange-600"></div>
-                    <div className="w-10 flex-shrink-0 flex items-center justify-center">
-                      <div className="p-2 bg-orange-100 rounded-lg">
-                        <BarChart3 className="h-6 w-6 text-orange-600" />
-                      </div>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center">
-                      <p className="text-xl font-semibold text-gray-900">
-                        {(userStats.averageScore || 0).toFixed(1)}
-                      </p>
-                      <p className="text-base font-medium text-gray-600">
-                        {t("quizzes.averageScore")}
-                      </p>
-                    </div>
-                  </div>
+                  <StatCard
+                    icon={<BarChart3 className="h-6 w-6 text-orange-600" />}
+                    bgColor="bg-orange-100"
+                    label={t("quizzes.averageScore")}
+                    value={(userStats.averageScore || 0).toFixed(1)}
+                  />
                 </div>
               )}
 
@@ -1828,10 +1730,9 @@ const StudentQuizView: React.FC = () => {
                           </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <BookCheck className="h-4 w-4 mr-1" />
+                          <CalendarClock className="h-4 w-4 mr-1" />
                           <span>
-                            {quiz.submissions?.length || 0}{" "}
-                            {t("quizzes.submissions")}
+                            {t("quizzes.deadline")}: {formatDate(quiz.deadline)}{" "}
                           </span>
                         </div>
                         <div className="text-sm text-gray-500 text-start flex items-center">
@@ -1885,6 +1786,5 @@ const StudentQuizView: React.FC = () => {
 };
 
 export const OnlineQuizzes: React.FC = () => {
-  // Always show StudentQuizView - teachers will use the separate quiz dashboard route
   return <StudentQuizView />;
 };

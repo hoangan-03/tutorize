@@ -14,6 +14,7 @@ import { InlineMath } from "react-katex";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Exercise, Subject } from "../../types/api";
+import { formatDate } from "../utils";
 
 interface ExercisePreviewProps {
   exercise: Exercise;
@@ -379,7 +380,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                   </span>
                 </div>
                 <div className="font-semibold text-red-800 text-base">
-                  {new Date(exercise.deadline).toLocaleDateString("vi-VN")}
+                  {formatDate(exercise.deadline)}
                 </div>
               </div>
 
@@ -401,7 +402,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                     Ngày tạo
                   </div>
                   <div className="font-semibold text-purple-800 text-sm">
-                    {new Date(exercise.createdAt).toLocaleDateString("vi-VN")}
+                    {formatDate(exercise.createdAt)}
                   </div>
                 </div>
                 <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">

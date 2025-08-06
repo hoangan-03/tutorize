@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import {
   Upload,
-  FileIcon,
   X,
   Send,
   AlertCircle,
   CheckCircle,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Exercise, ExerciseSubmission } from "../../types/api";
-import { useExerciseSubmissions } from "../../hooks";
+import { GoogleDriveService } from "../../services/googleDriveService";
+import { exerciseService } from "../../services/exerciseService";
 
 interface StudentSubmissionFormProps {
   exercise: Exercise;
@@ -25,9 +26,21 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
-  const { submitExercise } = useExerciseSubmissions();
-  const [content, setContent] = useState(existingSubmission?.content || "");
+  const [content, setContent] = useState<string>(
+    typeof existingSubmission?.submissionUrl === "string"
+      ? existingSubmission.submissionUrl
+      : ""
+  );
   const [files, setFiles] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<
+    Array<{
+      file: File;
+      preview: string;
+      uploadStatus: "pending" | "uploading" | "success" | "error";
+      driveLink?: string;
+      error?: string;
+    }>
+  >([]);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
@@ -48,14 +61,102 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const newFiles = Array.from(e.dataTransfer.files);
-      setFiles((prev) => [...prev, ...newFiles]);
+      const imageFiles = newFiles.filter((file) =>
+        file.type.startsWith("image/")
+      );
+
+      if (imageFiles.length > 0) {
+        const newImages = imageFiles.map((file) => ({
+          file,
+          preview: URL.createObjectURL(file),
+          uploadStatus: "pending" as const,
+        }));
+        setUploadedImages((prev) => [...prev, ...newImages]);
+      }
+
+      // Also keep non-image files for other submissions
+      const otherFiles = newFiles.filter(
+        (file) => !file.type.startsWith("image/")
+      );
+      setFiles((prev) => [...prev, ...otherFiles]);
     }
+  };
+
+  const uploadImages = async () => {
+    const pendingImages = uploadedImages.filter(
+      (img) => img.uploadStatus === "pending"
+    );
+
+    for (const image of pendingImages) {
+      try {
+        // Update status to uploading
+        setUploadedImages((prev) =>
+          prev.map((img) =>
+            img.file === image.file
+              ? { ...img, uploadStatus: "uploading" }
+              : img
+          )
+        );
+
+        const formData = new FormData();
+        formData.append("file", image.file);
+
+        const driveLink = await GoogleDriveService.uploadFile(
+          image.file,
+          exercise.id
+        );
+
+        // Update status to success and store the Google Drive link
+        setUploadedImages((prev) =>
+          prev.map((img) =>
+            img.file === image.file
+              ? { ...img, uploadStatus: "success", driveLink: driveLink }
+              : img
+          )
+        );
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        // Update status to error
+        setUploadedImages((prev) =>
+          prev.map((img) =>
+            img.file === image.file ? { ...img, uploadStatus: "error" } : img
+          )
+        );
+      }
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages((prev) => {
+      const imageToRemove = prev[index];
+      if (imageToRemove.preview) {
+        URL.revokeObjectURL(imageToRemove.preview);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setFiles((prev) => [...prev, ...newFiles]);
+      const imageFiles = newFiles.filter((file) =>
+        file.type.startsWith("image/")
+      );
+
+      if (imageFiles.length > 0) {
+        const newImages = imageFiles.map((file) => ({
+          file,
+          preview: URL.createObjectURL(file),
+          uploadStatus: "pending" as const,
+        }));
+        setUploadedImages((prev) => [...prev, ...newImages]);
+      }
+
+      // Also keep non-image files for other submissions
+      const otherFiles = newFiles.filter(
+        (file) => !file.type.startsWith("image/")
+      );
+      setFiles((prev) => [...prev, ...otherFiles]);
     }
   };
 
@@ -100,7 +201,7 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && files.length === 0) {
+    if (!content.trim() && uploadedImages.length === 0) {
       alert(t("studentSubmissionForm.validationMessage"));
       return;
     }
@@ -108,8 +209,19 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
     try {
       setUploading(true);
 
-      // Submit with content and files using hook
-      const submission = await submitExercise(exercise.id!, content, files);
+      // First upload all pending images
+      await uploadImages();
+
+      // Get all successful Google Drive links
+      const googleDriveLinks = uploadedImages
+        .filter((img) => img.uploadStatus === "success" && img.driveLink)
+        .map((img) => img.driveLink!);
+
+      // Submit with Google Drive links using the new method
+      const submission = await exerciseService.submitExerciseWithImages(
+        exercise.id!,
+        googleDriveLinks
+      );
 
       onSubmissionSuccess(submission);
     } catch (error) {
@@ -202,18 +314,18 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
                     {t("studentSubmissionForm.or")}
                   </p>
                   <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors">
-                    <FileIcon className="h-5 w-5 mr-2" />
-                    {t("studentSubmissionForm.selectFiles")}
+                    <ImageIcon className="h-5 w-5 mr-2" />
+                    {t("studentSubmissionForm.selectImages")}
                     <input
                       type="file"
                       multiple
                       onChange={handleFileSelect}
                       className="hidden"
-                      accept="*/*"
+                      accept="image/*"
                     />
                   </label>
                   <p className="text-sm text-gray-500 mt-2">
-                    {t("studentSubmissionForm.allFileTypesSupported")}
+                    {t("studentSubmissionForm.imagesSupported")}
                   </p>
                 </div>
               )}
@@ -259,6 +371,74 @@ export const StudentSubmissionForm: React.FC<StudentSubmissionFormProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Image Gallery */}
+            {uploadedImages.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  {t("studentSubmissionForm.uploadedImages", {
+                    count: uploadedImages.length,
+                  })}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {uploadedImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative group border rounded-lg overflow-hidden bg-gray-50"
+                    >
+                      <img
+                        src={image.preview}
+                        alt={`Upload ${index + 1}`}
+                        className="w-full h-32 object-cover"
+                      />
+
+                      {/* Upload Status Overlay */}
+                      {image.uploadStatus !== "success" && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          {image.uploadStatus === "uploading" && (
+                            <div className="text-white text-center">
+                              <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"></div>
+                              <span className="text-sm">Uploading...</span>
+                            </div>
+                          )}
+                          {image.uploadStatus === "error" && (
+                            <div className="text-white text-center">
+                              <AlertCircle className="h-6 w-6 mx-auto mb-2" />
+                              <span className="text-sm">Upload Error</span>
+                            </div>
+                          )}
+                          {image.uploadStatus === "pending" && (
+                            <div className="text-white text-center">
+                              <ImageIcon className="h-6 w-6 mx-auto mb-2" />
+                              <span className="text-sm">Pending</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Success Indicator */}
+                      {image.uploadStatus === "success" && (
+                        <div className="absolute top-2 right-2">
+                          <CheckCircle className="h-5 w-5 text-green-500 bg-white rounded-full" />
+                        </div>
+                      )}
+
+                      {/* Remove Button */}
+                      {canSubmit && (
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 left-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove image"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="flex items-center justify-between pt-4 border-t">

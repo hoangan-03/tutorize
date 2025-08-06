@@ -119,12 +119,7 @@ export class SubmitExerciseDto {
   @ApiProperty({ description: 'Nội dung bài làm' })
   @IsString()
   @IsNotEmpty()
-  content: string;
-
-  @ApiPropertyOptional({ description: 'Nội dung LaTeX' })
-  @IsOptional()
-  @IsString()
-  latexContent?: string;
+  submissionUrl: string;
 }
 
 export class GradeExerciseDto {

@@ -27,6 +27,7 @@ import {
   Headphones,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { StatCard } from "../ui";
 
 const StudentIeltsView: React.FC<{
   tests: IeltsTest[];
@@ -71,14 +72,13 @@ const StudentIeltsView: React.FC<{
     <div className="min-h-screen bg-gray-50">
       <div className="p-4 md:px-12 lg:px-36 md:py-12">
         {/* Page Header */}
-        <div className="relative bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl">
+        <div className="relative bg-gradient-to-r from-purple-600 to-indigo-700 rounded-2xl p-8 md:p-12 mb-3 md:mb-8 overflow-hidden shadow-xl h-[70px] md:h-[120px]">
           <div className="absolute top-0 left-0 h-full w-1 bg-white/20"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-between">
-            <div className="flex-1">
-              <h1 className="text-xl md:text-2xl lg:text-4xl font-bold text-white">
-                {t("ielts.centerTitle")}
-              </h1>
-            </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center justify-center md:justify-between w-full h-full">
+            <div> </div>
+            <h1 className="text-xl md:text-2xl lg:text-4xl font-bold text-white">
+              {t("ielts.centerTitle")}
+            </h1>
 
             {/* Decorative IELTS Book/Test Element */}
             <div className="hidden md:block relative">
@@ -516,30 +516,12 @@ const TeacherIeltsView: React.FC<{
   );
 };
 
-const StatCard: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  value: number | string;
-  bgColor: string;
-}> = ({ icon, label, value, bgColor }) => (
-  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-    <div className="flex items-center">
-      <div className={`p-3 ${bgColor} rounded-xl`}>{icon}</div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">{label}</p>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-      </div>
-    </div>
-  </div>
-);
-
 export const IeltsCenter: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [view, setView] = useState<"list" | "form">("list");
   const [currentTestId, setCurrentTestId] = useState<number | null>(null);
 
-  // Determine pagination params based on user role
   const testsParams = useMemo(() => {
     if (user?.role === "TEACHER") {
       return { limit: 100 };
@@ -576,7 +558,6 @@ export const IeltsCenter: React.FC = () => {
         await deleteTest(id);
       } catch (error) {
         console.error("Failed to delete IELTS test:", error);
-        // You might want to show a toast notification here
       }
     }
   };
@@ -603,14 +584,12 @@ export const IeltsCenter: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <StudentIeltsView
-        tests={resources}
-        submissions={submissions}
-        loading={loading}
-        onStartTest={handleStartTest}
-        onViewResult={handleViewResult}
-      />
-    </div>
+    <StudentIeltsView
+      tests={resources}
+      submissions={submissions}
+      loading={loading}
+      onStartTest={handleStartTest}
+      onViewResult={handleViewResult}
+    />
   );
 };

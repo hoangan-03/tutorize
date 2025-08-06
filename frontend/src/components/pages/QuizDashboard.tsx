@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,23 +11,21 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDetailedQuizStats } from "../../hooks";
+import { Quiz, QuizSubmission } from "../../types/api";
+import { formatDate } from "../utils";
 
 interface QuizDashboardProps {
-  quiz: any;
+  quiz: Quiz;
   onBack: () => void;
 }
 
-// Helper function to format time from seconds to human readable format
 const formatTime = (seconds: number): string => {
   if (!seconds || seconds <= 0) return "0s";
 
-  // Round to nearest second to avoid decimal places
   const roundedSeconds = Math.round(seconds);
-
   const hours = Math.floor(roundedSeconds / 3600);
   const minutes = Math.floor((roundedSeconds % 3600) / 60);
   const remainingSeconds = roundedSeconds % 60;
-
   let result = "";
 
   if (hours > 0) {
@@ -69,7 +66,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
         t("quizzes.dashboard.submittedAt"),
         t("quizzes.dashboard.status"),
       ],
-      ...stats.submissions.map((submission: any) => [
+      ...stats.submissions.map((submission: QuizSubmission) => [
         submission.user?.profile?.firstName || "Không xác định",
         submission.score.toString(),
         formatTime(submission.timeSpent || 0),
@@ -126,21 +123,23 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   const averageScore =
     totalSubmissions > 0
       ? stats.submissions.reduce(
-          (sum: number, submission: any) => sum + submission.score,
+          (sum: number, submission: QuizSubmission) => sum + submission.score,
           0
         ) / totalSubmissions
       : 0;
   const averageTime =
     totalSubmissions > 0
       ? stats.submissions.reduce(
-          (sum: number, submission: any) => sum + submission.timeSpent,
+          (sum: number, submission: QuizSubmission) =>
+            sum + submission.timeSpent,
           0
         ) / totalSubmissions
       : 0;
   const passRate =
     totalSubmissions > 0
-      ? (stats.submissions.filter((submission: any) => submission.score >= 5)
-          .length /
+      ? (stats.submissions.filter(
+          (submission: QuizSubmission) => submission.score >= 5
+        ).length /
           totalSubmissions) *
         100
       : 0;
@@ -148,16 +147,19 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   // Grade distribution
   const gradeDistribution = {
     excellent: stats.submissions.filter(
-      (submission: any) => submission.score >= 9
+      (submission: QuizSubmission) => submission.score >= 9
     ).length,
     good: stats.submissions.filter(
-      (submission: any) => submission.score >= 7 && submission.score < 9
+      (submission: QuizSubmission) =>
+        submission.score >= 7 && submission.score < 9
     ).length,
     average: stats.submissions.filter(
-      (submission: any) => submission.score >= 5 && submission.score < 7
+      (submission: QuizSubmission) =>
+        submission.score >= 5 && submission.score < 7
     ).length,
-    poor: stats.submissions.filter((submission: any) => submission.score < 5)
-      .length,
+    poor: stats.submissions.filter(
+      (submission: QuizSubmission) => submission.score < 5
+    ).length,
   };
 
   return (
@@ -193,9 +195,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
               <p className="text-sm text-gray-500">
                 {t("quizzes.dashboard.deadline")}
               </p>
-              <p className="font-semibold">
-                {new Date(quiz.deadline).toLocaleDateString("vi-VN")}
-              </p>
+              <p className="font-semibold">{formatDate(quiz.deadline)}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -396,7 +396,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {stats.submissions.map((submission: any) => (
+                {stats.submissions.map((submission: QuizSubmission) => (
                   <tr key={submission.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -449,6 +449,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
           <div className="p-6">
             <div className="space-y-6">
               {stats.questionAnalysis?.map(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (questionStat: any, index: number) => (
                   <div
                     key={questionStat.id}

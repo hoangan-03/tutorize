@@ -127,6 +127,20 @@ export const exerciseService = {
     return response.data;
   },
 
+  async submitExerciseWithImages(
+    exerciseId: number,
+    imageLinks: string[]
+  ): Promise<ExerciseSubmission> {
+    const response = await api.post<ExerciseSubmission>(
+      `/exercises/${exerciseId}/submit-images`,
+      {
+        imageLinks,
+        submittedAt: new Date().toISOString(),
+      }
+    );
+    return response.data;
+  },
+
   async getSubmission(submissionId: number): Promise<ExerciseSubmission> {
     const response = await api.get<ExerciseSubmission>(
       `/exercise-submissions/${submissionId}`

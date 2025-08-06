@@ -8,11 +8,10 @@ import {
   CreateExerciseDto,
   UpdateExerciseDto,
   ExerciseFilterDto,
-  SubmitExerciseDto,
   GradeExerciseDto,
 } from './dto/exercise.dto';
 import { PaginatedResultDto } from '../common/dto/pagination.dto';
-import { $Enums, ExerciseStatus } from '@prisma/client';
+import { $Enums, ExerciseStatus, SubmissionStatus } from '@prisma/client';
 
 @Injectable()
 export class ExerciseService {
@@ -323,7 +322,7 @@ export class ExerciseService {
   async submitExercise(
     exerciseId: number,
     userId: number,
-    submitDto: SubmitExerciseDto,
+    googleDriveLinks: string[],
   ) {
     const exercise = await this.prisma.exercise.findUnique({
       where: { id: exerciseId },
@@ -332,6 +331,9 @@ export class ExerciseService {
     if (!exercise) {
       throw new NotFoundException('Không tìm thấy bài tập');
     }
+
+    // Convert Google Drive links array to JSON string for storage
+    const imageLinksJson = JSON.stringify(googleDriveLinks);
 
     // Check if already submitted
     const existingSubmission = await this.prisma.exerciseSubmission.findFirst({
@@ -346,9 +348,9 @@ export class ExerciseService {
       return this.prisma.exerciseSubmission.update({
         where: { id: existingSubmission.id },
         data: {
-          content: submitDto.content,
+          submissionUrl: imageLinksJson,
           submittedAt: new Date(),
-          status: 'SUBMITTED',
+          status: SubmissionStatus.SUBMITTED,
           version: existingSubmission.version + 1,
         },
       });
@@ -359,8 +361,8 @@ export class ExerciseService {
       data: {
         exerciseId,
         userId,
-        content: submitDto.content,
-        status: 'SUBMITTED',
+        submissionUrl: imageLinksJson,
+        status: SubmissionStatus.SUBMITTED,
       },
     });
 

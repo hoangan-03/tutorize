@@ -3,6 +3,7 @@ import { Plus, Eye, Edit, Trash2, Calendar, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/Badge";
 import { Exercise, ExerciseStatus } from "../../types/api";
+import { formatDate } from "../utils";
 
 interface ExerciseListProps {
   exercises: Exercise[];
@@ -99,9 +100,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
                   <Calendar className="h-4 w-4 mr-1" />
                   <span>
                     {t("exerciseEditorUI.deadline", {
-                      date: new Date(exercise.deadline).toLocaleDateString(
-                        "vi-VN"
-                      ),
+                      date: formatDate(exercise.deadline),
                     })}
                   </span>
                 </div>

@@ -21,6 +21,7 @@ import { QuizPreview } from "./QuizPreview";
 import { Quiz, QuizStatus, Question } from "../../types/api";
 import { getStatusColor, getStatusText } from "../utils";
 import { useQuizzes, useQuizManagement, useTeacherStats } from "../../hooks";
+import { StatCard } from "../ui";
 
 export const QuizManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -155,27 +156,7 @@ export const QuizManagement: React.FC = () => {
                 <p className="text-white/90 text-lg leading-relaxed max-w-3xl text-start">
                   Tạo và quản lý các bài quiz trắc nghiệm cho học sinh.
                 </p>
-                <div className="flex items-center space-x-6 mt-4 text-sm text-white/80">
-                  <div className="flex items-center space-x-1">
-                    <BookOpen className="h-4 w-4" />
-                    <span>{stats.total} quiz</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Users className="h-4 w-4" />
-                    <span>{stats.totalSubmissions} lượt làm bài</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      Cập nhật gần nhất:{" "}
-                      {new Date().toLocaleDateString("vi-VN", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-                </div>
+              
               </div>
 
               <div className="flex flex-col items-end space-y-3">
@@ -198,66 +179,34 @@ export const QuizManagement: React.FC = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <BookOpen className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Tổng Quiz</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.total}
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            <StatCard
+              icon={<BookOpen className="h-6 w-6 text-indigo-600" />}
+              bgColor="bg-blue-100"
+              label={"Tổng Quiz"}
+              value={stats.total}
+            />
 
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Đang hoạt động
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.active}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <StatCard
+              icon={<CheckCircle className="h-6 w-6 text-green-600" />}
+              bgColor="bg-green-100"
+              label={"Đang hoạt động"}
+              value={stats.active}
+            />
 
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-orange-100 rounded-xl">
-                  <AlertTriangle className="h-6 w-6 text-orange-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Quá hạn</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.overdue}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <StatCard
+              icon={<AlertTriangle className="h-6 w-6 text-orange-600" />}
+              bgColor="bg-orange-100"
+              label={"Quá hạn"}
+              value={stats.overdue}
+            />
 
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-              <div className="flex items-center">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <Users className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Lượt làm bài
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalSubmissions}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <StatCard
+              icon={<Users className="h-6 w-6 text-purple-600" />}
+              bgColor="bg-purple-100"
+              label={"Lượt làm bài"}
+              value={stats.totalSubmissions}
+            />
           </div>
 
           {/* Error Message */}

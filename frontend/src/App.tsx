@@ -32,6 +32,7 @@ import { QuizDashboardPage } from "./components/pages/QuizDashboardPage";
 import { QuizSubmissionView } from "./components/pages/QuizSubmissionView";
 import { WritingGrader } from "./components/pages/WritingGrader";
 import { ExerciseEditor } from "./components/pages/ExerciseEditor";
+import { ExerciseDetailView } from "./components/pages/ExerciseDetailView";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
 import { IeltsResultPage } from "./components/pages/IeltsResultPage";
 import { Role } from "./types/api";
@@ -149,6 +150,7 @@ function AppContent() {
         />
 
         {/* Exercise Routes */}
+        {/* Exercise Management Route (for teachers) */}
         <Route
           path="/exercises"
           element={
@@ -159,6 +161,22 @@ function AppContent() {
               />
               <main>
                 <ExerciseEditor />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Individual Exercise Detail Route */}
+        <Route
+          path="/exercise/:exerciseId"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <ExerciseDetailView />
               </main>
             </ProtectedRoute>
           }
@@ -327,6 +345,15 @@ function AppContent() {
         {/* Legacy Management Routes - Redirect to new structure */}
         <Route
           path="/management/exercises"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <Navigate to="/exercises" replace />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/exercises/manage"
           element={
             <ProtectedRoute requireAdmin={true}>
               <Navigate to="/exercises" replace />
