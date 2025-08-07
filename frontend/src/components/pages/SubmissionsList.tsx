@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Clock,
@@ -8,37 +8,30 @@ import {
   Filter,
   Search,
 } from "lucide-react";
-import { exerciseService } from "../../services/exerciseService";
-import { ExerciseSubmission, SubmissionStatus } from "../../types/api";
+import {
+  useMyExerciseSubmissions,
+  useAllExerciseSubmissions,
+} from "../../hooks";
+import { SubmissionStatus } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { Badge } from "../ui/Badge";
 import { formatDateTime } from "../utils";
 
 export const SubmissionsList: React.FC = () => {
   const { isTeacher } = useAuth();
-  const [submissions, setSubmissions] = useState<ExerciseSubmission[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "submitted" | "graded">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const loadSubmissions = useCallback(async () => {
-    try {
-      setLoading(true);
-      const defaultParams = { page: 1, limit: 100 }; // Get more submissions by default
-      const data = isTeacher
-        ? await exerciseService.getAllSubmissions(defaultParams)
-        : await exerciseService.getMySubmissions(defaultParams);
-      setSubmissions(data.data || []);
-    } catch (error) {
-      console.error("Error loading submissions:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [isTeacher]);
+  // Use appropriate hook based on user role
+  const params = { page: 1, limit: 100 };
+  const { submissions: mySubmissions, isLoading: myLoading } =
+    useMyExerciseSubmissions(!isTeacher ? params : undefined);
 
-  useEffect(() => {
-    loadSubmissions();
-  }, [loadSubmissions]);
+  const { submissions: allSubmissions, isLoading: allLoading } =
+    useAllExerciseSubmissions(isTeacher ? params : undefined);
+
+  const submissions = isTeacher ? allSubmissions : mySubmissions;
+  const loading = isTeacher ? allLoading : myLoading;
 
   const getStatusBadge = (status: SubmissionStatus, score?: number | null) => {
     if (status === SubmissionStatus.GRADED) {

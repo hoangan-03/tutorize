@@ -315,6 +315,10 @@
     "points": "Điểm",
     "gradedOn": "Chấm vào",
     "editSubmission": "Chỉnh sửa bài nộp",
+    "confirmDelete": "Xác nhận xóa",
+    "confirmDeleteMessage": "Bạn có chắc chắn muốn xóa bài tập này không? Hành động này không thể hoàn tác.",
+    "submissionDeleted": "Đã xóa bài nộp thành công.",
+    "submissionUpdated": "Cập nhật bài nộp thành công.",
     "dashboard": {
       "cannotLoad": "Không thể tải dữ liệu",
       "back": "Quay lại",

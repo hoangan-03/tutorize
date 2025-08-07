@@ -238,7 +238,7 @@ const Modal: React.FC<ModalProps> = ({
                 {theme.icon}
               </div>
 
-              <div className="flex-1 pt-1">
+              <div className="flex-1 pt-1 text-start">
                 <h3 className={`text-2xl font-bold ${theme.headerColor} mb-1`}>
                   {title || (type === "confirm" ? "Xác nhận" : "Thông báo")}
                 </h3>

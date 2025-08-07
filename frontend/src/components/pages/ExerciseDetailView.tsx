@@ -23,7 +23,7 @@ import {
 import { InlineMath } from "react-katex";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { useExercise } from "../../hooks";
+import { useExercise, useModal } from "../../hooks";
 import {
   ExerciseStatus,
   Exercise,
@@ -44,6 +44,7 @@ export const ExerciseDetailView: React.FC = () => {
   const navigate = useNavigate();
   const { isTeacher } = useAuth();
   const { t } = useTranslation();
+  const { showSuccess, showError, showConfirm } = useModal();
   const { exercise, isLoading } = useExercise(
     exerciseId ? parseInt(exerciseId) : null
   );
@@ -149,10 +150,14 @@ export const ExerciseDetailView: React.FC = () => {
       setUploadedImages([]);
       loadExistingSubmission();
 
-      alert(t("exercises.submissionUpdated"));
+      showSuccess(t("exercises.submissionUpdated"), {
+        title: t("common.success") || "Thành công",
+        autoClose: true,
+        autoCloseDelay: 2000,
+      });
     } catch (error) {
       console.error("Error updating submission:", error);
-      alert(t("exercises.submissionError"));
+      showError(t("exercises.submissionError"), t("common.error") || "Lỗi");
     } finally {
       setIsSubmitting(false);
     }
@@ -162,17 +167,30 @@ export const ExerciseDetailView: React.FC = () => {
   const handleDeleteSubmission = async () => {
     if (!existingSubmission) return;
 
-    if (window.confirm(t("exercises.confirmDelete"))) {
-      try {
-        await exerciseService.deleteSubmission(existingSubmission.id);
-        setExistingSubmission(null);
-        setExistingImages([]);
-        alert(t("exercises.submissionDeleted"));
-      } catch (error) {
-        console.error("Error deleting submission:", error);
-        alert(t("exercises.submissionError"));
+    showConfirm(
+      t("exercises.confirmDeleteMessage") ||
+        "Bạn có chắc chắn muốn xóa bài nộp này? Hành động này không thể hoàn tác.",
+      async () => {
+        try {
+          await exerciseService.deleteSubmission(existingSubmission.id);
+          setExistingSubmission(null);
+          setExistingImages([]);
+          showSuccess(t("exercises.submissionDeleted"), {
+            title: t("common.success") || "Thành công",
+            autoClose: true,
+            autoCloseDelay: 2000,
+          });
+        } catch (error) {
+          console.error("Error deleting submission:", error);
+          showError(t("exercises.submissionError"), t("common.error") || "Lỗi");
+        }
+      },
+      {
+        title: t("exercises.confirmDelete") || "Xác nhận xóa",
+        confirmText: t("common.delete") || "Xóa",
+        cancelText: t("common.cancel") || "Hủy",
       }
-    }
+    );
   };
 
   // Handle file selection
@@ -275,7 +293,7 @@ export const ExerciseDetailView: React.FC = () => {
     }
 
     if (uploadedImages.length === 0) {
-      alert(t("exercises.pleaseUploadImages"));
+      showError(t("exercises.pleaseUploadImages"), t("common.error") || "Lỗi");
       return;
     }
 
@@ -298,7 +316,11 @@ export const ExerciseDetailView: React.FC = () => {
         successfulLinks
       );
 
-      alert(t("exercises.submissionSuccess"));
+      showSuccess(t("exercises.submissionSuccess"), {
+        title: t("common.success") || "Thành công",
+        autoClose: true,
+        autoCloseDelay: 2000,
+      });
 
       // Clear uploaded images and reload submission
       uploadedImages.forEach((img) => URL.revokeObjectURL(img.preview));
@@ -306,7 +328,7 @@ export const ExerciseDetailView: React.FC = () => {
       loadExistingSubmission();
     } catch (error) {
       console.error("Submission error:", error);
-      alert(t("exercises.submissionError"));
+      showError(t("exercises.submissionError"), t("common.error") || "Lỗi");
     } finally {
       setIsSubmitting(false);
     }
@@ -635,7 +657,11 @@ export const ExerciseDetailView: React.FC = () => {
       } catch (fallbackError) {
         console.error("Fallback PDF Error:", fallbackError);
         // Final fallback to browser print
-        alert(t("exercisePublicView.printFallback"));
+        showError(
+          t("exercisePublicView.printFallback") ||
+            "Không thể tải PDF. Vui lòng thử in trang.",
+          t("common.error") || "Lỗi"
+        );
       }
     }
   };

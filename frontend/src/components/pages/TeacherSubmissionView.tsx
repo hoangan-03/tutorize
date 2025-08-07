@@ -1,31 +1,39 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ArrowLeft, Clock, User, Save } from "lucide-react";
-import { exerciseService } from "../../services/exerciseService";
-import { ExerciseSubmission, SubmissionStatus } from "../../types/api";
+import {
+  useExerciseSubmission,
+  useExerciseSubmissions,
+  useModal,
+} from "../../hooks";
+import { SubmissionStatus } from "../../types/api";
 import { Badge } from "../ui/Badge";
 import { formatDateTime } from "../utils";
 
 export const TeacherSubmissionView: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
 
-  const [submission, setSubmission] = useState<ExerciseSubmission | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    submission,
+    isLoading: loading,
+    mutate,
+  } = useExerciseSubmission(submissionId ? parseInt(submissionId) : null);
+  const { gradeSubmission } = useExerciseSubmissions();
+  const { showSuccess, showError } = useModal();
+
   const [grading, setGrading] = useState(false);
   const [score, setScore] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
 
-  const loadSubmission = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await exerciseService.getSubmission(parseInt(submissionId!));
-      setSubmission(data);
-
+  useEffect(() => {
+    if (submission) {
       // Parse images
-      if (data.submissionUrl) {
+      if (submission.submissionUrl) {
         try {
-          const imageUrls = JSON.parse(data.submissionUrl as unknown as string);
+          const imageUrls = JSON.parse(
+            submission.submissionUrl as unknown as string
+          );
           setImages(Array.isArray(imageUrls) ? imageUrls : []);
         } catch {
           setImages([]);
@@ -33,30 +41,26 @@ export const TeacherSubmissionView: React.FC = () => {
       }
 
       // Set current grading values
-      setScore(data.score || 0);
-      setFeedback(data.feedback || "");
-    } catch (error) {
-      console.error("Error loading submission:", error);
-    } finally {
-      setLoading(false);
+      setScore(submission.score || 0);
+      setFeedback(submission.feedback || "");
     }
-  }, [submissionId]);
-
-  useEffect(() => {
-    if (submissionId) {
-      loadSubmission();
-    }
-  }, [submissionId, loadSubmission]);
+  }, [submission]);
 
   const handleGradeSubmission = async () => {
     if (!submission) return;
 
     try {
       setGrading(true);
-      await exerciseService.gradeSubmission(submission.id, score, feedback);
-      await loadSubmission(); // Reload to get updated data
+      await gradeSubmission(submission.id, score, feedback);
+      mutate(); // Refresh the submission data
+      showSuccess("Chấm điểm thành công!", {
+        title: "Thành công",
+        autoClose: true,
+        autoCloseDelay: 2000,
+      });
     } catch (error) {
       console.error("Error grading submission:", error);
+      showError("Có lỗi xảy ra khi chấm điểm. Vui lòng thử lại.", "Lỗi");
     } finally {
       setGrading(false);
     }

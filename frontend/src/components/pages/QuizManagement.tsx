@@ -19,7 +19,7 @@ import {
 import { QuizForm } from "./QuizForm";
 import { QuizPreview } from "./QuizPreview";
 import { Quiz, QuizStatus, Question } from "../../types/api";
-import { getStatusColor, getStatusText } from "../utils";
+import { formatDate, getStatusColor, getStatusText } from "../utils";
 import { useQuizzes, useQuizManagement, useTeacherStats } from "../../hooks";
 import { StatCard } from "../ui";
 
@@ -156,7 +156,6 @@ export const QuizManagement: React.FC = () => {
                 <p className="text-white/90 text-lg leading-relaxed max-w-3xl text-start">
                   Tạo và quản lý các bài quiz trắc nghiệm cho học sinh.
                 </p>
-              
               </div>
 
               <div className="flex flex-col items-end space-y-3">
@@ -169,11 +168,6 @@ export const QuizManagement: React.FC = () => {
                     <span>Tạo Quiz mới</span>
                   </button>
                 </div>
-                <p className="text-xs text-white/70 text-right">
-                  Nhấn để tạo quiz
-                  <br />
-                  với trình tạo câu hỏi thông minh
-                </p>
               </div>
             </div>
           </div>
@@ -281,9 +275,7 @@ export const QuizManagement: React.FC = () => {
                           {quiz.deadline && (
                             <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-2" />
-                              {new Date(quiz.deadline).toLocaleDateString(
-                                "vi-VN"
-                              )}
+                              {formatDate(quiz.deadline)}
                             </div>
                           )}
                           <div className="flex items-center">

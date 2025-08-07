@@ -46,7 +46,7 @@ const StudentQuizView: React.FC = () => {
   const { t } = useTranslation();
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
-  const { showError, showSuccess } = useModal();
+  const { showError, showSuccess, showConfirm } = useModal();
 
   const [currentView, setCurrentView] = useState<
     "list" | "quiz" | "result" | "teacher-view"
@@ -92,7 +92,6 @@ const StudentQuizView: React.FC = () => {
   } | null>(null);
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0); // seconds remaining
-  const [showTestModal, setShowTestModal] = useState(false);
 
   const storageKey = useMemo(() => {
     if (!user || !quizId) return null;
@@ -790,78 +789,6 @@ const StudentQuizView: React.FC = () => {
 
     return (
       <div className="p-2 md:p-8">
-        {/* Exit Confirmation Modal */}
-        {showTestModal && (
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          >
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 border-2 border-blue-200">
-              {/* Accent bar */}
-              <div className="h-1.5 w-full bg-blue-500"></div>
-
-              {/* Background gradient */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50">
-                {/* Header */}
-                <div className="flex items-start space-x-4 p-6 pb-4">
-                  <div className="flex-shrink-0 rounded-2xl p-3 bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-                    <svg
-                      className="h-10 w-10 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1 pt-1">
-                    <h3 className="text-2xl font-bold text-blue-800 mb-1">
-                      Xác nhận thoát
-                    </h3>
-                    <div className="h-0.5 w-16 bg-blue-500 rounded-full opacity-60"></div>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="px-6 pb-6">
-                  <div className="bg-white bg-opacity-70 backdrop-blur-sm rounded-xl p-4 shadow-sm">
-                    <p className="text-gray-700 text-base leading-relaxed">
-                      Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được
-                      tính là 0 điểm.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="bg-white bg-opacity-90 backdrop-blur-sm border-t border-gray-200 border-opacity-20">
-                <div className="flex items-center justify-end space-x-3 p-6">
-                  <button
-                    onClick={() => setShowTestModal(false)}
-                    className="px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-700 border border-gray-300 hover:border-gray-400"
-                  >
-                    Tiếp tục làm bài
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowTestModal(false);
-                      handleQuizExit();
-                    }}
-                    className="px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border border-blue-400 hover:border-indigo-500"
-                    autoFocus
-                  >
-                    Thoát
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
             <div className="flex items-center justify-between mb-8">
@@ -1135,7 +1062,17 @@ const StudentQuizView: React.FC = () => {
                     currentView
                   );
                   if (currentView === "quiz" && currentQuiz && !isTeacher) {
-                    setShowTestModal(true);
+                    showConfirm(
+                      "Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được tính là 0 điểm.",
+                      () => {
+                        handleQuizExit();
+                      },
+                      {
+                        title: "Xác nhận thoát",
+                        confirmText: "Thoát",
+                        cancelText: "Tiếp tục làm bài",
+                      }
+                    );
                   } else {
                     clearAttemptAndNavigate();
                   }

@@ -15,7 +15,12 @@ import {
   Award,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { ExerciseSubmission, Exercise, SubmissionStatus } from "../../types/api";
+import { useModal } from "../../hooks";
+import {
+  ExerciseSubmission,
+  Exercise,
+  SubmissionStatus,
+} from "../../types/api";
 import { formatDate, formatDateTime } from "../utils";
 
 interface StudentSubmissionViewProps {
@@ -34,6 +39,7 @@ export const StudentSubmissionView: React.FC<StudentSubmissionViewProps> = ({
   onDelete,
 }) => {
   const { t } = useTranslation();
+  const { showConfirm } = useModal();
   const [showImages, setShowImages] = useState(false);
 
   // Parse image links from submission URL
@@ -46,6 +52,22 @@ export const StudentSubmissionView: React.FC<StudentSubmissionViewProps> = ({
   };
 
   const imageLinks = getImageLinks();
+
+  // Handle delete with confirmation modal
+  const handleDeleteWithConfirmation = () => {
+    if (onDelete) {
+      showConfirm(
+        t("submissions.confirmDeleteMessage") ||
+          "Bạn có chắc chắn muốn xóa bài nộp này? Hành động này không thể hoàn tác.",
+        onDelete,
+        {
+          title: t("submissions.confirmDelete") || "Xác nhận xóa",
+          confirmText: t("common.delete") || "Xóa",
+          cancelText: t("common.cancel") || "Hủy",
+        }
+      );
+    }
+  };
 
   const getStatusBadge = () => {
     switch (submission.status) {
@@ -282,7 +304,7 @@ export const StudentSubmissionView: React.FC<StudentSubmissionViewProps> = ({
                   )}
                   {onDelete && (
                     <button
-                      onClick={onDelete}
+                      onClick={handleDeleteWithConfirmation}
                       className="w-full flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />

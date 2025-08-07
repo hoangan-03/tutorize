@@ -17,6 +17,9 @@ export {
   useExercise,
   useExerciseWithAnswers,
   useExerciseSubmissions,
+  useExerciseSubmission,
+  useMyExerciseSubmissions,
+  useAllExerciseSubmissions,
   useExerciseSubmissionsList,
   useExerciseStats,
   useExerciseManagement,
@@ -51,4 +54,4 @@ export {
   useDocumentSearch,
 } from "./useDocuments";
 
-export { useModal } from "./useModal";
+export { useModal } from "../contexts/ModalContext";

@@ -2,7 +2,12 @@ import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { IeltsQuestion, IeltsQuestionType, IeltsTest } from "../../types/api";
-import { useAuth, useIeltsTest, useIeltsTestManagement, useModal } from "../../hooks";
+import {
+  useAuth,
+  useIeltsTest,
+  useIeltsTestManagement,
+  useModal,
+} from "../../hooks";
 
 export type Answer = string;
 export type AnswerState = Record<number, Answer>;
@@ -248,7 +253,7 @@ export const IeltsTestPlayer: React.FC = () => {
   const { t } = useTranslation();
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
-  const { showSuccess } = useModal();
+  const { showSuccess, showError, showConfirm } = useModal();
   const { user } = useAuth();
 
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
@@ -399,7 +404,7 @@ export const IeltsTestPlayer: React.FC = () => {
       }
 
       if (!detailedTest.sections || detailedTest.sections.length === 0) {
-        alert("This IELTS test has no sections to complete.");
+        showError("This IELTS test has no sections to complete.");
         clearAttemptAndNavigate();
         return;
       }
@@ -441,7 +446,23 @@ export const IeltsTestPlayer: React.FC = () => {
 
   const handleSubmit = useCallback(
     async (isAutoSubmit = false) => {
-      if (!isAutoSubmit && !window.confirm(t("ielts.player.submitConfirm"))) {
+      if (!isAutoSubmit) {
+        showConfirm(t("ielts.player.submitConfirm"), async () => {
+          try {
+            const submissionData = Object.entries(answers).map(
+              ([questionId, answer]) => ({
+                questionId: Number(questionId),
+                answer,
+              })
+            );
+            await submitTest(Number(testId!), submissionData);
+            showSuccess(t("ielts.player.submitSuccess"));
+            clearAttemptAndNavigate();
+          } catch (err) {
+            console.error("Submit error:", err);
+            showError("Failed to submit test. Please try again.");
+          }
+        });
         return;
       }
 
@@ -453,19 +474,29 @@ export const IeltsTestPlayer: React.FC = () => {
           })
         );
         await submitTest(Number(testId!), submissionData);
-        alert(t("ielts.player.submitSuccess"));
+        showSuccess(t("ielts.player.submitSuccess"));
         clearAttemptAndNavigate();
       } catch (err) {
         console.error("Submit error:", err);
+        showError("Failed to submit test. Please try again.");
       }
     },
-    [answers, testId, clearAttemptAndNavigate, t, submitTest]
+    [
+      answers,
+      testId,
+      clearAttemptAndNavigate,
+      t,
+      submitTest,
+      showConfirm,
+      showSuccess,
+      showError,
+    ]
   );
 
   const handleExit = () => {
-    if (window.confirm(t("ielts.player.exitConfirm"))) {
+    showConfirm(t("ielts.player.exitConfirm"), () => {
       clearAttemptAndNavigate();
-    }
+    });
   };
 
   const questionNumberOffsets = useMemo(() => {

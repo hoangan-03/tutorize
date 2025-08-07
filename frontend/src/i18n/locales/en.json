@@ -295,6 +295,10 @@
     "points": "Points",
     "gradedOn": "Graded on",
     "editSubmission": "Edit Submission",
+    "confirmDelete": "Confirm Delete",
+    "confirmDeleteMessage": "Are you sure you want to delete this exercise? This action cannot be undone.",
+    "submissionDeleted": "Submission deleted successfully.",
+    "submissionUpdated": "Submission updated successfully.",
     "dashboard": {
       "cannotLoad": "Could not load data",
       "back": "Back",

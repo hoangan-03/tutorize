@@ -20,6 +20,10 @@ import { ReactPlugin } from "@stagewise-plugins/react";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import Modal from "./components/ui/Modal";
+
+// Context and Hooks
+import { ModalProvider, useModal } from "./contexts/ModalContext";
 
 // Pages
 import { LandingPage } from "./components/pages/LandingPage";
@@ -56,6 +60,7 @@ const RoleBasedRedirect = () => {
 
 function AppContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { modal, closeModal } = useModal();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -440,6 +445,20 @@ function AppContent() {
         {/* Redirect any unknown routes to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Global Modal */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        onConfirm={modal.onConfirm}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
+        autoClose={modal.autoClose}
+        autoCloseDelay={modal.autoCloseDelay}
+      />
     </div>
   );
 }
@@ -456,21 +475,23 @@ function App() {
     >
       <LanguageProvider>
         <AuthProvider>
-          <Router>
-            <AppContent />
-            <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
-          </Router>
+          <ModalProvider>
+            <Router>
+              <AppContent />
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
+            </Router>
+          </ModalProvider>
         </AuthProvider>
       </LanguageProvider>
     </SWRConfig>

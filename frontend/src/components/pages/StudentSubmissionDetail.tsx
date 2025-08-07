@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,9 +9,13 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { exerciseService } from "../../services/exerciseService";
+import {
+  useExerciseSubmission,
+  useExerciseSubmissions,
+  useModal,
+} from "../../hooks";
 import { UploadService } from "../../services/uploadService";
-import { ExerciseSubmission, SubmissionStatus } from "../../types/api";
+import { SubmissionStatus } from "../../types/api";
 import { Badge } from "../ui/Badge";
 import { formatDateTime } from "../utils";
 
@@ -19,8 +23,13 @@ export const StudentSubmissionDetail: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
   const navigate = useNavigate();
 
-  const [submission, setSubmission] = useState<ExerciseSubmission | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    submission,
+    isLoading: loading,
+    mutate,
+  } = useExerciseSubmission(submissionId ? parseInt(submissionId) : null);
+  const { updateSubmission, deleteSubmission } = useExerciseSubmissions();
+  const { showSuccess, showError, showConfirm } = useModal();
   const [editing, setEditing] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<
     Array<{
@@ -32,33 +41,21 @@ export const StudentSubmissionDetail: React.FC = () => {
   >([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
-  const loadSubmission = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await exerciseService.getSubmission(parseInt(submissionId!));
-      setSubmission(data);
-
+  useEffect(() => {
+    if (submission) {
       // Parse existing images
-      if (data.submissionUrl) {
+      if (submission.submissionUrl) {
         try {
-          const imageUrls = JSON.parse(data.submissionUrl as unknown as string);
+          const imageUrls = JSON.parse(
+            submission.submissionUrl as unknown as string
+          );
           setExistingImages(Array.isArray(imageUrls) ? imageUrls : []);
         } catch {
           setExistingImages([]);
         }
       }
-    } catch (error) {
-      console.error("Error loading submission:", error);
-    } finally {
-      setLoading(false);
     }
-  }, [submissionId]);
-
-  useEffect(() => {
-    if (submissionId) {
-      loadSubmission();
-    }
-  }, [submissionId, loadSubmission]);
+  }, [submission]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -139,26 +136,46 @@ export const StudentSubmissionDetail: React.FC = () => {
 
       const allImageUrls = [...existingImages, ...successfulUploads];
 
-      await exerciseService.updateSubmission(submission.id, allImageUrls);
+      await updateSubmission(submission.id, allImageUrls);
       setEditing(false);
       setUploadedImages([]);
-      loadSubmission();
+      mutate(); // Refresh the submission data
+      showSuccess("Cập nhật bài nộp thành công!", {
+        title: "Thành công",
+        autoClose: true,
+        autoCloseDelay: 2000,
+      });
     } catch (error) {
       console.error("Error updating submission:", error);
+      showError("Có lỗi xảy ra khi cập nhật bài nộp. Vui lòng thử lại.", "Lỗi");
     }
   };
 
   const handleDeleteSubmission = async () => {
     if (!submission) return;
 
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài nộp này?")) {
-      try {
-        await exerciseService.deleteSubmission(submission.id);
-        navigate("/submissions");
-      } catch (error) {
-        console.error("Error deleting submission:", error);
+    showConfirm(
+      "Bạn có chắc chắn muốn xóa bài nộp này? Hành động này không thể hoàn tác.",
+      async () => {
+        try {
+          await deleteSubmission(submission.id);
+          showSuccess("Xóa bài nộp thành công!", {
+            title: "Thành công",
+            autoClose: true,
+            autoCloseDelay: 2000,
+          });
+          navigate("/submissions");
+        } catch (error) {
+          console.error("Error deleting submission:", error);
+          showError("Có lỗi xảy ra khi xóa bài nộp. Vui lòng thử lại.", "Lỗi");
+        }
+      },
+      {
+        title: "Xác nhận xóa",
+        confirmText: "Xóa",
+        cancelText: "Hủy",
       }
-    }
+    );
   };
 
   const removeExistingImage = (index: number) => {

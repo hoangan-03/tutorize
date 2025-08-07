@@ -338,11 +338,6 @@ export const ExerciseEditor: React.FC = () => {
                   <span>Tạo bài tập mới</span>
                 </button>
               </div>
-              <p className="text-xs text-white/70 text-right">
-                Nhấn để tạo bài tập
-                <br />
-                với trình soạn thảo thông minh
-              </p>
             </div>
           </div>
         </div>

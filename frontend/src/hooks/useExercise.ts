@@ -177,28 +177,56 @@ export const useExerciseManagement = () => {
 
 // Exercise submission hooks
 export const useExerciseSubmissions = () => {
-  const submitExercise = async (
+  const submitExerciseWithImages = async (
     exerciseId: number,
-    content: string,
-    files?: File[]
+    imageUrls: string[]
   ) => {
-    const submission = await exerciseService.submitExercise(
+    const submission = await exerciseService.submitExerciseWithImages(
       exerciseId,
-      content,
-      files
+      imageUrls
+    );
+    // Invalidate relevant caches
+    mutate(
+      (key) =>
+        Array.isArray(key) &&
+        (key[0] === "/exercise-submissions/my" ||
+          key[0] === "/exercise-submissions/all")
     );
     toast.success("Nộp bài thành công!");
     return submission;
   };
 
-  const updateSubmission = async (submissionId: number, content: string) => {
+  const updateSubmission = async (
+    submissionId: number,
+    imageUrls: string[]
+  ) => {
     const submission = await exerciseService.updateSubmission(
       submissionId,
-      content
+      imageUrls
     );
     mutate(`/exercise-submissions/${submissionId}`, submission, false);
+    // Invalidate submission lists
+    mutate(
+      (key) =>
+        Array.isArray(key) &&
+        (key[0] === "/exercise-submissions/my" ||
+          key[0] === "/exercise-submissions/all")
+    );
     toast.success("Cập nhật bài nộp thành công!");
     return submission;
+  };
+
+  const deleteSubmission = async (submissionId: number) => {
+    await exerciseService.deleteSubmission(submissionId);
+    mutate(`/exercise-submissions/${submissionId}`, undefined, false);
+    // Invalidate submission lists
+    mutate(
+      (key) =>
+        Array.isArray(key) &&
+        (key[0] === "/exercise-submissions/my" ||
+          key[0] === "/exercise-submissions/all")
+    );
+    toast.success("Xóa bài nộp thành công!");
   };
 
   const gradeSubmission = async (
@@ -212,13 +240,21 @@ export const useExerciseSubmissions = () => {
       feedback
     );
     mutate(`/exercise-submissions/${submissionId}`, submission, false);
+    // Invalidate submission lists
+    mutate(
+      (key) =>
+        Array.isArray(key) &&
+        (key[0] === "/exercise-submissions/my" ||
+          key[0] === "/exercise-submissions/all")
+    );
     toast.success("Chấm điểm thành công!");
     return submission;
   };
 
   return {
-    submitExercise,
+    submitExerciseWithImages,
     updateSubmission,
+    deleteSubmission,
     gradeSubmission,
   };
 };
@@ -287,6 +323,27 @@ export const useMyExerciseSubmissions = (params?: PaginationParams) => {
     isLoading,
     error,
     mutate: () => mutate(["/exercise-submissions/my", params]),
+  };
+};
+
+// Get all submissions (for teachers)
+export const useAllExerciseSubmissions = (params?: PaginationParams) => {
+  const { data, error, isLoading } = useSWR(
+    ["/exercise-submissions/all", params],
+    ([, params]) => exerciseService.getAllSubmissions(params),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submissions: data?.data || [],
+    total: data?.total || 0,
+    page: data?.page || 1,
+    totalPages: data?.totalPages || 1,
+    isLoading,
+    error,
+    mutate: () => mutate(["/exercise-submissions/all", params]),
   };
 };
 
