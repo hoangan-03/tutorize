@@ -37,6 +37,7 @@ import {
   useQuizzes,
   useStudentStats,
 } from "../../hooks";
+import { mutate } from "swr";
 import { formatDate } from "../utils";
 import { StatCard } from "../ui";
 
@@ -57,7 +58,7 @@ const StudentQuizView: React.FC = () => {
     []
   );
 
-  const { quizzes, isLoading: loading } = useQuizzes();
+  const { quizzes, isLoading: loading, mutate: mutateQuizzes } = useQuizzes();
   const { stats: userStats } = useStudentStats();
   const { submitQuizWithAnswers } = useQuizTaking();
 
@@ -69,9 +70,19 @@ const StudentQuizView: React.FC = () => {
       ? parsedQuizId
       : null
   );
-  const { submissionHistory } = useQuizSubmissionHistory(
-    currentView === "result" || (quizId && !isPlayRoute) ? parsedQuizId : null
-  );
+  const { submissionHistory, mutate: mutateSubmissionHistory } =
+    useQuizSubmissionHistory(
+      currentView === "result" || (quizId && !isPlayRoute) ? parsedQuizId : null
+    );
+
+  console.log("useQuizSubmissionHistory called with:", {
+    condition: currentView === "result" || (quizId && !isPlayRoute),
+    currentView,
+    quizId,
+    isPlayRoute,
+    parsedQuizId,
+    submissionHistoryData: submissionHistory,
+  });
   const [quizResults, setQuizResults] = useState<{
     score?: number;
     totalQuestions?: number;
@@ -262,6 +273,12 @@ const StudentQuizView: React.FC = () => {
       };
 
       await submitQuizWithAnswers(currentQuiz.id, submitData);
+
+      // Invalidate submission history cache
+      mutateSubmissionHistory();
+
+      // Also invalidate quiz list to update submission counts
+      mutateQuizzes();
 
       if (storageKey) {
         localStorage.removeItem(storageKey);
@@ -498,8 +515,18 @@ const StudentQuizView: React.FC = () => {
           submitData
         );
 
+        // Get fresh submission history data
         const freshSubmissionHistory =
           await quizService.getQuizSubmissionHistory(currentQuiz.id);
+
+        console.log(
+          "Fresh submission history after submit:",
+          freshSubmissionHistory
+        );
+        console.log(
+          "Number of submissions:",
+          freshSubmissionHistory.submissions?.length
+        );
 
         const results = {
           correct: submission.answers?.filter((a) => a.isCorrect).length || 0,
@@ -516,6 +543,10 @@ const StudentQuizView: React.FC = () => {
           quiz: freshSubmissionHistory.quiz || currentQuiz,
         };
 
+        console.log("Quiz results with fresh data:", results);
+
+        // Remove the timeout since we'll invalidate before setting view
+
         if (isAutoSubmit) {
           showSuccess(
             `Hết giờ làm bài! Quiz đã được nộp với ${validAnswers.length}/${
@@ -531,6 +562,14 @@ const StudentQuizView: React.FC = () => {
             clearAttemptAndNavigate();
           }, 8500);
         } else {
+          // Update cache with fresh data immediately
+          mutate(
+            `/quizzes/${currentQuiz.id}/submission-history`,
+            freshSubmissionHistory,
+            false
+          );
+          mutate(["/quizzes", undefined], undefined, { revalidate: true });
+
           setQuizResults(results);
           setCurrentView("result");
 
@@ -1055,32 +1094,39 @@ const StudentQuizView: React.FC = () => {
             </div>
 
             <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  console.log(
-                    "Exit button clicked, current view:",
-                    currentView
-                  );
-                  if (currentView === "quiz" && currentQuiz && !isTeacher) {
-                    showConfirm(
-                      "Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được tính là 0 điểm.",
-                      () => {
-                        handleQuizExit();
-                      },
-                      {
-                        title: "Xác nhận thoát",
-                        confirmText: "Thoát",
-                        cancelText: "Tiếp tục làm bài",
+              {/* Hide Exit button for first attempt */}
+              {submissionHistory?.submissions &&
+                submissionHistory.submissions.length > 0 && (
+                  <button
+                    onClick={() => {
+                      console.log(
+                        "Exit button clicked, current view:",
+                        currentView
+                      );
+                      if (currentView === "quiz" && currentQuiz && !isTeacher) {
+                        showConfirm(
+                          "Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được tính là 0 điểm.",
+                          () => {
+                            handleQuizExit();
+                          },
+                          {
+                            title: "Xác nhận thoát",
+                            confirmText: "Thoát",
+                            cancelText: "Tiếp tục làm bài",
+                          }
+                        );
+                      } else {
+                        clearAttemptAndNavigate();
                       }
-                    );
-                  } else {
-                    clearAttemptAndNavigate();
-                  }
-                }}
-                className="px-4 py-2 md:px-6 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm md:text-base"
-              >
-                {t("quizzes.exit")}
-              </button>
+                    }}
+                    className="px-4 py-2 md:px-6 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm md:text-base"
+                  >
+                    {t("quizzes.exit")}
+                  </button>
+                )}
+              {/* Spacer for first attempt to maintain layout */}
+              {(!submissionHistory?.submissions ||
+                submissionHistory.submissions.length === 0) && <div></div>}
               <div className="flex space-x-2 md:space-x-4">
                 <button
                   onClick={prevQuestion}
