@@ -122,7 +122,7 @@
     "enterPhone": "Nhập số điện thoại",
     "enterAddress": "Nhập địa chỉ",
     "enterSchool": "Nhập tên trường",
-    "dateFormat": "Định dạng ngày: YYYY-MM-DD",
+    "dateFormat": "Định dạng ngày: MM-DD-YYYY",
     "forgotPasswordDescription": "Nhập địa chỉ email và chúng tôi sẽ gửi cho bạn mật khẩu tạm thời để đăng nhập.",
     "sendResetEmail": "Gửi mật khẩu tạm thời",
     "rememberPassword": "Nhớ mật khẩu?",

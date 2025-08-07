@@ -35,7 +35,7 @@ export class UploadController {
     return {
       success: true,
       cloudinaryUrl,
-      driveLink: cloudinaryUrl, // Keep backward compatibility
+      driveLink: cloudinaryUrl,
       fileName: file.originalname,
     };
   }

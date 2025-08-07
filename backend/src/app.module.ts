@@ -15,13 +15,11 @@ import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
-    // Environment Configuration
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // Rate Limiting
     ThrottlerModule.forRootAsync({
       useFactory: () => ({
         throttlers: [
@@ -32,11 +30,7 @@ import { UploadModule } from './upload/upload.module';
         ],
       }),
     }),
-
-    // Database
     PrismaModule,
-
-    // Feature Modules
     AuthModule,
     UserModule,
     QuizModule,

@@ -11,11 +11,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Security
   app.use(helmet());
   app.use(compression());
 
-  // CORS
   app.enableCors({
     origin: configService.get<string>('CORS_ORIGIN')?.split(',') || [
       'http://localhost:3000',
@@ -25,7 +23,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global pipes
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -37,13 +34,10 @@ async function bootstrap() {
     }),
   );
 
-  // Global filters
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // API prefix
   app.setGlobalPrefix('api/v1');
 
-  // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Tutor Platform API')
     .setDescription(

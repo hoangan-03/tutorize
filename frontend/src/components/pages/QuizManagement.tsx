@@ -19,7 +19,7 @@ import {
 import { QuizForm } from "./QuizForm";
 import { QuizPreview } from "./QuizPreview";
 import { Quiz, QuizStatus, Question } from "../../types/api";
-import { formatDate, getStatusColor, getStatusText } from "../utils";
+import { formatDate, getStatusColor } from "../utils";
 import { useQuizzes, useQuizManagement, useTeacherStats } from "../../hooks";
 import { StatCard } from "../ui";
 
@@ -257,7 +257,7 @@ export const QuizManagement: React.FC = () => {
                               quiz.status
                             )}`}
                           >
-                            {getStatusText(quiz.status)}
+                            {quiz.status}
                           </span>
                         </div>
 

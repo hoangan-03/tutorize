@@ -143,7 +143,7 @@
     "enterPhone": "Enter phone number",
     "enterAddress": "Enter address",
     "enterSchool": "Enter school name",
-    "dateFormat": "Date format: YYYY-MM-DD",
+    "dateFormat": "Date format: MM-DD-YYYY",
     "forgotPasswordDescription": "Enter your email address and we'll send you a temporary password to log in.",
     "sendResetEmail": "Send Temporary Password",
     "rememberPassword": "Remember your password?",
