@@ -147,7 +147,7 @@ export const QuizSubmissionView: React.FC = () => {
 
   return (
     <div className="p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="mx-auto p-6 lg:px-16 xl:px-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">

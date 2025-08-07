@@ -52,26 +52,23 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 
   const downloadAsPDF = async () => {
     try {
-      // Create a temporary PDF preview element
       const tempElement = document.createElement("div");
       tempElement.style.position = "absolute";
       tempElement.style.left = "-9999px";
       tempElement.style.top = "0";
-      tempElement.style.width = "794px"; // A4 width in pixels at 96 DPI
+      tempElement.style.width = "794px";
       tempElement.style.backgroundColor = "white";
       tempElement.style.padding = "40px";
-      tempElement.style.minHeight = "1000px"; // Ensure minimum height
+      tempElement.style.minHeight = "1000px";
       tempElement.style.overflow = "visible";
       tempElement.style.fontFamily =
         popularFonts.find((font) => font.name === selectedFont)?.value ||
         '"Cambria Math", Cambria, serif';
 
-      // Create PDF content with safe hex colors (no oklch)
       const cleanContent = exercise.content
-        .replace(/class="[^"]*"/g, "") // Remove all CSS classes
-        .replace(/style="[^"]*"/g, "") // Remove existing styles
+        .replace(/class="[^"]*"/g, "")
+        .replace(/style="[^"]*"/g, "")
         .replace(/<([^>]+)>/g, (_match, content) => {
-          // Clean up any problematic attributes
           return `<${content
             .replace(/class="[^"]*"/g, "")
             .replace(/style="[^"]*"/g, "")}>`;
@@ -93,9 +90,9 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Lớp:</strong> ${
                  exercise.grade
                }</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Hạn nộp:</strong> ${new Date(
+               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Hạn nộp:</strong> ${formatDate(
                  exercise.deadline
-               ).toLocaleDateString("vi-VN")}</p>
+               )}</p>
                <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Giáo viên:</strong> ${
                  exercise.createdBy
                }</p>
@@ -119,11 +116,9 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 
       document.body.appendChild(tempElement);
 
-      // Wait for fonts to load and DOM to settle
       await document.fonts.ready;
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Force layout calculation and get accurate height
       tempElement.style.height = "auto";
       const actualHeight = Math.max(
         tempElement.scrollHeight,
@@ -131,15 +126,8 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
         1000
       );
 
-      console.log("Element dimensions:", {
-        scrollHeight: tempElement.scrollHeight,
-        offsetHeight: tempElement.offsetHeight,
-        actualHeight: actualHeight,
-      });
-
-      // Capture the element as canvas with high quality
       const canvas = await html2canvas(tempElement, {
-        scale: 2, // Higher resolution
+        scale: 2,
         useCORS: true,
         allowTaint: false,
         backgroundColor: "#ffffff",
@@ -148,7 +136,6 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
         scrollX: 0,
         scrollY: 0,
         ignoreElements: (element) => {
-          // Skip elements that might cause oklch issues
           return (
             element.tagName === "STYLE" ||
             element.tagName === "LINK" ||
@@ -157,13 +144,11 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
           );
         },
         onclone: (clonedDoc) => {
-          // Remove any problematic stylesheets
           const styles = clonedDoc.querySelectorAll(
             'style, link[rel="stylesheet"]'
           );
           styles.forEach((style) => style.remove());
 
-          // Add safe inline styles
           const safeStyle = clonedDoc.createElement("style");
           safeStyle.textContent = `
              * { 
@@ -183,32 +168,18 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
         },
       });
 
-      // Remove temporary element
       document.body.removeChild(tempElement);
 
-      // Create PDF
       const pdf = new jsPDF("p", "mm", "a4");
       const imgData = canvas.toDataURL("image/png");
 
-      // Calculate dimensions to fit A4
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
+      const imgWidth = 210;
+      const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      console.log("PDF dimensions:", {
-        canvasWidth: canvas.width,
-        canvasHeight: canvas.height,
-        imgWidth: imgWidth,
-        imgHeight: imgHeight,
-        pageHeight: pageHeight,
-        pagesNeeded: Math.ceil(imgHeight / pageHeight),
-      });
-
       if (imgHeight <= pageHeight) {
-        // Single page - content fits
         pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
       } else {
-        // Multiple pages needed
         let remainingHeight = imgHeight;
         let sourceY = 0;
         let pageNumber = 0;
@@ -220,10 +191,8 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
             pdf.addPage();
           }
 
-          // Calculate source position and size for this page
           const sourceHeight = (heightToUse * canvas.height) / imgHeight;
 
-          // Create a temporary canvas for this page slice
           const pageCanvas = document.createElement("canvas");
           pageCanvas.width = canvas.width;
           pageCanvas.height = sourceHeight;
@@ -235,11 +204,11 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
               0,
               sourceY,
               canvas.width,
-              sourceHeight, // source
+              sourceHeight,
               0,
               0,
               canvas.width,
-              sourceHeight // destination
+              sourceHeight
             );
 
             const pageImgData = pageCanvas.toDataURL("image/png");
@@ -252,13 +221,11 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
         }
       }
 
-      // Save PDF with original Vietnamese filename
       const fileName = `${exercise.name.replace(/[<>:"/\\|?*]/g, "_")}.pdf`;
       pdf.save(fileName);
     } catch (error) {
       console.error("PDF Error:", error);
 
-      // Fallback: Try simple text-based PDF
       try {
         const pdf = new jsPDF();
         pdf.setFontSize(16);
@@ -267,17 +234,12 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
         pdf.setFontSize(12);
         pdf.text(`Mon hoc: ${exercise.subject}`, 20, 50);
         pdf.text(`Lop: ${exercise.grade}`, 20, 65);
-        pdf.text(
-          `Han nop: ${new Date(exercise.deadline).toLocaleDateString()}`,
-          20,
-          80
-        );
+        pdf.text(`Han nop: ${formatDate(exercise.deadline)}`, 20, 80);
         pdf.text(`Giao vien: ${exercise.createdBy}`, 20, 95);
 
-        // Simple content without Vietnamese chars
         const simpleContent = exercise.content
           .replace(/<[^>]+>/g, " ")
-          .replace(/[^\u0020-\u007E]/g, "?") // Replace non-printable ASCII with ?
+          .replace(/[^\u0020-\u007E]/g, "?")
           .substring(0, 1000);
 
         const lines = pdf.splitTextToSize(simpleContent, 170);
@@ -294,7 +256,6 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
         pdf.save(`${exercise.name.replace(/[^\w]/g, "_")}.pdf`);
       } catch (fallbackError) {
         console.error("Fallback PDF Error:", fallbackError);
-        // Final fallback to browser print
         alert(
           "Không thể tạo PDF. Bạn có thể sử dụng Print của trình duyệt (Ctrl+P) để in/lưu PDF."
         );
@@ -304,7 +265,6 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 
   return (
     <div className="max-w-8xl mx-auto">
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
           <button
@@ -340,7 +300,6 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Exercise Info Sidebar */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sticky top-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-100">
@@ -430,17 +389,14 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
           </div>
         </div>
 
-        {/* Content Area */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            {/* Content Header */}
             <div className="border-b border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">
                   {exercise.name}
                 </h2>
                 <div className="flex items-center space-x-3">
-                  {/* View Mode Buttons */}
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setPreviewMode("reading")}
@@ -478,7 +434,6 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                       )}
                   </div>
 
-                  {/* Font Selector - Only show in reading mode */}
                   {previewMode === "reading" && (
                     <div className="flex items-center space-x-2 border-l border-gray-300 pl-3">
                       <Type className="h-4 w-4 text-gray-500" />
@@ -500,10 +455,8 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
               </div>
             </div>
 
-            {/* Content Body */}
             <div ref={contentRef} className="p-6">
               {previewMode === "reading" ? (
-                // Reading Mode - Optimized for easy reading
                 <div className="max-w-none">
                   <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 border border-blue-100">
                     <div className="bg-white rounded-lg p-8 shadow-sm">

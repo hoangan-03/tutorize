@@ -207,7 +207,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   const isEditMode = !!quiz;
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="mx-auto p-6 lg:px-16 xl:px-20">
       {/* Header */}
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -239,6 +239,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 Môn học *
               </label>
               <select
+                aria-label="Môn học"
                 required
                 value={formData.subject}
                 onChange={(e) =>
@@ -262,6 +263,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 Lớp *
               </label>
               <select
+                aria-label="Lớp"
                 required
                 value={formData.grade}
                 onChange={(e) =>
@@ -286,6 +288,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 Thời gian làm bài (phút) *
               </label>
               <input
+                aria-label="Thời gian làm bài"
                 type="number"
                 required
                 value={formData.timeLimit}
@@ -305,6 +308,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 Hạn chót *
               </label>
               <input
+                aria-label="Hạn chót"
                 type="datetime-local"
                 required={false}
                 value={formData.deadline || ""}
@@ -320,6 +324,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 Trạng thái
               </label>
               <select
+                aria-label="Trạng thái"
                 value={formData.status}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -340,6 +345,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
               Mô tả
             </label>
             <textarea
+              aria-label="Mô tả"
               value={formData.description}
               onChange={(e) =>
                 setFormData((prev) => ({
@@ -442,6 +448,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                             Loại câu hỏi
                           </label>
                           <select
+                            aria-label="Loại câu hỏi"
                             value={question.type}
                             onChange={(e) =>
                               updateQuestion(questionIndex, {
@@ -467,6 +474,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                             Điểm
                           </label>
                           <input
+                            aria-label="Điểm"
                             type="number"
                             min="1"
                             max="10"
@@ -493,6 +501,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                                 className="flex items-center space-x-3"
                               >
                                 <input
+                                  aria-label="Đáp án đúng"
                                   type="radio"
                                   name={`correct-${questionIndex}`}
                                   checked={

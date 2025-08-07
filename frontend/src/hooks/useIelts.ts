@@ -113,6 +113,24 @@ export const useIeltsTestSubmissions = (testId: number | null) => {
   };
 };
 
+// Get all submissions (for teacher view)
+export const useIeltsAllSubmissions = () => {
+  const {
+    data: submissions,
+    error,
+    isLoading,
+  } = useSWR("/ielts/submissions/all", () => ieltsService.getAllSubmissions(), {
+    revalidateOnFocus: false,
+  });
+
+  return {
+    submissions: submissions || [],
+    isLoading,
+    error,
+    mutate: () => mutate("/ielts/submissions/all"),
+  };
+};
+
 // Get submission details
 export const useIeltsSubmissionDetails = (submissionId: number | null) => {
   const {

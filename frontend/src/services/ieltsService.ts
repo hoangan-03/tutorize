@@ -215,6 +215,11 @@ export const ieltsService = {
     return response.data.data;
   },
 
+  async getAllSubmissions(): Promise<IeltsSubmission[]> {
+    const response = await api.get<IeltsSubmission[]>("/ielts/submissions");
+    return response.data;
+  },
+
   async getSubmissionDetails(
     submissionId: number
   ): Promise<IeltsSubmissionResult> {

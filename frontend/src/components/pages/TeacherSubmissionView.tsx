@@ -28,7 +28,6 @@ export const TeacherSubmissionView: React.FC = () => {
 
   useEffect(() => {
     if (submission) {
-      // Parse images
       if (submission.submissionUrl) {
         try {
           const imageUrls = JSON.parse(
@@ -39,8 +38,6 @@ export const TeacherSubmissionView: React.FC = () => {
           setImages([]);
         }
       }
-
-      // Set current grading values
       setScore(submission.score || 0);
       setFeedback(submission.feedback || "");
     }
@@ -52,7 +49,7 @@ export const TeacherSubmissionView: React.FC = () => {
     try {
       setGrading(true);
       await gradeSubmission(submission.id, score, feedback);
-      mutate(); // Refresh the submission data
+      mutate();
       showSuccess("Chấm điểm thành công!", {
         title: "Thành công",
         autoClose: true,
@@ -114,11 +111,12 @@ export const TeacherSubmissionView: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="mx-auto p-6 lg:px-16 xl:px-20">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-start gap-4 flex-row">
           <button
+            aria-label="Quay lại"
             onClick={() => window.history.back()}
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
@@ -204,6 +202,7 @@ export const TeacherSubmissionView: React.FC = () => {
                 Điểm (0-10)
               </label>
               <input
+                aria-label="Điểm"
                 type="number"
                 min="0"
                 max="10"
@@ -221,6 +220,7 @@ export const TeacherSubmissionView: React.FC = () => {
                 Nhận xét
               </label>
               <textarea
+                aria-label="Nhận xét"
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={6}
@@ -237,6 +237,7 @@ export const TeacherSubmissionView: React.FC = () => {
               <div className="grid grid-cols-5 gap-2">
                 {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((quickScore) => (
                   <button
+                    aria-label={`Điểm ${quickScore}`}
                     key={quickScore}
                     onClick={() => setScore(quickScore)}
                     className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
@@ -253,6 +254,7 @@ export const TeacherSubmissionView: React.FC = () => {
 
             {/* Submit Button */}
             <button
+              aria-label="Lưu điểm"
               onClick={handleGradeSubmission}
               disabled={grading}
               className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

@@ -9,6 +9,7 @@ import {
   XCircleIcon,
   BookOpenIcon,
 } from "@heroicons/react/24/solid";
+import { formatDateTime } from "../utils";
 
 export const IeltsResultPage: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
@@ -166,7 +167,7 @@ export const IeltsResultPage: React.FC = () => {
     <div>
       <Header mobileMenuOpen={false} setMobileMenuOpen={() => {}} />
       <div className="bg-gray-50 min-h-screen">
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-20">
           {/* Header */}
           <div className="bg-white p-6 rounded-lg shadow-md mb-8">
             <div className="flex justify-between items-start">
@@ -176,14 +177,7 @@ export const IeltsResultPage: React.FC = () => {
                 </h1>
                 <p className="mt-1 text-sm text-gray-500">
                   {t("ielts.result.submittedOn")}{" "}
-                  {new Date(submission.submittedAt).toLocaleDateString(
-                    "vi-VN",
-                    {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    }
-                  )}
+                  {formatDateTime(submission.submittedAt)}
                 </p>
               </div>
               <button

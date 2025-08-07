@@ -30,6 +30,8 @@ import { LandingPage } from "./components/pages/LandingPage";
 import { AuthForm } from "./components/pages/AuthForm";
 import { DocumentLibrary } from "./components/pages/DocumentLibrary";
 import { IeltsCenter } from "./components/pages/IeltsCenter";
+import { IeltsSubmissionsList } from "./components/pages/IeltsSubmissionsList";
+import { IeltsSubmissionDetail } from "./components/pages/IeltsSubmissionDetail";
 import { OnlineQuizzes } from "./components/pages/OnlineQuizzes";
 import { QuizManagement } from "./components/pages/QuizManagement";
 import { QuizDashboardPage } from "./components/pages/QuizDashboardPage";
@@ -355,6 +357,36 @@ function AppContent() {
               />
               <main>
                 <IeltsCenter />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ielts/submissions"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <IeltsSubmissionsList />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ielts/submission/:id"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <IeltsSubmissionDetail />
               </main>
             </ProtectedRoute>
           }

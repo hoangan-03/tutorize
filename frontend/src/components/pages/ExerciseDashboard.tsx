@@ -10,8 +10,13 @@ import {
   PieChart,
   Target,
 } from "lucide-react";
-import { Exercise, ExerciseSubmission, SubmissionStatus } from "../../types/api";
+import {
+  Exercise,
+  ExerciseSubmission,
+  SubmissionStatus,
+} from "../../types/api";
 import { useExerciseSubmissionsList } from "../../hooks";
+import { formatDate } from "../utils";
 
 interface ExerciseDashboardProps {
   exercise: Exercise;
@@ -445,8 +450,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="h-4 w-4 mr-2" />
-                  Hạn nộp:{" "}
-                  {new Date(exercise.deadline).toLocaleDateString("vi-VN")}
+                  Hạn nộp: {formatDate(exercise.deadline)}
                 </div>
               </div>
             </div>

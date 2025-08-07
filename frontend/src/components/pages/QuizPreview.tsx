@@ -45,7 +45,7 @@ export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="mx-auto p-6 lg:px-16 xl:px-20">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4 text-sm text-gray-500">

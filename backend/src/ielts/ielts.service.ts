@@ -689,6 +689,45 @@ export class IeltsService {
     });
   }
 
+  async getAllSubmissions(teacherId: number) {
+    // Get all tests created by this teacher
+    const teacherTests = await this.prisma.ieltsTest.findMany({
+      where: { createdBy: teacherId },
+      select: { id: true },
+    });
+
+    const testIds = teacherTests.map((test) => test.id);
+
+    return this.prisma.ieltsSubmission.findMany({
+      where: {
+        testId: { in: testIds },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        test: {
+          select: {
+            id: true,
+            title: true,
+            skill: true,
+            level: true,
+          },
+        },
+      },
+      orderBy: { submittedAt: 'desc' },
+    });
+  }
+
   async getSubmissionDetails(submissionId: number, userId: number) {
     const submission = await this.prisma.ieltsSubmission.findUnique({
       where: { id: submissionId },

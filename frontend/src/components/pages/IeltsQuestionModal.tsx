@@ -196,6 +196,7 @@ export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
                   Loại câu hỏi
                 </label>
                 <select
+                  aria-label="Loại câu hỏi"
                   name="type"
                   id="type"
                   value={questionData.type}
@@ -217,6 +218,7 @@ export const IeltsQuestionModal: React.FC<IeltsQuestionModalProps> = ({
                   Tổng điểm
                 </label>
                 <input
+                  aria-label="Tổng điểm"
                   type="number"
                   name="points"
                   id="points"

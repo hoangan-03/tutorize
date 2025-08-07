@@ -96,7 +96,7 @@ export const SubmissionsList: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="mx-auto p-6 lg:px-16 xl:px-20">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">
           {isTeacher ? "Quản lý bài nộp" : "Bài nộp của tôi"}
@@ -108,6 +108,7 @@ export const SubmissionsList: React.FC = () => {
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-gray-500" />
           <select
+            aria-label="Lọc bài nộp"
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

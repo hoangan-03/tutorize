@@ -236,6 +236,15 @@ export class IeltsController {
     return this.ieltsService.getMySubmissions(user.id);
   }
 
+  @Get('submissions')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Lấy tất cả bài nộp IELTS (Teacher only)' })
+  @ApiResponse({ status: 200, description: 'Danh sách tất cả bài nộp' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  getAllSubmissions(@CurrentUser() user: any) {
+    return this.ieltsService.getAllSubmissions(user.id);
+  }
+
   @Get('submissions/:submissionId/details')
   @ApiOperation({ summary: 'Lấy chi tiết kết quả bài nộp IELTS' })
   @ApiResponse({ status: 200, description: 'Chi tiết kết quả' })

@@ -1,11 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  IeltsTest,
-  IeltsSkill,
-  IeltsSubmission,
-  IeltsLevel,
-} from "../../types/api";
+import { IeltsTest, IeltsSkill, IeltsSubmission } from "../../types/api";
 import {
   useAuth,
   useIeltsTests,
@@ -28,6 +23,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "../ui";
+import { formatDateTime, getLevelInfo, getSkillInfo } from "../utils";
 
 const StudentIeltsView: React.FC<{
   tests: IeltsTest[];
@@ -218,7 +214,7 @@ const StudentIeltsView: React.FC<{
 
         {/* Submission History */}
         <div className="mt-16">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-start">
             {t("ielts.submissionHistory")}
           </h2>
           {submissions.length === 0 ? (
@@ -246,7 +242,7 @@ const StudentIeltsView: React.FC<{
                         </h3>
                         <p className="text-sm text-gray-500">
                           {t("ielts.submittedAt")}:{" "}
-                          {new Date(submission.submittedAt).toLocaleString()}
+                          {formatDateTime(submission.submittedAt)}
                         </p>
                       </div>
                       <div className="text-right">
@@ -280,7 +276,15 @@ const TeacherIeltsView: React.FC<{
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onCreate: () => void;
-}> = ({ resources, loading, onEdit, onDelete, onCreate }) => {
+  onViewSubmissions: () => void;
+}> = ({
+  resources,
+  loading,
+  onEdit,
+  onDelete,
+  onCreate,
+  onViewSubmissions,
+}) => {
   const { t } = useTranslation();
   const stats = {
     total: resources.length,
@@ -288,55 +292,6 @@ const TeacherIeltsView: React.FC<{
     listening: resources.filter((r) => r.skill === "LISTENING").length,
     writing: resources.filter((r) => r.skill === "WRITING").length,
     speaking: resources.filter((r) => r.skill === "SPEAKING").length,
-  };
-
-  const getSkillInfo = (skill: IeltsSkill) => {
-    switch (skill) {
-      case "READING":
-        return {
-          label: t("ielts.reading"),
-          color: "bg-blue-100 text-blue-800",
-        };
-      case "LISTENING":
-        return {
-          label: t("ielts.listening"),
-          color: "bg-purple-100 text-purple-800",
-        };
-      case "WRITING":
-        return {
-          label: t("ielts.writing"),
-          color: "bg-orange-100 text-orange-800",
-        };
-      case "SPEAKING":
-        return {
-          label: t("ielts.speaking"),
-          color: "bg-teal-100 text-teal-800",
-        };
-      default:
-        return { label: skill, color: "bg-gray-100 text-gray-800" };
-    }
-  };
-
-  const getLevelInfo = (level: IeltsLevel) => {
-    switch (level) {
-      case "BEGINNER":
-        return {
-          label: t("ielts.level.beginner"),
-          color: "bg-green-100 text-green-800",
-        };
-      case "INTERMEDIATE":
-        return {
-          label: t("ielts.level.intermediate"),
-          color: "bg-yellow-100 text-yellow-800",
-        };
-      case "ADVANCED":
-        return {
-          label: t("ielts.level.advanced"),
-          color: "bg-red-100 text-red-800",
-        };
-      default:
-        return { label: level, color: "bg-gray-100 text-gray-800" };
-    }
   };
 
   return (
@@ -445,17 +400,17 @@ const TeacherIeltsView: React.FC<{
                         </h3>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            getSkillInfo(test.skill).color
+                            getSkillInfo(test.skill, t).color
                           }`}
                         >
-                          {getSkillInfo(test.skill).label}
+                          {getSkillInfo(test.skill, t).label}
                         </span>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            getLevelInfo(test.level).color
+                            getLevelInfo(test.level, t).color
                           }`}
                         >
-                          {getLevelInfo(test.level).label}
+                          {getLevelInfo(test.level, t).label}
                         </span>
                       </div>
 
@@ -482,9 +437,7 @@ const TeacherIeltsView: React.FC<{
 
                     <div className="flex items-center space-x-1">
                       <button
-                        onClick={() => {
-                          /* handleViewSubmissions(test) */
-                        }}
+                        onClick={onViewSubmissions}
                         className="p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
                         title={t("ielts.teacher.viewSubmissions")}
                       >
@@ -562,13 +515,17 @@ export const IeltsCenter: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
+  const handleViewSubmissions = () => {
+    navigate("/ielts/submissions");
+  };
+
+  const handleBackToList = () => {
     setView("list");
     setCurrentTestId(null);
   };
 
   if (view === "form") {
-    return <IeltsTestForm testId={currentTestId} onBack={handleBack} />;
+    return <IeltsTestForm testId={currentTestId} onBack={handleBackToList} />;
   }
 
   if (user?.role === "TEACHER") {
@@ -579,6 +536,7 @@ export const IeltsCenter: React.FC = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onCreate={handleCreate}
+        onViewSubmissions={handleViewSubmissions}
       />
     );
   }

@@ -620,7 +620,7 @@ const StudentQuizView: React.FC = () => {
 
     return (
       <div className="p-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto p-6 lg:px-16 xl:px-20">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -1167,7 +1167,7 @@ const StudentQuizView: React.FC = () => {
     if (quizResults.isSubmissionHistory) {
       return (
         <div className="p-8">
-          <div className="max-w-6xl mx-auto">
+          <div className="mx-auto p-6 lg:px-16 xl:px-20">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
               <div className="mb-8">
                 <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">

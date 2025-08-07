@@ -414,9 +414,7 @@ export const ExerciseDetailView: React.FC = () => {
                )}:</strong> ${exerciseGrade}</p>
                <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
                  "exercisePublicView.deadline"
-               )}:</strong> ${new Date(exerciseDeadline).toLocaleDateString(
-        "vi-VN"
-      )}</p>
+               )}:</strong> ${formatDate(exerciseDeadline)}</p>
                <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
                  "exercisePublicView.teacher"
                )}:</strong> ${exerciseTeacher}</p>
@@ -673,7 +671,7 @@ export const ExerciseDetailView: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto p-6 lg:px-16 xl:px-20">
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
@@ -685,7 +683,7 @@ export const ExerciseDetailView: React.FC = () => {
   if (!exercise) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto p-6 lg:px-16 xl:px-20">
           <div className="text-center py-12">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -710,7 +708,7 @@ export const ExerciseDetailView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="mx-auto p-6 lg:px-16 xl:px-20">
         {/* Header Section with Gradient */}
         <div className="bg-gradient-to-r from-sky-700 to-sky-900 rounded-2xl shadow-xl text-white p-4 md:p-8 mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between">
@@ -938,6 +936,7 @@ export const ExerciseDetailView: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <Type className="h-4 w-4 text-gray-500" />
                     <select
+                      aria-label="Chọn font"
                       value={selectedFont}
                       onChange={(e) => setSelectedFont(e.target.value)}
                       className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1267,6 +1266,7 @@ export const ExerciseDetailView: React.FC = () => {
                     {t("exercises.selectFiles")}
                   </button>
                   <input
+                    aria-label="Chọn file"
                     ref={fileInputRef}
                     type="file"
                     multiple

@@ -124,6 +124,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                   Môn học *
                 </label>
                 <select
+                  aria-label="Môn học"
                   value={formData.subject}
                   onChange={(e) => onInputChange("subject", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -141,6 +142,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                   Lớp *
                 </label>
                 <select
+                  aria-label="Lớp"
                   value={formData.grade}
                   onChange={(e) =>
                     onInputChange("grade", parseInt(e.target.value))
@@ -160,6 +162,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                   Hạn nộp *
                 </label>
                 <input
+                  aria-label="Hạn nộp"
                   type="datetime-local"
                   value={formData.deadline}
                   onChange={(e) => onInputChange("deadline", e.target.value)}

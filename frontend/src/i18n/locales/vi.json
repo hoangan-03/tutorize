@@ -122,7 +122,7 @@
     "enterPhone": "Nhập số điện thoại",
     "enterAddress": "Nhập địa chỉ",
     "enterSchool": "Nhập tên trường",
-    "dateFormat": "Định dạng ngày: MM-DD-YYYY",
+    "dateFormat": "Định dạng ngày: DD/MM/YYYY",
     "forgotPasswordDescription": "Nhập địa chỉ email và chúng tôi sẽ gửi cho bạn mật khẩu tạm thời để đăng nhập.",
     "sendResetEmail": "Gửi mật khẩu tạm thời",
     "rememberPassword": "Nhớ mật khẩu?",
@@ -520,6 +520,7 @@
       "noAnswer": "Không trả lời",
       "yourAnswer": "Câu trả lời của bạn"
     },
+
     "bands": {
       "expert": "Người dùng thành thạo",
       "veryGood": "Người dùng rất giỏi",
@@ -589,6 +590,25 @@
     "submittedAt": "Nộp lúc",
     "score": "Điểm",
     "review": "Xem lại",
+    "submissions": {
+      "title": "Danh sách bài nộp IELTS",
+      "subtitle": "Quản lý và theo dõi kết quả bài thi của học sinh",
+      "searchPlaceholder": "Tìm kiếm theo tên, email hoặc tiêu đề bài thi...",
+      "allSkills": "Tất cả kỹ năng",
+      "allLevels": "Tất cả cấp độ",
+      "totalSubmissions": "Tổng bài nộp",
+      "uniqueStudents": "Học sinh",
+      "averageScore": "Điểm TB",
+      "uniqueTests": "Bài thi",
+      "submissionsList": "Danh sách bài nộp",
+      "noSubmissions": "Chưa có bài nộp nào",
+      "unknownUser": "Người dùng ẩn danh",
+      "bandScore": "Band",
+      "viewDetails": "Xem chi tiết",
+      "submissionDetail": "Chi tiết bài nộp",
+      "notFound": "Không tìm thấy bài nộp",
+      "unknownTest": "Bài thi không xác định"
+    },
     "teacher": {
       "manageTitle": "Quản lý Bài test IELTS",
       "manageDescription": "Tạo và quản lý các bài test IELTS cho bốn kỹ năng: Nghe, Nói, Đọc, Viết.",
