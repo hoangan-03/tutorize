@@ -33,6 +33,9 @@ import { QuizSubmissionView } from "./components/pages/QuizSubmissionView";
 import { WritingGrader } from "./components/pages/WritingGrader";
 import { ExerciseEditor } from "./components/pages/ExerciseEditor";
 import { ExerciseDetailView } from "./components/pages/ExerciseDetailView";
+import { SubmissionsList } from "./components/pages/SubmissionsList";
+import { StudentSubmissionDetail } from "./components/pages/StudentSubmissionDetail";
+import { TeacherSubmissionView } from "./components/pages/TeacherSubmissionView";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
 import { IeltsResultPage } from "./components/pages/IeltsResultPage";
 import { Role } from "./types/api";
@@ -177,6 +180,70 @@ function AppContent() {
               />
               <main>
                 <ExerciseDetailView />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Exercise Submissions List Route */}
+        <Route
+          path="/exercises/submissions"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <SubmissionsList />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Teacher Submission Detail Route */}
+        <Route
+          path="/teacher/submissions/:submissionId"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <TeacherSubmissionView />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student Submission Detail Route */}
+        <Route
+          path="/submissions/:submissionId"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <StudentSubmissionDetail />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Alternative route format for consistency */}
+        <Route
+          path="/exercises/submissions/:submissionId"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <TeacherSubmissionView />
               </main>
             </ProtectedRoute>
           }

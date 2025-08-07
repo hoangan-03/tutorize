@@ -10,7 +10,7 @@ import {
   PieChart,
   Target,
 } from "lucide-react";
-import { Exercise, ExerciseSubmission } from "../../types/api";
+import { Exercise, ExerciseSubmission, SubmissionStatus } from "../../types/api";
 import { useExerciseSubmissionsList } from "../../hooks";
 
 interface ExerciseDashboardProps {
@@ -53,7 +53,7 @@ export const ExerciseDashboard: React.FC<ExerciseDashboardProps> = ({
   const calculateStats = (submissions: ExerciseSubmission[]) => {
     const totalSubmissions = submissions.length;
     const gradedSubmissions = submissions.filter(
-      (s) => s.status === "GRADED"
+      (s) => s.status === SubmissionStatus.GRADED
     ).length;
     const pendingSubmissions = submissions.filter(
       (s) => s.status === "SUBMITTED"

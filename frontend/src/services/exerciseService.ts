@@ -36,6 +36,13 @@ export const exerciseService = {
     return response.data;
   },
 
+  async getMaxScore(submissionId: number): Promise<number> {
+    const response = await api.get<{ maxScore: number }>(
+      `/exercise-submissions/${submissionId}/max-score`
+    );
+    return response.data.maxScore;
+  },
+
   async getExerciseWithAnswers(id: number): Promise<Exercise> {
     const response = await api.get<Exercise>(`/exercises/${id}/with-answers`);
     return response.data;
@@ -101,38 +108,12 @@ export const exerciseService = {
   },
 
   // Exercise Submissions
-  async submitExercise(
-    exerciseId: number,
-    content: string,
-    files?: File[]
-  ): Promise<ExerciseSubmission> {
-    const formData = new FormData();
-    formData.append("content", content);
-
-    if (files && files.length > 0) {
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
-    }
-
-    const response = await api.post<ExerciseSubmission>(
-      `/exercises/${exerciseId}/submit`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-    return response.data;
-  },
-
   async submitExerciseWithImages(
     exerciseId: number,
     imageLinks: string[]
   ): Promise<ExerciseSubmission> {
     const response = await api.post<ExerciseSubmission>(
-      `/exercises/${exerciseId}/submit-images`,
+      `/exercises/${exerciseId}/submit`,
       {
         imageLinks,
         submittedAt: new Date().toISOString(),
@@ -150,15 +131,20 @@ export const exerciseService = {
 
   async updateSubmission(
     submissionId: number,
-    content: string
+    imageLinks: string[]
   ): Promise<ExerciseSubmission> {
     const response = await api.put<ExerciseSubmission>(
       `/exercise-submissions/${submissionId}`,
       {
-        content,
+        imageLinks,
+        submittedAt: new Date().toISOString(),
       }
     );
     return response.data;
+  },
+
+  async deleteSubmission(submissionId: number): Promise<void> {
+    await api.delete(`/exercise-submissions/${submissionId}`);
   },
 
   async getMySubmissions(
@@ -166,6 +152,16 @@ export const exerciseService = {
   ): Promise<PaginatedResult<ExerciseSubmission>> {
     const response = await api.get<PaginatedResult<ExerciseSubmission>>(
       "/exercise-submissions/my",
+      { params }
+    );
+    return response.data;
+  },
+
+  async getAllSubmissions(
+    params?: PaginationParams
+  ): Promise<PaginatedResult<ExerciseSubmission>> {
+    const response = await api.get<PaginatedResult<ExerciseSubmission>>(
+      "/exercise-submissions/all",
       { params }
     );
     return response.data;
@@ -188,8 +184,8 @@ export const exerciseService = {
     score: number,
     feedback?: string
   ): Promise<ExerciseSubmission> {
-    const response = await api.post<ExerciseSubmission>(
-      `/exercise-submissions/${submissionId}/grade`,
+    const response = await api.patch<ExerciseSubmission>(
+      `/exercises/submissions/${submissionId}/grade`,
       {
         score,
         feedback,

@@ -73,21 +73,21 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
 
   const getStatusBadge = (status: SubmissionStatus) => {
     switch (status) {
-      case "SUBMITTED":
+      case SubmissionStatus.SUBMITTED:
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             <Clock className="h-3 w-3 mr-1" />
             {t("teacherSubmissionsView.waitingForGrading")}
           </span>
         );
-      case "GRADED":
+      case SubmissionStatus.GRADED:
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
             {t("teacherSubmissionsView.graded")}
           </span>
         );
-      case "LATE":
+      case SubmissionStatus.LATE:
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
             <AlertTriangle className="h-3 w-3 mr-1" />
@@ -109,7 +109,8 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
 
   const stats = {
     total: submissions.length,
-    graded: submissions.filter((s) => s.status === "GRADED").length,
+    graded: submissions.filter((s) => s.status === SubmissionStatus.GRADED)
+      .length,
     pending: submissions.filter((s) => s.status === "SUBMITTED").length,
     late: submissions.filter((s) => s.status === "LATE").length,
     averageScore:
@@ -240,7 +241,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
               <option value="SUBMITTED">
                 {t("teacherSubmissionsView.pending")}
               </option>
-              <option value="GRADED">
+              <option value={SubmissionStatus.GRADED}>
                 {t("teacherSubmissionsView.graded")}
               </option>
               <option value="LATE">{t("teacherSubmissionsView.late")}</option>
@@ -314,7 +315,10 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
-                                {submission.user?.name || "Unknown Student"}
+                                {submission.user?.profile?.lastName +
+                                  " " +
+                                  submission.user?.profile?.firstName ||
+                                  "Unknown Student"}
                               </div>
                             </div>
                           </div>
@@ -332,7 +336,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {submission.score === null
                             ? "N/A"
-                            : `${submission.score}/10`}
+                            : `${submission.score}/${exercise.maxScore}`}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center space-x-2">

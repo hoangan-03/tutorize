@@ -27,14 +27,15 @@ export class UploadController {
       throw new BadRequestException('No file uploaded');
     }
 
-    const driveLink = await this.uploadService.uploadToGoogleDrive(
+    const cloudinaryUrl = await this.uploadService.uploadToCloudinary(
       file,
       exerciseId ? parseInt(exerciseId) : undefined,
     );
 
     return {
       success: true,
-      driveLink,
+      cloudinaryUrl,
+      driveLink: cloudinaryUrl, // Keep backward compatibility
       fileName: file.originalname,
     };
   }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -9,27 +9,35 @@ import {
   Clock,
   Type,
   BookCheck,
-  Users,
   ArrowLeft,
   Upload,
   Image as ImageIcon,
   X,
   CheckCircle,
   AlertCircle,
+  Edit,
+  Trash2,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { InlineMath } from "react-katex";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useExercise } from "../../hooks";
-import { ExerciseStatus, Exercise } from "../../types/api";
+import {
+  ExerciseStatus,
+  Exercise,
+  ExerciseSubmission,
+  SubmissionStatus,
+} from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/Badge";
 import { exerciseService } from "../../services/exerciseService";
-import { GoogleDriveService } from "../../services/googleDriveService";
+import { UploadService } from "../../services/uploadService";
 
 import "katex/dist/katex.min.css";
-import { formatDate } from "../utils";
+import { formatDate, formatDateTime } from "../utils";
 
 export const ExerciseDetailView: React.FC = () => {
   const { exerciseId } = useParams<{ exerciseId: string }>();
@@ -45,12 +53,17 @@ export const ExerciseDetailView: React.FC = () => {
   const [selectedFont, setSelectedFont] = useState<string>("Cambria Math");
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Image upload states
+  enum UploadStatus {
+    PENDING = "pending",
+    UPLOADING = "uploading",
+    SUCCESS = "success",
+    ERROR = "error",
+  }
   const [uploadedImages, setUploadedImages] = useState<
     Array<{
       file: File;
       preview: string;
-      uploadStatus: "pending" | "uploading" | "success" | "error";
+      uploadStatus: UploadStatus;
       driveLink?: string;
       error?: string;
     }>
@@ -59,21 +72,127 @@ export const ExerciseDetailView: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Student submission states
+  const [existingSubmission, setExistingSubmission] =
+    useState<ExerciseSubmission | null>(null);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [editing, setEditing] = useState(false);
+
+  // Load existing submission for students
+  const loadExistingSubmission = useCallback(async () => {
+    try {
+      const submissions = await exerciseService.getMySubmissions({
+        page: 1,
+        limit: 100,
+      });
+      const submission = submissions.data.find(
+        (s) => s.exercise?.id === exercise?.id
+      );
+
+      if (submission) {
+        setExistingSubmission(submission);
+
+        // Parse existing images
+        if (submission.submissionUrl) {
+          try {
+            const imageUrls = JSON.parse(
+              submission.submissionUrl as unknown as string
+            );
+            setExistingImages(Array.isArray(imageUrls) ? imageUrls : []);
+          } catch {
+            setExistingImages([]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading existing submission:", error);
+    }
+  }, [exercise?.id]);
+
+  useEffect(() => {
+    if (!isTeacher && exercise?.id) {
+      loadExistingSubmission();
+    }
+  }, [isTeacher, exercise?.id, loadExistingSubmission]);
+
+  // Remove existing image
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle submission update
+  const handleUpdateSubmission = async () => {
+    if (!existingSubmission) return;
+
+    try {
+      setIsSubmitting(true);
+
+      // Upload new images
+      const uploadPromises = uploadedImages.map(async (imageData) => {
+        if (imageData.uploadStatus === "pending") {
+          return await UploadService.uploadFile(imageData.file, exercise?.id);
+        }
+        return imageData.driveLink;
+      });
+
+      const newImageUrls = await Promise.all(uploadPromises);
+      const allImageUrls = [
+        ...existingImages,
+        ...newImageUrls.filter((url): url is string => Boolean(url)),
+      ];
+
+      await exerciseService.updateSubmission(
+        existingSubmission.id,
+        allImageUrls
+      );
+      setEditing(false);
+      setUploadedImages([]);
+      loadExistingSubmission();
+
+      alert(t("exercises.submissionUpdated"));
+    } catch (error) {
+      console.error("Error updating submission:", error);
+      alert(t("exercises.submissionError"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle submission deletion
+  const handleDeleteSubmission = async () => {
+    if (!existingSubmission) return;
+
+    if (window.confirm(t("exercises.confirmDelete"))) {
+      try {
+        await exerciseService.deleteSubmission(existingSubmission.id);
+        setExistingSubmission(null);
+        setExistingImages([]);
+        alert(t("exercises.submissionDeleted"));
+      } catch (error) {
+        console.error("Error deleting submission:", error);
+        alert(t("exercises.submissionError"));
+      }
+    }
+  };
+
   // Handle file selection
-  const handleFileSelect = useCallback((files: FileList | File[]) => {
-    const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter((file) =>
-      file.type.startsWith("image/")
-    );
+  const handleFileSelect = useCallback(
+    (files: FileList | File[]) => {
+      const fileArray = Array.from(files);
+      const imageFiles = fileArray.filter((file) =>
+        file.type.startsWith("image/")
+      );
 
-    const newImages = imageFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      uploadStatus: "pending" as const,
-    }));
+      const newImages = imageFiles.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+        uploadStatus: UploadStatus.PENDING,
+      }));
 
-    setUploadedImages((prev) => [...prev, ...newImages]);
-  }, []);
+      setUploadedImages((prev) => [...prev, ...newImages]);
+    },
+    [UploadStatus.PENDING]
+  );
 
   // Handle drag and drop
   const handleDrop = useCallback(
@@ -111,12 +230,12 @@ export const ExerciseDetailView: React.FC = () => {
   // Upload all images to Google Drive
   const uploadAllImages = async () => {
     setUploadedImages((prev) =>
-      prev.map((img) => ({ ...img, uploadStatus: "uploading" as const }))
+      prev.map((img) => ({ ...img, uploadStatus: UploadStatus.UPLOADING }))
     );
 
     const uploadPromises = uploadedImages.map(async (imageData, index) => {
       try {
-        const driveLink = await GoogleDriveService.uploadFile(
+        const uploadUrl = await UploadService.uploadFile(
           imageData.file,
           exercise?.id
         );
@@ -124,18 +243,18 @@ export const ExerciseDetailView: React.FC = () => {
           const newImages = [...prev];
           newImages[index] = {
             ...newImages[index],
-            uploadStatus: "success",
-            driveLink,
+            uploadStatus: UploadStatus.SUCCESS,
+            driveLink: uploadUrl,
           };
           return newImages;
         });
-        return driveLink;
+        return uploadUrl;
       } catch (error) {
         setUploadedImages((prev) => {
           const newImages = [...prev];
           newImages[index] = {
             ...newImages[index],
-            uploadStatus: "error",
+            uploadStatus: UploadStatus.ERROR,
             error: error instanceof Error ? error.message : "Upload failed",
           };
           return newImages;
@@ -149,6 +268,12 @@ export const ExerciseDetailView: React.FC = () => {
 
   // Submit exercise with uploaded images
   const submitExercise = async () => {
+    if (existingSubmission && editing) {
+      // Update existing submission
+      await handleUpdateSubmission();
+      return;
+    }
+
     if (uploadedImages.length === 0) {
       alert(t("exercises.pleaseUploadImages"));
       return;
@@ -157,7 +282,7 @@ export const ExerciseDetailView: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Upload all images to Google Drive first
+      // Upload all images to Cloudinary first
       const driveLinks = await uploadAllImages();
 
       // Filter out any failed uploads
@@ -175,9 +300,10 @@ export const ExerciseDetailView: React.FC = () => {
 
       alert(t("exercises.submissionSuccess"));
 
-      // Clear uploaded images
+      // Clear uploaded images and reload submission
       uploadedImages.forEach((img) => URL.revokeObjectURL(img.preview));
       setUploadedImages([]);
+      loadExistingSubmission();
     } catch (error) {
       console.error("Submission error:", error);
       alert(t("exercises.submissionError"));
@@ -904,192 +1030,305 @@ export const ExerciseDetailView: React.FC = () => {
             </div>
           </div>
 
-          {/* Image Upload Section - Only for active exercises and non-teachers */}
-          {!isTeacher && exercise.status === ExerciseStatus.ACTIVE && (
+          {/* Student Submission View Section - Show existing submission */}
+          {!isTeacher && existingSubmission && (
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-8">
-              <div className="flex items-center mb-6">
-                <div className="p-3 bg-green-100 rounded-xl mr-4">
-                  <Upload className="h-6 w-6 text-green-600" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="p-3 bg-blue-100 rounded-xl flex-shrink-0">
+                    <CheckCircle className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="flex flex-col text-start min-w-0 flex-1">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+                      {t("exercises.yourSubmission")}
+                    </h3>
+                    <p className="text-gray-600 text-sm sm:text-base break-all">
+                      {t("exercises.submittedOn")}{" "}
+                      {formatDateTime(existingSubmission.submittedAt)}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {t("exercises.submitYourWork")}
-                </h3>
-              </div>
 
-              {/* File Upload Area */}
-              <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                  isDragOver
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-300 bg-gray-50"
-                }`}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-              >
-                <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  {t("exercises.uploadImages")}
-                </h4>
-                <p className="text-gray-600 mb-4">
-                  {t("exercises.dragDropOrClick")}
-                </p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {t("exercises.selectFiles")}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) =>
-                    e.target.files && handleFileSelect(e.target.files)
-                  }
-                />
-              </div>
-
-              {/* Uploaded Images Preview */}
-              {uploadedImages.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                    {t("exercises.uploadedImages")} ({uploadedImages.length})
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {uploadedImages.map((imageData, index) => (
-                      <div
-                        key={index}
-                        className="relative bg-gray-100 rounded-lg overflow-hidden"
+                {/* Status Badge and Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
+                  {/* Status Badge */}
+                  <div className="w-full sm:w-auto">
+                    {existingSubmission.status ===
+                      SubmissionStatus.SUBMITTED && (
+                      <Badge
+                        variant="status"
+                        className="bg-blue-100 text-blue-800 w-full sm:w-auto justify-center sm:justify-start"
                       >
+                        {t("exercises.waitingForGrade")}
+                      </Badge>
+                    )}
+                    {existingSubmission.status === SubmissionStatus.GRADED && (
+                      <Badge
+                        variant="status"
+                        className="bg-green-100 text-green-800 w-full sm:w-auto justify-center sm:justify-start"
+                      >
+                        {t("exercises.graded")}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Edit/Delete buttons only if not graded */}
+                  {existingSubmission.status === SubmissionStatus.SUBMITTED && (
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={() => setEditing(!editing)}
+                        className="flex-1 sm:flex-initial px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1 text-sm sm:text-base"
+                      >
+                        <Edit className="w-4 h-4" />
+                        {editing ? t("common.cancel") : t("common.edit")}
+                      </button>
+                      <button
+                        onClick={handleDeleteSubmission}
+                        className="flex-1 sm:flex-initial px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-1 text-sm sm:text-base"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {t("common.delete")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Score and Feedback */}
+              {existingSubmission.score !== null && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <h4 className="font-semibold text-green-800 text-sm sm:text-base">
+                      {t("exercises.gradeResult")}
+                    </h4>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-bold text-green-700 mb-2">
+                    {existingSubmission.score}/10 {t("exercises.points")}
+                  </div>
+                  {existingSubmission.feedback && (
+                    <div>
+                      <h5 className="font-medium text-green-800 mb-1 flex items-center gap-1 text-sm sm:text-base">
+                        <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                        {t("exercises.feedback")}:
+                      </h5>
+                      <p className="text-green-700 text-sm sm:text-base leading-relaxed break-words">
+                        {existingSubmission.feedback}
+                      </p>
+                    </div>
+                  )}
+                  {existingSubmission.gradedAt && (
+                    <div className="text-xs sm:text-sm text-green-600 mt-2 break-all">
+                      {t("exercises.gradedOn")}{" "}
+                      {formatDateTime(existingSubmission.gradedAt)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Existing Images */}
+              <div className="space-y-3 sm:space-y-4">
+                <h4 className="text-base sm:text-lg font-semibold">
+                  {t("exercises.submittedImages")} ({existingImages.length})
+                </h4>
+
+                {existingImages.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                    {existingImages.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
                         <img
-                          src={imageData.preview}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-32 object-cover"
+                          src={imageUrl}
+                          alt={`${t("exercises.submission")} ${index + 1}`}
+                          className="w-full h-40 sm:h-48 object-cover rounded-lg border cursor-pointer"
+                          onClick={() => window.open(imageUrl, "_blank")}
                         />
-
-                        {/* Upload Status Overlay */}
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          {imageData.uploadStatus === "pending" && (
-                            <span className="text-white text-sm">
-                              {t("exercises.pending")}
-                            </span>
-                          )}
-                          {imageData.uploadStatus === "uploading" && (
-                            <div className="text-white text-center">
-                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto mb-1"></div>
-                              <span className="text-xs">
-                                {t("exercises.uploading")}
-                              </span>
-                            </div>
-                          )}
-                          {imageData.uploadStatus === "success" && (
-                            <CheckCircle className="h-8 w-8 text-green-400" />
-                          )}
-                          {imageData.uploadStatus === "error" && (
-                            <AlertCircle className="h-8 w-8 text-red-400" />
-                          )}
+                        {editing && (
+                          <button
+                            onClick={() => removeExistingImage(index)}
+                            className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            title={t("exercises.removeImage")}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                        <div className="absolute bottom-2 left-2">
+                          <Badge
+                            variant="status"
+                            className="bg-gray-100 text-gray-800 text-xs"
+                          >
+                            {t("exercises.image")} {index + 1}
+                          </Badge>
                         </div>
-
-                        {/* Remove Button */}
-                        <button
-                          onClick={() => removeImage(index)}
-                          aria-label={t("exercises.removeImage")}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-gray-300" />
+                    <p className="text-sm sm:text-base">
+                      {t("exercises.noImages")}
+                    </p>
+                  </div>
+                )}
 
-                  {/* Submit Button */}
-                  <div className="mt-6 flex justify-center">
+                {/* Save/Cancel buttons when editing */}
+                {editing && (
+                  <div className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-gray-200">
                     <button
-                      onClick={submitExercise}
-                      disabled={
-                        isSubmitting ||
-                        uploadedImages.some(
-                          (img) => img.uploadStatus === "uploading"
-                        )
-                      }
-                      className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl ${
-                        isSubmitting ||
-                        uploadedImages.some(
-                          (img) => img.uploadStatus === "uploading"
-                        )
-                          ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                          : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
-                      }`}
+                      onClick={handleUpdateSubmission}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm sm:text-base"
                     >
-                      {isSubmitting ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          {t("exercises.submitting")}
-                        </div>
-                      ) : (
-                        t("exercises.submitExercise")
-                      )}
+                      {isSubmitting
+                        ? t("exercises.saving")
+                        : t("exercises.saveChanges")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditing(false);
+                        setUploadedImages([]);
+                      }}
+                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm sm:text-base"
+                    >
+                      {t("common.cancel")}
                     </button>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
-          {/* Action Section */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <BookOpen className="h-6 w-6 text-green-600" />
+          {/* Image Upload Section - Only for active exercises and non-teachers */}
+          {!isTeacher &&
+            exercise.status === ExerciseStatus.ACTIVE &&
+            (!existingSubmission || editing) && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-8">
+                <div className="flex flex-col sm:flex-row sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+                  <div className="flex items-center flex-1">
+                    <div className="p-3 bg-green-100 rounded-xl mr-3 sm:mr-4 flex-shrink-0">
+                      <Upload className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+                      {existingSubmission && editing
+                        ? t("exercises.editSubmission")
+                        : t("exercises.submitYourWork")}
+                    </h3>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 text-start">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    {isTeacher
-                      ? ""
-                      : exercise.status === ExerciseStatus.ACTIVE
-                      ? t("exercises.readyToSubmit")
-                      : t("exercises.unavailable")}
-                  </h4>
-                  <p className="text-gray-600">
-                    {isTeacher
-                      ? ""
-                      : exercise.status === ExerciseStatus.ACTIVE
-                      ? t("exercises.completeAndSubmit")
-                      : t("exercises.contactAdministrator")}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center space-x-4">
-                {!isTeacher && (
+                {/* File Upload Area */}
+                <div
+                  className={`border-2 border-dashed rounded-xl p-4 sm:p-6 md:p-8 text-center transition-colors ${
+                    isDragOver
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-300 bg-gray-50"
+                  }`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                >
+                  <ImageIcon className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                    {t("exercises.uploadImages")}
+                  </h4>
+                  <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base px-2">
+                    {t("exercises.dragDropOrClick")}
+                  </p>
                   <button
-                    className={`${
-                      exercise.status === ExerciseStatus.ACTIVE
-                        ? "block"
-                        : "hidden"
-                    } px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold`}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
                   >
-                    {t("exercises.submitExercise")}
+                    {t("exercises.selectFiles")}
                   </button>
-                )}
-                {isTeacher && (
-                  <div className="flex space-x-4">
-                    <button className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center">
-                      <Users className="h-5 w-5 mr-2" />
-                      {t("exercises.viewSubmissions")}
-                    </button>
-                    <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold">
-                      {t("exercises.gradeExercise")}
-                    </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) =>
+                      e.target.files && handleFileSelect(e.target.files)
+                    }
+                  />
+                </div>
+
+                {/* Uploaded Images Preview */}
+                {uploadedImages.length > 0 && (
+                  <div className="mt-4 sm:mt-6">
+                    <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
+                      {t("exercises.uploadedImages")} ({uploadedImages.length})
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
+                      {uploadedImages.map((imageData, index) => (
+                        <div
+                          key={index}
+                          className="relative bg-gray-100 rounded-lg overflow-hidden"
+                        >
+                          <img
+                            src={imageData.preview}
+                            alt={`Upload ${index + 1}`}
+                            className="w-full h-24 sm:h-32 object-cover"
+                          />
+
+                          {/* Upload Status Overlay */}
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            {imageData.uploadStatus === "success" && (
+                              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
+                            )}
+                            {imageData.uploadStatus === "error" && (
+                              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-400" />
+                            )}
+                          </div>
+
+                          {/* Remove Button */}
+                          <button
+                            onClick={() => removeImage(index)}
+                            aria-label={t("exercises.removeImage")}
+                            className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          >
+                            <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="mt-4 sm:mt-6 flex justify-center">
+                      <button
+                        onClick={submitExercise}
+                        disabled={
+                          isSubmitting ||
+                          uploadedImages.some(
+                            (img) => img.uploadStatus === "uploading"
+                          )
+                        }
+                        className={`w-full sm:w-auto px-6 sm:px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base ${
+                          isSubmitting ||
+                          uploadedImages.some(
+                            (img) => img.uploadStatus === "uploading"
+                          )
+                            ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                            : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
+                        }`}
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
+                            {existingSubmission && editing
+                              ? t("exercises.updating")
+                              : t("exercises.submitting")}
+                          </div>
+                        ) : existingSubmission && editing ? (
+                          t("exercises.updateSubmission")
+                        ) : (
+                          t("exercises.submitExercise")
+                        )}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            )}
         </div>
       </div>
     </div>

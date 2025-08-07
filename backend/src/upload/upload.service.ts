@@ -1,138 +1,121 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { drive_v3, google } from 'googleapis';
+import { v2 as cloudinary } from 'cloudinary';
 import * as stream from 'stream';
 
 @Injectable()
 export class UploadService {
-  private drive: drive_v3.Drive;
   private readonly logger = new Logger(UploadService.name);
 
   constructor(private configService: ConfigService) {
-    this.initGoogleDriveClient();
+    this.initCloudinary();
   }
 
-  private initGoogleDriveClient() {
+  private initCloudinary() {
     try {
-      const keyFile = this.configService.get<string>(
-        'GOOGLE_SERVICE_ACCOUNT_PATH',
-      );
+      const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
+      const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY');
+      const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET');
 
-      if (!keyFile) {
+      if (!cloudName || !apiKey || !apiSecret) {
         throw new Error(
-          'GOOGLE_SERVICE_ACCOUNT_PATH environment variable is not set',
+          'Cloudinary configuration is incomplete. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET',
         );
       }
 
-      const auth = new google.auth.GoogleAuth({
-        keyFile,
-        scopes: ['https://www.googleapis.com/auth/drive.file'],
+      cloudinary.config({
+        cloud_name: cloudName,
+        api_key: apiKey,
+        api_secret: apiSecret,
       });
 
-      this.drive = google.drive({ version: 'v3', auth });
-      this.logger.log('Google Drive client initialized successfully');
+      this.logger.log('Cloudinary initialized successfully');
     } catch (error: any) {
-      this.logger.error(
-        `Failed to initialize Google Drive client: ${error.message}`,
-      );
+      this.logger.error(`Failed to initialize Cloudinary: ${error.message}`);
       throw error;
     }
   }
 
-  async uploadToGoogleDrive(
+  async uploadToCloudinary(
     file: Express.Multer.File,
     exerciseId?: number,
   ): Promise<string> {
     try {
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(file.buffer);
+      const fileName = `exercise_${exerciseId || 'unknown'}_${Date.now()}_${file.originalname}`;
 
-      const fileName = `${Date.now()}-exercise_${exerciseId || 'unknown'}_${file.originalname}`;
+      return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            public_id: fileName,
+            resource_type: 'auto', // Auto-detect file type
+            folder: 'tutorize/uploads', // Organize files in folders
+          },
+          (error, result) => {
+            if (error) {
+              this.logger.error(
+                `Failed to upload file to Cloudinary: ${error.message}`,
+              );
+              reject(
+                new BadRequestException('Failed to upload file to Cloudinary'),
+              );
+            } else if (result) {
+              this.logger.log(`File uploaded successfully: ${fileName}`);
+              resolve(result.secure_url);
+            } else {
+              reject(
+                new BadRequestException('Upload failed: No result returned'),
+              );
+            }
+          },
+        );
 
-      const fileMetadata = {
-        name: fileName,
-        // Don't specify parents - upload to service account's root drive
-      };
-
-      const media = {
-        mimeType: file.mimetype,
-        body: bufferStream,
-      };
-
-      const response = await this.drive.files.create({
-        requestBody: fileMetadata,
-        media: media,
-        fields: 'id,webViewLink',
+        // Create a readable stream from the buffer
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(file.buffer);
+        bufferStream.pipe(uploadStream);
       });
-
-      if (!response.data.id) {
-        throw new Error('File upload failed: No file ID returned');
-      }
-
-      // Make the file publicly viewable
-      await this.drive.permissions.create({
-        fileId: response.data.id,
-        requestBody: {
-          role: 'reader',
-          type: 'anyone',
-        },
-      });
-
-      const fileData = await this.drive.files.get({
-        fileId: response.data.id,
-        fields: 'webContentLink',
-      });
-
-      if (!fileData.data.webContentLink) {
-        throw new Error('Failed to get file download URL');
-      }
-
-      // Clean the URL by removing export parameter
-      const cleanUrl = this.cleanGoogleDriveUrl(fileData.data.webContentLink);
-      this.logger.log(`File uploaded successfully: ${fileName}`);
-      return cleanUrl;
     } catch (error: any) {
       this.logger.error(
-        `Failed to upload file to Google Drive: ${error.message}`,
+        `Failed to upload file to Cloudinary: ${error.message}`,
       );
-      throw new BadRequestException('Failed to upload file to Google Drive');
+      throw new BadRequestException('Failed to upload file to Cloudinary');
     }
   }
 
   async deleteFile(fileUrl: string): Promise<boolean> {
     try {
-      const fileId = this.extractFileIdFromUrl(fileUrl);
+      const publicId = this.extractPublicIdFromUrl(fileUrl);
 
-      if (!fileId) {
-        this.logger.error(`Failed to extract file ID from URL: ${fileUrl}`);
+      if (!publicId) {
+        this.logger.error(`Failed to extract public ID from URL: ${fileUrl}`);
         return false;
       }
 
-      await this.drive.files.delete({
-        fileId,
-      });
+      const result = await cloudinary.uploader.destroy(publicId);
 
-      this.logger.log(`File deleted successfully: ${fileId}`);
-      return true;
+      if (result.result === 'ok') {
+        this.logger.log(`File deleted successfully: ${publicId}`);
+        return true;
+      } else {
+        this.logger.error(`Failed to delete file: ${result.result}`);
+        return false;
+      }
     } catch (error: any) {
       this.logger.error(
-        `Failed to delete file from Google Drive: ${error.message}`,
+        `Failed to delete file from Cloudinary: ${error.message}`,
       );
       return false;
     }
   }
 
-  private extractFileIdFromUrl(url: string): string | null {
+  private extractPublicIdFromUrl(url: string): string | null {
     try {
-      const match = url.match(/[-\w]{25,}/);
-      return match ? match[0] : null;
+      // Extract public_id from Cloudinary URL
+      // Example: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/public_id.jpg
+      const match = url.match(/\/v\d+\/(.+)\./);
+      return match ? match[1] : null;
     } catch {
       return null;
     }
-  }
-
-  private cleanGoogleDriveUrl(url: string): string {
-    // Remove the export=download parameter
-    return url.replace('&export=download', '');
   }
 }

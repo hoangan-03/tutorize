@@ -95,7 +95,6 @@ export const ExercisePublicView: React.FC = () => {
             label={t("exercises.total")}
             value={exercises.length}
           />
-
           <StatCard
             icon={<Calendar className="h-6 w-6 text-green-600" />}
             bgColor="bg-green-100"
@@ -104,7 +103,6 @@ export const ExercisePublicView: React.FC = () => {
               exercises.filter((ex: Exercise) => ex.status === "ACTIVE").length
             }
           />
-
           <StatCard
             icon={<CalendarClock className="h-6 w-6 text-red-600" />}
             bgColor="bg-red-100"
@@ -116,13 +114,16 @@ export const ExercisePublicView: React.FC = () => {
               ).length
             }
           />
-
-          <StatCard
+          {/* <StatCard
             icon={<Users className="h-6 w-6 text-orange-600" />}
             bgColor="bg-orange-100"
             label={t("exercises.completed")}
-            value={7}
-          />
+            value={
+              exercises.filter(
+                (ex: Exercise) => ex.submissions && ex.submissions > 0
+              ).length
+            }
+          /> */}
         </div>
 
         {/* Exercises Grid */}
@@ -131,7 +132,7 @@ export const ExercisePublicView: React.FC = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {exercises.map((exercise: Exercise) => (
               <div
                 key={exercise.id}

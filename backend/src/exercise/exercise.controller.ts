@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -165,14 +166,10 @@ export class ExerciseController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài tập' })
   async submitExercise(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { googleDriveLinks: string[] },
+    @Body() body: { imageLinks: string[] },
     @CurrentUser() user: any,
   ) {
-    return this.exerciseService.submitExercise(
-      +id,
-      user.id,
-      body.googleDriveLinks,
-    );
+    return this.exerciseService.submitExercise(+id, user.id, body.imageLinks);
   }
 
   @Get(':id/submissions')
@@ -205,10 +202,69 @@ export class ExerciseSubmissionController {
     return this.exerciseService.getMySubmissions(user.id, query);
   }
 
+  @Get('all')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Lấy tất cả bài nộp (Teacher only)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Tất cả bài nộp' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  getAllSubmissions(@Query() query: any, @CurrentUser() user: any) {
+    return this.exerciseService.getAllSubmissions(user.id, query);
+  }
+
   @Get('stats')
   @ApiOperation({ summary: 'Thống kê bài nộp của tôi' })
   @ApiResponse({ status: 200, description: 'Thống kê bài nộp' })
   getMyStats(@CurrentUser() user: any) {
     return this.exerciseService.getMyStats(user.id);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Lấy chi tiết bài nộp' })
+  @ApiResponse({ status: 200, description: 'Chi tiết bài nộp' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
+  @ApiResponse({ status: 403, description: 'Không có quyền xem bài nộp này' })
+  getSubmission(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.exerciseService.getSubmissionById(id, user.id);
+  }
+
+  @Get(':id/max-score')
+  @ApiOperation({ summary: 'Lấy điểm tối đa của bài tập qua id của bài nộp' })
+  @ApiResponse({ status: 200, description: 'Điểm tối đa của bài tập' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
+  getMaxScore(@Param('id', ParseIntPipe) id: number) {
+    return this.exerciseService.getExerciseMaxScore(id);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Cập nhật bài nộp' })
+  @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
+  @ApiResponse({
+    status: 403,
+    description: 'Không có quyền cập nhật bài nộp này',
+  })
+  updateSubmission(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { imageLinks: string[] },
+    @CurrentUser() user: any,
+  ) {
+    return this.exerciseService.updateSubmission(id, body.imageLinks, user.id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Xóa bài nộp' })
+  @ApiResponse({ status: 200, description: 'Xóa thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy bài nộp' })
+  @ApiResponse({ status: 403, description: 'Không có quyền xóa bài nộp này' })
+  deleteSubmission(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.exerciseService.deleteSubmission(id, user.id);
   }
 }

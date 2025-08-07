@@ -1,6 +1,6 @@
 import api from "../lib/api";
 
-export class GoogleDriveService {
+export class UploadService {
   static async uploadFile(file: File, exerciseId?: number): Promise<string> {
     try {
       const formData = new FormData();
@@ -15,7 +15,7 @@ export class GoogleDriveService {
         },
       });
 
-      return response.data.driveLink;
+      return response.data.cloudinaryUrl;
     } catch (error) {
       console.error("File upload error:", error);
       throw error;
@@ -30,5 +30,18 @@ export class GoogleDriveService {
       this.uploadFile(file, exerciseId)
     );
     return Promise.all(uploadPromises);
+  }
+
+  static async deleteFile(fileUrl: string): Promise<boolean> {
+    try {
+      const response = await api.delete("/upload/file", {
+        data: { fileUrl },
+      });
+
+      return response.data.success;
+    } catch (error) {
+      console.error("File delete error:", error);
+      return false;
+    }
   }
 }

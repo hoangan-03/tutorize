@@ -24,7 +24,9 @@
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset",
     "seed": "ts-node scripts/init-db.ts",
-    "fix:line-endings": "node scripts/fix-line-endings.js"
+    "fix:line-endings": "node scripts/fix-line-endings.js",
+    "migrate": "npx prisma generate && npx prisma db push",
+    "migrate:reset": "npx prisma migrate reset --force"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -43,8 +45,8 @@
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cloudinary": "^2.7.0",
     "compression": "^1.7.4",
-    "googleapis": "^154.1.0",
     "helmet": "^7.1.0",
     "mime-types": "^2.1.35",
     "multer": "^1.4.5-lts.1",

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Eye,
   Calendar,
@@ -9,7 +10,6 @@ import {
   BookCheck,
   Edit,
   Trash2,
-  BarChart3,
   UserCheck,
   Play,
   Pause,
@@ -33,6 +33,7 @@ import { formatDate, getDefaultDeadline } from "../utils";
 export const ExerciseEditor: React.FC = () => {
   const { isTeacher, user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { exercises, isLoading } = useExercises();
   const {
     createExercise,
@@ -146,15 +147,10 @@ export const ExerciseEditor: React.FC = () => {
     setCurrentView("preview");
   };
 
-  const handleViewSubmissions = (exercise: Exercise) => {
-    setSelectedExercise(exercise);
-    setCurrentView("submissions");
-  };
-
-  const handleViewDashboard = (exercise: Exercise) => {
-    setSelectedExercise(exercise);
-    setCurrentView("dashboard");
-  };
+  // const handleViewDashboard = (exercise: Exercise) => {
+  //   setSelectedExercise(exercise);
+  //   setCurrentView("dashboard");
+  // };
 
   const handleFormToggleStatus = async () => {
     if (selectedExercise) {
@@ -327,7 +323,6 @@ export const ExerciseEditor: React.FC = () => {
               <p className="text-white/90 text-lg leading-relaxed max-w-3xl text-start">
                 Tạo và quản lý bài tập cho học sinh.
               </p>
-            
             </div>
 
             <div className="flex flex-col items-end space-y-3">
@@ -503,15 +498,15 @@ export const ExerciseEditor: React.FC = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <button
+                      {/* <button
                         onClick={() => handleViewDashboard(exercise)}
                         className="p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
                         title="Xem thống kê"
                       >
                         <BarChart3 className="h-5 w-5" />
-                      </button>
+                      </button> */}
                       <button
-                        onClick={() => handleViewSubmissions(exercise)}
+                        onClick={() => navigate("/exercises/submissions")}
                         className="p-3 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
                         title="Xem bài nộp"
                       >

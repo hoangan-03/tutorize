@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   mobileMenuOpen,
   setMobileMenuOpen,
 }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const isTeacher = user?.role === Role.TEACHER;
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -43,6 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleLogout = () => {
     logout();
+    setMobileMenuOpen(false); // Close mobile menu on logout
     navigate("/");
   };
 
@@ -236,7 +237,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Navigation */}
-              {user ? (
+              {isAuthenticated && user ? (
                 /* Logged in navigation */
                 isTeacher ? (
                   <TeacherNavigation />
@@ -277,13 +278,13 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Language Switcher */}
                 <LanguageSwitcher />
 
-                {user ? (
+                {isAuthenticated && user ? (
                   <div className="flex items-center space-x-3">
                     <div className="relative group">
                       <button className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                         <User className="h-4 w-4" />
                         <span>
-                          {user.profile?.firstName} {user.profile?.lastName}{" "}
+                          {user.profile?.lastName} {user.profile?.firstName}{" "}
                           {isTeacher && (
                             <span className="text-blue-600 font-medium">
                               (Teacher)
@@ -360,7 +361,7 @@ export const Header: React.FC<HeaderProps> = ({
             {mobileMenuOpen && (
               <div className="lg:hidden border-t border-gray-100 mt-4">
                 <div className="py-4 space-y-2">
-                  {user ? (
+                  {isAuthenticated && user ? (
                     <>
                       {isTeacher ? (
                         <MobileTeacherNavigation />
@@ -394,10 +395,10 @@ export const Header: React.FC<HeaderProps> = ({
 
                   <hr className="my-3" />
 
-                  {user ? (
+                  {isAuthenticated && user ? (
                     <>
                       <div className="px-3 py-2 text-sm text-gray-500 border-b border-gray-100">
-                        {user.profile?.firstName} {user.profile?.lastName}{" "}
+                        {user.profile?.lastName} {user.profile?.firstName}{" "}
                         {isTeacher && (
                           <span className="text-blue-600 font-medium">
                             (Teacher)

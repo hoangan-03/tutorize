@@ -56,7 +56,7 @@ export const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
-            {t("dashboard.welcome")}, {user?.name}! 👋
+            {t("dashboard.welcome")}, {user?.profile?.firstName}! 👋
           </h1>
           <p className="text-gray-600 mt-2">
             {t("dashboard.welcomeBack")}. {t("dashboard.continueJourney")}!
@@ -255,7 +255,7 @@ export const Dashboard: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             {t("dashboard.continueLearning")}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {continueLearningData.map((item) => (
               <div
                 key={item.id}

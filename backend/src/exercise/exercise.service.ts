@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -322,7 +323,7 @@ export class ExerciseService {
   async submitExercise(
     exerciseId: number,
     userId: number,
-    googleDriveLinks: string[],
+    imageLinks: string[],
   ) {
     const exercise = await this.prisma.exercise.findUnique({
       where: { id: exerciseId },
@@ -332,8 +333,8 @@ export class ExerciseService {
       throw new NotFoundException('Không tìm thấy bài tập');
     }
 
-    // Convert Google Drive links array to JSON string for storage
-    const imageLinksJson = JSON.stringify(googleDriveLinks);
+    // Convert image links array to JSON string for storage
+    const imageLinksJson = JSON.stringify(imageLinks);
 
     // Check if already submitted
     const existingSubmission = await this.prisma.exerciseSubmission.findFirst({
@@ -492,7 +493,9 @@ export class ExerciseService {
 
   async getMySubmissions(userId: number, query: any) {
     const { page = 1, limit = 10 } = query;
-    const skip = (page - 1) * limit;
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 10;
+    const skip = (pageNum - 1) * limitNum;
 
     const [submissions, total] = await Promise.all([
       this.prisma.exerciseSubmission.findMany({
@@ -501,7 +504,7 @@ export class ExerciseService {
           exercise: {
             select: {
               id: true,
-
+              name: true,
               subject: true,
               grade: true,
               status: true,
@@ -522,7 +525,7 @@ export class ExerciseService {
         },
         orderBy: { submittedAt: 'desc' },
         skip,
-        take: limit,
+        take: limitNum,
       }),
       this.prisma.exerciseSubmission.count({
         where: { userId },
@@ -532,14 +535,99 @@ export class ExerciseService {
     return {
       data: submissions,
       meta: {
-        page,
-        limit,
+        page: pageNum,
+        limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limitNum),
       },
     };
   }
 
+  async getAllSubmissions(userId: number, query: any) {
+    const { page = 1, limit = 10 } = query;
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get user role to determine what submissions they can see
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== 'TEACHER') {
+      throw new ForbiddenException(
+        'Chỉ giáo viên mới có thể xem tất cả bài nộp',
+      );
+    }
+
+    const [submissions, total] = await Promise.all([
+      this.prisma.exerciseSubmission.findMany({
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              profile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+          exercise: {
+            select: {
+              id: true,
+              name: true,
+              subject: true,
+              grade: true,
+              status: true,
+              deadline: true,
+              creator: {
+                select: {
+                  id: true,
+                  profile: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { submittedAt: 'desc' },
+        skip,
+        take: limitNum,
+      }),
+      this.prisma.exerciseSubmission.count(),
+    ]);
+
+    return {
+      data: submissions,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
+  }
+
+  async getExerciseMaxScore(exerciseId: number): Promise<number> {
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id: exerciseId },
+      select: {
+        maxScore: true,
+      },
+    });
+    if (!exercise) {
+      throw new NotFoundException('Không tìm thấy bài tập');
+    }
+    return exercise.maxScore || 10;
+  }
   async getMyStats(userId: number) {
     const [submittedCount, averageScore, gradedCount, recentSubmissions] =
       await Promise.all([
@@ -556,7 +644,7 @@ export class ExerciseService {
         this.prisma.exerciseSubmission.count({
           where: {
             userId,
-            status: 'GRADED',
+            status: SubmissionStatus.GRADED,
           },
         }),
         this.prisma.exerciseSubmission.findMany({
@@ -582,5 +670,147 @@ export class ExerciseService {
       pending: submittedCount - gradedCount,
       recentSubmissions,
     };
+  }
+
+  async getSubmissionById(submissionId: number, userId: number) {
+    const submission = await this.prisma.exerciseSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        exercise: {
+          select: {
+            id: true,
+            name: true,
+            createdBy: true,
+          },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Không tìm thấy bài nộp');
+    }
+
+    // Check permission: student can only see their own submission, teacher can see all
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (user?.role === 'STUDENT' && submission.userId !== userId) {
+      throw new ForbiddenException('Không có quyền xem bài nộp này');
+    }
+    if (user?.role === 'TEACHER' && submission.exercise.createdBy !== userId) {
+      throw new ForbiddenException('Không có quyền xem bài nộp này');
+    }
+
+    return submission;
+  }
+
+  async updateSubmission(
+    submissionId: number,
+    imageLinks: string[],
+    userId: number,
+  ) {
+    const submission = await this.prisma.exerciseSubmission.findUnique({
+      where: { id: submissionId },
+      include: { exercise: true },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Không tìm thấy bài nộp');
+    }
+
+    // Only the student who submitted can update their submission
+    if (submission.userId !== userId) {
+      throw new ForbiddenException('Không có quyền cập nhật bài nộp này');
+    }
+
+    // Check if exercise is still active
+    if (submission.exercise.status !== 'ACTIVE') {
+      throw new BadRequestException('Bài tập không còn hoạt động');
+    }
+
+    // Check deadline
+    if (
+      submission.exercise.deadline &&
+      new Date() > submission.exercise.deadline
+    ) {
+      throw new BadRequestException('Đã hết hạn nộp bài');
+    }
+
+    const imageLinksJson = JSON.stringify(imageLinks);
+
+    return this.prisma.exerciseSubmission.update({
+      where: { id: submissionId },
+      data: {
+        submissionUrl: imageLinksJson,
+        submittedAt: new Date(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        exercise: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
+
+  async deleteSubmission(submissionId: number, userId: number) {
+    const submission = await this.prisma.exerciseSubmission.findUnique({
+      where: { id: submissionId },
+      include: { exercise: true },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Không tìm thấy bài nộp');
+    }
+
+    // Only the student who submitted can delete their submission
+    if (submission.userId !== userId) {
+      throw new ForbiddenException('Không có quyền xóa bài nộp này');
+    }
+
+    // Check if exercise is still active
+    if (submission.exercise.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'Bài tập không còn hoạt động, không thể xóa bài nộp',
+      );
+    }
+
+    // Check deadline
+    if (
+      submission.exercise.deadline &&
+      new Date() > submission.exercise.deadline
+    ) {
+      throw new BadRequestException('Đã hết hạn, không thể xóa bài nộp');
+    }
+
+    await this.prisma.exerciseSubmission.delete({
+      where: { id: submissionId },
+    });
+
+    return { message: 'Xóa bài nộp thành công' };
   }
 }
