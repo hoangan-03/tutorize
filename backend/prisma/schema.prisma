@@ -31,6 +31,8 @@ model User {
   ieltsTestsCreated   IeltsTest[]          @relation("IeltsTestCreator")
   ieltsSubmissions    IeltsSubmission[]
   writingAssessments  WritingAssessment[]
+  writingTasks        WritingTask[]        @relation("WritingTaskCreator")
+  writingTaskSubs     WritingSubmission[]
   notifications       Notification[]
   systemLogs          SystemLog[]
 
@@ -489,6 +491,44 @@ model WritingAssessment {
 enum WritingType {
   IELTS_TASK1
   IELTS_TASK2
+}
+
+// ----------------------------------------------------------------------------
+// WRITING TASKS (Teacher-created assignments)
+// ----------------------------------------------------------------------------
+
+model WritingTask {
+  id        Int         @id @default(autoincrement())
+  title     String
+  prompt    String      @db.Text
+  type      WritingType
+  level     IeltsLevel
+  createdBy Int
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  creator     User                @relation("WritingTaskCreator", fields: [createdBy], references: [id])
+  submissions WritingSubmission[]
+
+  @@map("writing_tasks")
+}
+
+model WritingSubmission {
+  id          Int       @id @default(autoincrement())
+  taskId      Int
+  userId      Int
+  content     String    @db.Text
+  submittedAt DateTime  @default(now())
+  gradedAt    DateTime?
+  aiScore     Json?
+  aiFeedback  Json?
+
+  task WritingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@map("writing_submissions")
 }
 
 // ============================================================================

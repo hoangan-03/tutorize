@@ -701,6 +701,18 @@
       "modest": "Modest User",
       "limited": "Limited User",
       "basic": "Extremely Limited User"
+    },
+    "writingTasks": {
+      "title": "Writing Tasks",
+      "noTasksYet": "No Writing Tasks Yet",
+      "noTasksDescription": "Teachers haven't created any Writing Tasks for you to practice.",
+      "startTask": "Start Task",
+      "close": "Close",
+      "submit": "Submit",
+      "gradeWithAI": "Grade with AI",
+      "manageDescription": "Manage created Writing Tasks",
+      "createTask": "Create Writing Task",
+      "statsLabel": "Writing Tasks"
     }
   },
   "documents": {

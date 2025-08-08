@@ -520,7 +520,6 @@
       "noAnswer": "Không trả lời",
       "yourAnswer": "Câu trả lời của bạn"
     },
-
     "bands": {
       "expert": "Người dùng thành thạo",
       "veryGood": "Người dùng rất giỏi",
@@ -681,6 +680,18 @@
       "nextSection": "Phần sau",
       "submit": "Nộp bài",
       "selectOption": "Chọn..."
+    },
+    "writingTasks": {
+      "title": "Writing Tasks",
+      "noTasksYet": "Chưa có Writing Task nào",
+      "noTasksDescription": "Giáo viên chưa tạo Writing Task nào cho bạn luyện tập.",
+      "startTask": "Làm bài",
+      "close": "Đóng",
+      "submit": "Nộp bài",
+      "gradeWithAI": "Chấm điểm AI",
+      "manageDescription": "Quản lý các Writing Task đã tạo",
+      "createTask": "Tạo Writing Task",
+      "statsLabel": "Writing Tasks"
     }
   },
   "documents": {

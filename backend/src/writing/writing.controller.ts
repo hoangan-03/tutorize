@@ -14,7 +14,12 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { WritingService } from './writing.service';
-import { SubmitWritingDto } from './dto/writing.dto';
+import {
+  SubmitWritingDto,
+  CreateWritingTaskDto,
+  SubmitWritingTaskDto,
+  WritingTaskQueryDto,
+} from './dto/writing.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -60,5 +65,50 @@ export class WritingController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài chấm điểm' })
   findOne(@Param('id') id: number, @CurrentUser('sub') userId: number) {
     return this.writingService.findOne(id, userId);
+  }
+
+  // ------------------------
+  // Writing Tasks
+  // ------------------------
+  @Post('tasks')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Tạo Writing Task (giáo viên)' })
+  @ApiResponse({ status: 201, description: 'Writing Task được tạo thành công' })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
+  createTask(
+    @Body() dto: CreateWritingTaskDto,
+    @CurrentUser('sub') userId: number,
+  ) {
+    console.log('Controller received data:', { dto, userId });
+    return this.writingService.createTask(dto, userId);
+  }
+
+  @Get('tasks')
+  @ApiOperation({
+    summary: 'Danh sách Writing Task (học sinh xem tab Writing)',
+  })
+  getTasks(@Query() query: WritingTaskQueryDto) {
+    return this.writingService.getTasks(query);
+  }
+
+  @Post('tasks/:taskId/submit')
+  @ApiOperation({ summary: 'Học sinh nộp bài viết' })
+  submitTask(
+    @Param('taskId') taskId: number,
+    @Body() dto: SubmitWritingTaskDto,
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.writingService.submitTask(taskId, userId, dto);
+  }
+
+  @Post('tasks/:taskId/grade')
+  @ApiOperation({
+    summary: 'AI chấm bài viết đã nộp và trả feedback (Gemini 2.0 Flash)',
+  })
+  gradeTask(
+    @Param('taskId') taskId: number,
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.writingService.gradeTask(taskId, userId);
   }
 }

@@ -494,6 +494,35 @@ export interface WritingAssessment {
   user?: User;
 }
 
+// Writing Task Types (Teacher-created assignments)
+export interface WritingTask {
+  id: number;
+  title: string;
+  prompt: string;
+  type: WritingType;
+  level: IeltsLevel;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+
+  creator?: User;
+  submissions?: WritingSubmission[];
+}
+
+export interface WritingSubmission {
+  id: number;
+  taskId: number;
+  userId: number;
+  content: string;
+  submittedAt: string;
+  gradedAt?: string;
+  aiScore?: Record<string, unknown>;
+  aiFeedback?: Record<string, unknown>;
+
+  task?: WritingTask;
+  user?: User;
+}
+
 // System Types
 export interface Notification {
   id: number;

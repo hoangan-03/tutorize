@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { WritingType } from '@prisma/client';
+import { WritingType, IeltsLevel } from '@prisma/client';
 
 export class CreateWritingAssessmentDto {
   @ApiProperty({ description: 'Tiêu đề bài viết' })
@@ -163,4 +163,47 @@ export class WritingFilterDto extends PaginationDto {
   @IsOptional()
   @IsString()
   userId?: number;
+}
+
+// =========================
+// Writing Task DTOs
+// =========================
+export class CreateWritingTaskDto {
+  @ApiProperty({ description: 'Tiêu đề' })
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @ApiProperty({ description: 'Đề bài' })
+  @IsString()
+  @IsNotEmpty()
+  prompt: string;
+
+  @ApiProperty({ enum: WritingType })
+  @IsEnum(WritingType)
+  type: WritingType;
+
+  @ApiPropertyOptional({ description: 'Level', enum: IeltsLevel })
+  @IsOptional()
+  @IsEnum(IeltsLevel)
+  level?: IeltsLevel;
+}
+
+export class SubmitWritingTaskDto {
+  @ApiProperty({ description: 'Nội dung bài viết (HTML/Rich Text)' })
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+}
+
+export class WritingTaskQueryDto extends PaginationDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  level?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  type?: string;
 }

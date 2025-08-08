@@ -1,6 +1,13 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { IeltsTest, IeltsSkill, IeltsSubmission } from "../../types/api";
+import {
+  IeltsTest,
+  IeltsSkill,
+  IeltsSubmission,
+  WritingType,
+  WritingTask,
+  IeltsLevel,
+} from "../../types/api";
 import {
   useAuth,
   useIeltsTests,
@@ -8,22 +15,23 @@ import {
   useIeltsTestManagement,
 } from "../../hooks";
 import { IeltsTestForm } from "./IeltsTestForm";
-import {
-  BookOpen,
-  Edit,
-  Plus,
-  Trash2,
-  BarChart3,
-  Calendar,
-  Clock,
-  Mic,
-  Book,
-  PenSquare,
-  Headphones,
-} from "lucide-react";
+import { BookOpen, Plus, PenSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { StatCard } from "../ui";
-import { formatDateTime, getLevelInfo, getSkillInfo } from "../utils";
+import { formatDateTime } from "../utils";
+import { writingService } from "../../services/writingService";
+import { RichTextEditor } from "../ui/RichTextEditor";
+import { WritingTaskModal } from "./WritingTaskModal";
+import {
+  useWritingTasks,
+  useWritingTaskManagement,
+} from "../../hooks/useWriting";
+import {
+  IeltsStatsCards,
+  IeltsTestCard,
+  WritingTaskCard,
+  IeltsItemRow,
+  EmptyState,
+} from "./IeltsComponents";
 
 const StudentIeltsView: React.FC<{
   tests: IeltsTest[];
@@ -43,6 +51,18 @@ const StudentIeltsView: React.FC<{
     { name: IeltsSkill.WRITING, label: t("ielts.writing") },
     { name: IeltsSkill.SPEAKING, label: t("ielts.speaking") },
   ];
+
+  const [writingTasks, setWritingTasks] = useState<WritingTask[]>([]);
+  const [currentTask, setCurrentTask] = useState<WritingTask | null>(null);
+  const [submissionContent, setSubmissionContent] = useState<string>("");
+
+  useEffect(() => {
+    if (activeSkill === IeltsSkill.WRITING) {
+      writingService
+        .listTasks({ page: 1, limit: 20 })
+        .then((res) => setWritingTasks(res.data || []));
+    }
+  }, [activeSkill]);
 
   const filteredTests = useMemo(() => {
     return tests.filter((resource) => resource.skill === activeSkill);
@@ -137,80 +157,101 @@ const StudentIeltsView: React.FC<{
           </div>
         </div>
 
-        {/* Available Tests */}
-        <div>
-          {loading ? (
-            <p>{t("ielts.loading")}</p>
-          ) : filteredTests.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800">
-                {t("ielts.noTests")}
-              </h3>
-              <p className="text-gray-500 mt-1">{t("ielts.noTestsForSkill")}</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTests.map((resource) => {
-                const highestSubmission = getHighestScoreSubmission(
-                  resource.id
-                );
-                return (
-                  <div
-                    key={resource.id}
-                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col justify-between hover:shadow-xl transition-shadow"
+        {/* Available Tests - Hide for Writing tab since we have separate Writing Tasks */}
+        {activeSkill !== IeltsSkill.WRITING && (
+          <div>
+            {loading ? (
+              <p>{t("ielts.loading")}</p>
+            ) : filteredTests.length === 0 ? (
+              <EmptyState
+                icon={<BookOpen className="h-16 w-16" />}
+                title={t("ielts.noTests")}
+                description={t("ielts.noTestsForSkill")}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredTests.map((resource) => {
+                  const highestSubmission = getHighestScoreSubmission(
+                    resource.id
+                  );
+                  return (
+                    <IeltsTestCard
+                      key={resource.id}
+                      test={resource}
+                      highestSubmission={highestSubmission}
+                      onStartTest={onStartTest}
+                      onViewResult={onViewResult}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Writing Tasks for students */}
+        {activeSkill === IeltsSkill.WRITING && (
+          <div>
+            {writingTasks.length === 0 ? (
+              <EmptyState
+                icon={<PenSquare className="h-16 w-16" />}
+                title={t("ielts.writingTasks.noTasksYet")}
+                description={t("ielts.writingTasks.noTasksDescription")}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {writingTasks.map((task) => (
+                  <WritingTaskCard
+                    key={task.id}
+                    task={task}
+                    onStartTask={setCurrentTask}
+                  />
+                ))}
+              </div>
+            )}
+
+            {currentTask && (
+              <div className="mt-6 p-4 bg-white rounded-lg border shadow-sm">
+                <div className="flex items-center justify-end mb-2">
+                  <button
+                    className="text-red-800 hover:text-red-700"
+                    onClick={() => setCurrentTask(null)}
                   >
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">
-                        {resource.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 line-clamp-3 mb-4">
-                        {resource.description}
-                      </p>
-                    </div>
-                    <div>
-                      {highestSubmission ? (
-                        <div className="mb-4">
-                          <p className="text-sm text-gray-500">
-                            {t("ielts.highestScore")}
-                          </p>
-                          <p className="text-2xl font-bold text-indigo-600">
-                            {highestSubmission.score.toFixed(1)}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="mb-4">
-                          <p className="text-sm text-gray-500">
-                            {t("ielts.notTaken")}
-                          </p>
-                          <p className="text-2xl font-bold text-gray-400">-</p>
-                        </div>
-                      )}
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => onStartTest(resource.id)}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-                        >
-                          {highestSubmission
-                            ? t("ielts.retake")
-                            : t("ielts.start")}
-                        </button>
-                        {highestSubmission && (
-                          <button
-                            onClick={() => onViewResult(highestSubmission.id)}
-                            className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-                          >
-                            {t("ielts.viewResult")}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                    {t("ielts.writingTasks.close")}
+                  </button>
+                </div>
+
+                <div className="mt-3">
+                  <RichTextEditor
+                    value={submissionContent}
+                    onChange={setSubmissionContent}
+                  />
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-lime-600 hover:bg-lime-700 max-w-[150px]"
+                    onClick={async () => {
+                      await writingService.submitTask(
+                        currentTask.id,
+                        submissionContent
+                      );
+                    }}
+                  >
+                    {t("ielts.writingTasks.submit")}
+                  </button>
+                  <button
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 max-w-[150px]"
+                    onClick={async () => {
+                      await writingService.gradeTask(currentTask.id);
+                    }}
+                  >
+                    {t("ielts.writingTasks.gradeWithAI")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Submission History */}
         <div className="mt-16">
@@ -218,9 +259,11 @@ const StudentIeltsView: React.FC<{
             {t("ielts.submissionHistory")}
           </h2>
           {submissions.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <p>{t("ielts.noSubmissions")}</p>
-            </div>
+            <EmptyState
+              icon={<BookOpen className="h-16 w-16" />}
+              title={t("ielts.noSubmissions")}
+              description=""
+            />
           ) : (
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
               <ul role="list" className="divide-y divide-gray-200">
@@ -286,12 +329,57 @@ const TeacherIeltsView: React.FC<{
   onViewSubmissions,
 }) => {
   const { t } = useTranslation();
+  const [isWritingTaskModalOpen, setIsWritingTaskModalOpen] = useState(false);
+
+  // Writing Tasks hooks
+  const { tasks: writingTasks } = useWritingTasks();
+  const { createTask, deleteTask, getTaskSubmissions } =
+    useWritingTaskManagement();
+
   const stats = {
     total: resources.length,
     reading: resources.filter((r) => r.skill === "READING").length,
     listening: resources.filter((r) => r.skill === "LISTENING").length,
     writing: resources.filter((r) => r.skill === "WRITING").length,
     speaking: resources.filter((r) => r.skill === "SPEAKING").length,
+    writingTasks: writingTasks.length,
+  };
+
+  const handleCreateWritingTask = async (data: {
+    title: string;
+    prompt: string;
+    type: WritingType;
+    level: IeltsLevel;
+  }) => {
+    await createTask(data);
+    setIsWritingTaskModalOpen(false);
+  };
+
+  const handleEditWritingTask = (taskId: number) => {
+    // TODO: Open edit modal for Writing Task
+    console.log("Edit Writing Task:", taskId);
+    // For now, we can implement this later with a proper edit modal
+  };
+
+  const handleDeleteWritingTask = async (taskId: number) => {
+    if (window.confirm(t("ielts.teacher.confirmDelete"))) {
+      try {
+        await deleteTask(taskId);
+      } catch (error) {
+        console.error("Failed to delete Writing Task:", error);
+      }
+    }
+  };
+
+  const handleViewWritingSubmissions = async (taskId: number) => {
+    try {
+      const submissions = await getTaskSubmissions(taskId);
+      console.log("Writing Task submissions:", submissions);
+      // TODO: Navigate to submissions page or show in modal
+      // navigate(`/writing-tasks/${taskId}/submissions`);
+    } catch (error) {
+      console.error("Failed to fetch Writing Task submissions:", error);
+    }
   };
 
   return (
@@ -318,6 +406,13 @@ const TeacherIeltsView: React.FC<{
             <div className="flex flex-col items-end space-y-3">
               <div className="flex space-x-3">
                 <button
+                  onClick={() => setIsWritingTaskModalOpen(true)}
+                  className="flex items-center px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                >
+                  <PenSquare className="h-5 w-5 mr-2" />
+                  <span>{t("ielts.writingTasks.createTask")}</span>
+                </button>
+                <button
                   onClick={onCreate}
                   className="flex items-center px-6 py-3 bg-white text-indigo-600 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                 >
@@ -330,38 +425,7 @@ const TeacherIeltsView: React.FC<{
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <StatCard
-            icon={<BookOpen className="h-6 w-6 text-indigo-600" />}
-            bgColor="bg-indigo-100"
-            label={t("ielts.teacher.totalTests")}
-            value={stats.total}
-          />
-          <StatCard
-            icon={<Book className="h-6 w-6 text-blue-600" />}
-            bgColor="bg-blue-100"
-            label={t("ielts.teacher.readingTests")}
-            value={stats.reading}
-          />
-          <StatCard
-            icon={<Headphones className="h-6 w-6 text-purple-600" />}
-            bgColor="bg-purple-100"
-            label={t("ielts.teacher.listeningTests")}
-            value={stats.listening}
-          />
-          <StatCard
-            icon={<PenSquare className="h-6 w-6 text-orange-600" />}
-            bgColor="bg-orange-100"
-            label={t("ielts.teacher.writingTests")}
-            value={stats.writing}
-          />
-          <StatCard
-            icon={<Mic className="h-6 w-6 text-teal-600" />}
-            bgColor="bg-teal-100"
-            label={t("ielts.teacher.speakingTests")}
-            value={stats.speaking}
-          />
-        </div>
+        <IeltsStatsCards stats={stats} />
 
         {/* Test List */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
@@ -370,101 +434,66 @@ const TeacherIeltsView: React.FC<{
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
             </div>
           ) : resources.length === 0 ? (
-            <div className="text-center py-16">
-              <BookOpen className="h-20 w-20 text-gray-300 mx-auto mb-6" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                {t("ielts.teacher.noTestsYet")}
-              </h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                {t("ielts.teacher.createFirstTest")}
-              </p>
-              <button
-                onClick={onCreate}
-                className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-semibold"
-              >
-                {t("ielts.teacher.createNewTest")}
-              </button>
-            </div>
+            <EmptyState
+              icon={<BookOpen className="h-20 w-20" />}
+              title={t("ielts.teacher.noTestsYet")}
+              description={t("ielts.teacher.createFirstTest")}
+              action={{
+                label: t("ielts.teacher.createNewTest"),
+                onClick: onCreate,
+              }}
+            />
           ) : (
             <div className="divide-y divide-gray-100">
               {resources.map((test) => (
-                <div
+                <IeltsItemRow
                   key={test.id}
-                  className="p-6 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {test.title}
-                        </h3>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            getSkillInfo(test.skill, t).color
-                          }`}
-                        >
-                          {getSkillInfo(test.skill, t).label}
-                        </span>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            getLevelInfo(test.level, t).color
-                          }`}
-                        >
-                          {getLevelInfo(test.level, t).label}
-                        </span>
-                      </div>
-
-                      <p className="text-gray-600 mb-4 text-sm leading-relaxed text-start">
-                        {test.description}
-                      </p>
-
-                      <div className="flex items-center space-x-6 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-2" />
-                          {test.timeLimit
-                            ? t("ielts.teacher.minutes", {
-                                count: test.timeLimit,
-                              })
-                            : t("ielts.teacher.unlimitedTime")}
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {t("ielts.teacher.createdAt")}:{" "}
-                          {new Date(test.createdAt).toLocaleDateString("vi-VN")}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={onViewSubmissions}
-                        className="p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
-                        title={t("ielts.teacher.viewSubmissions")}
-                      >
-                        <BarChart3 className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => onEdit(test.id)}
-                        className="p-3 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
-                        title={t("ielts.teacher.edit")}
-                      >
-                        <Edit className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(test.id)}
-                        className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                        title={t("ielts.teacher.delete")}
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  item={test}
+                  type="test"
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onViewSubmissions={onViewSubmissions}
+                />
               ))}
             </div>
           )}
         </div>
+
+        {/* Writing Tasks Section */}
+        {writingTasks.length > 0 && (
+          <div className="mt-8 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900">
+                {t("ielts.writingTasks.title")}
+              </h3>
+              <p className="text-gray-600 text-sm mt-1">
+                {t("ielts.writingTasks.manageDescription")}
+              </p>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {writingTasks.map((task: WritingTask) => (
+                <IeltsItemRow
+                  key={task.id}
+                  item={task}
+                  type="task"
+                  onEdit={handleEditWritingTask}
+                  onDelete={handleDeleteWritingTask}
+                  onViewSubmissions={() =>
+                    handleViewWritingSubmissions(task.id)
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Writing Task Modal */}
+      <WritingTaskModal
+        isOpen={isWritingTaskModalOpen}
+        onClose={() => setIsWritingTaskModalOpen(false)}
+        onSave={handleCreateWritingTask}
+      />
     </div>
   );
 };

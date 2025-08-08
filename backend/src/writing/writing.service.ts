@@ -6,11 +6,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { IeltsLevel } from '@prisma/client';
 import {
   SubmitWritingDto,
   WritingAssessmentResultDto,
   CreateWritingAssessmentDto,
   UpdateWritingAssessmentDto,
+  CreateWritingTaskDto,
 } from './dto/writing.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
@@ -485,5 +487,106 @@ export class WritingService {
     });
 
     return assessment;
+  }
+
+  // =========================
+  // Writing Tasks
+  // =========================
+  async createTask(dto: CreateWritingTaskDto, userId: number) {
+    try {
+      console.log('Creating task with data:', { dto, userId });
+
+      // Use casting to avoid type issue before Prisma client is regenerated
+      const prismaAny = this.prisma as any;
+      const result = await prismaAny.writingTask.create({
+        data: {
+          title: dto.title,
+          prompt: dto.prompt,
+          type: dto.type,
+          level: dto.level || IeltsLevel.BEGINNER,
+          createdBy: userId,
+        },
+      });
+
+      console.log('Task created successfully:', result);
+      return result;
+    } catch (error) {
+      console.error('Error creating writing task:', error);
+      throw new BadRequestException(
+        `Failed to create writing task: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  async getTasks(query: PaginationDto & { level?: string; type?: string }) {
+    const { page = 1, limit = 10, level, type } = query as any;
+    const skip = (page - 1) * limit;
+    const where: any = {};
+    if (level) where.level = level;
+    if (type) where.type = type;
+    const prismaAny = this.prisma as any;
+    const [items, total] = await Promise.all([
+      prismaAny.writingTask.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prismaAny.writingTask.count({ where }),
+    ]);
+    return {
+      data: items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page * limit < total,
+      hasPrev: page > 1,
+    };
+  }
+
+  async submitTask(taskId: number, userId: number, dto: { content: string }) {
+    // Upsert to allow edit/resubmit
+    const prismaAny = this.prisma as any;
+    return prismaAny.writingSubmission.upsert({
+      where: { taskId_userId: { taskId: Number(taskId), userId } },
+      create: { taskId: Number(taskId), userId, content: dto.content },
+      update: { content: dto.content, submittedAt: new Date() },
+    });
+  }
+
+  async gradeTask(taskId: number, userId: number) {
+    const prismaAny = this.prisma as any;
+    const submission = await prismaAny.writingSubmission.findUnique({
+      where: { taskId_userId: { taskId: Number(taskId), userId } },
+      include: { task: true },
+    });
+    if (!submission) throw new NotFoundException('Chưa có bài nộp');
+
+    // Call Gemini 2.0 Flash (placeholder - integrate your API key via ConfigService)
+    const ai = await this.callAIAssessment(
+      submission.content,
+      submission.task.type,
+      submission.task.prompt,
+    );
+    return prismaAny.writingSubmission.update({
+      where: { id: submission.id },
+      data: {
+        aiScore: {
+          overallScore: ai.overallScore,
+          taskAchievement: ai.taskAchievement,
+          coherenceCohesion: ai.coherenceCohesion,
+          lexicalResource: ai.lexicalResource,
+          grammaticalRange: ai.grammaticalRange,
+        },
+        aiFeedback: {
+          general: ai.feedback,
+          strengths: ai.strengths,
+          improvements: ai.improvements,
+          suggestions: ai.suggestions,
+        },
+        gradedAt: new Date(),
+      },
+    });
   }
 }

@@ -69,4 +69,56 @@ export const writingService = {
     const response = await api.get("/writing/my-stats");
     return response.data;
   },
+
+  // Writing Tasks
+  async createTask(data: {
+    title: string;
+    prompt: string;
+    type: "IELTS_TASK1" | "IELTS_TASK2";
+    level?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  }): Promise<any> {
+    const response = await api.post("/writing/tasks", data);
+    return response.data;
+  },
+
+  async listTasks(
+    params?: PaginationParams & { level?: string; type?: string }
+  ) {
+    const response = await api.get("/writing/tasks", { params });
+    return response.data;
+  },
+
+  async submitTask(taskId: number, content: string): Promise<any> {
+    const response = await api.post(`/writing/tasks/${taskId}/submit`, {
+      content,
+    });
+    return response.data;
+  },
+
+  async gradeTask(taskId: number): Promise<any> {
+    const response = await api.post(`/writing/tasks/${taskId}/grade`, {});
+    return response.data;
+  },
+
+  async editTask(
+    taskId: number,
+    data: {
+      title?: string;
+      prompt?: string;
+      type?: "IELTS_TASK1" | "IELTS_TASK2";
+      level?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+    }
+  ): Promise<any> {
+    const response = await api.put(`/writing/tasks/${taskId}`, data);
+    return response.data;
+  },
+
+  async deleteTask(taskId: number): Promise<void> {
+    await api.delete(`/writing/tasks/${taskId}`);
+  },
+
+  async getTaskSubmissions(taskId: number): Promise<any> {
+    const response = await api.get(`/writing/tasks/${taskId}/submissions`);
+    return response.data;
+  },
 };
