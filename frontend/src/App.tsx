@@ -14,9 +14,6 @@ import "./App.css";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
-// Components
-import { StagewiseToolbar } from "@stagewise/toolbar-react";
-import { ReactPlugin } from "@stagewise-plugins/react";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -66,13 +63,6 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Stagewise Toolbar - only in development */}
-      <StagewiseToolbar
-        config={{
-          plugins: [ReactPlugin],
-        }}
-      />
-
       <Routes>
         {/* Public Routes */}
         <Route

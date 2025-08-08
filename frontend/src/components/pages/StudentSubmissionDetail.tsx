@@ -238,6 +238,7 @@ export const StudentSubmissionDetail: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
         <div className="flex items-start sm:items-center gap-3 sm:gap-4">
           <button
+            title="Quay lại"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg flex-shrink-0 mt-1 sm:mt-0"
           >
@@ -262,6 +263,7 @@ export const StudentSubmissionDetail: React.FC = () => {
         {submission.status === "SUBMITTED" && (
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
+              title="Chỉnh sửa"
               onClick={() => setEditing(!editing)}
               className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm sm:text-base"
             >
@@ -378,6 +380,7 @@ export const StudentSubmissionDetail: React.FC = () => {
                       className="w-full h-48 object-cover rounded-lg border"
                     />
                     <button
+                      title="Xóa ảnh này"
                       onClick={() => removeUploadedImage(index)}
                       className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
