@@ -7,10 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================================
-// USER MANAGEMENT
-// ============================================================================
-
 model User {
   id          Int       @id @default(autoincrement())
   email       String    @unique
@@ -21,20 +17,16 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  profile             UserProfile?
-  quizzesCreated      Quiz[]               @relation("QuizCreator")
-  quizSubmissions     QuizSubmission[]
-  exercisesCreated    Exercise[]           @relation("ExerciseCreator")
-  exerciseSubmissions ExerciseSubmission[]
-  documentsUploaded   Document[]           @relation("DocumentUploader")
-  documentAccesses    DocumentAccess[]
-  ieltsTestsCreated   IeltsTest[]          @relation("IeltsTestCreator")
-  ieltsSubmissions    IeltsSubmission[]
-  writingAssessments  WritingAssessment[]
-  writingTasks        WritingTask[]        @relation("WritingTaskCreator")
-  writingTaskSubs     WritingSubmission[]
-  notifications       Notification[]
-  systemLogs          SystemLog[]
+  profile                  UserProfile?
+  quizzesCreated           Quiz[]                   @relation("QuizCreator")
+  quizSubmissions          QuizSubmission[]
+  exercisesCreated         Exercise[]               @relation("ExerciseCreator")
+  exerciseSubmissions      ExerciseSubmission[]
+  documentsUploaded        Document[]               @relation("DocumentUploader")
+  ieltsReadingTestsCreated IeltsReadingTest[]       @relation("IeltsReadingTestCreator")
+  ieltsReadingSubmissions  IeltsReadingSubmission[]
+  ieltsWritingTests        IeltsWritingTest[]       @relation("IeltsWritingTestCreator")
+  ieltsWritingSubmissions  IeltsWritingSubmission[]
 
   @@map("users")
 }
@@ -43,9 +35,8 @@ model UserProfile {
   id     Int @id @default(autoincrement())
   userId Int @unique
 
-  avatar  String?
-  grade   Int?
-  subject Subject?
+  avatar String?
+  grade  Int?
 
   firstName   String?
   lastName    String?
@@ -53,7 +44,6 @@ model UserProfile {
   dateOfBirth DateTime?
   address     String?
   school      String?
-  preferences Json      @default("{}")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -86,10 +76,6 @@ enum Subject {
   MUSIC
 }
 
-// ============================================================================
-// QUIZ SYSTEM
-// ============================================================================
-
 model Quiz {
   id                             Int        @id @default(autoincrement())
   title                          String
@@ -103,13 +89,11 @@ model Quiz {
   totalQuestions                 Int        @default(0)
   totalSubmissions               Int        @default(0)
   averageScore                   Float      @default(0)
-  isPublic                       Boolean    @default(false)
   tags                           String[]
   instructions                   String?    @db.Text
   maxAttempts                    Int        @default(1) // number of times user can take quiz
   isAllowedReviewed              Boolean    @default(false) // can review quiz after submit
   isAllowedViewAnswerAfterSubmit Boolean    @default(false) // can view correct answers after submit
-  showResultsImmediately         Boolean    @default(true) // show results right after submit
   shuffleQuestions               Boolean    @default(false) // randomize question order
   shuffleAnswers                 Boolean    @default(false) // randomize answer options
   createdAt                      DateTime   @default(now())
@@ -200,10 +184,6 @@ enum SubmissionStatus {
   LATE
 }
 
-// ============================================================================
-// EXERCISE SYSTEM
-// ============================================================================
-
 model Exercise {
   id                  Int            @id @default(autoincrement())
   name                String
@@ -213,7 +193,6 @@ model Exercise {
   deadline            DateTime
   note                String?        @db.Text
   content             String         @db.Text
-  latexContent        String?        @db.Text
   createdBy           Int
   submissions         Int            @default(0)
   status              ExerciseStatus @default(DRAFT)
@@ -226,7 +205,6 @@ model Exercise {
   creator             User                 @relation("ExerciseCreator", fields: [createdBy], references: [id])
   attachments         ExerciseAttachment[]
   exerciseSubmissions ExerciseSubmission[]
-  rubric              GradingRubric?
 
   @@map("exercises")
 }
@@ -265,29 +243,12 @@ model ExerciseSubmission {
   @@map("exercise_submissions")
 }
 
-model GradingRubric {
-  id          Int      @id @default(autoincrement())
-  exerciseId  Int      @unique
-  criteria    Json     @default("[]")
-  totalPoints Float    @default(100)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-
-  @@map("grading_rubrics")
-}
-
 enum ExerciseStatus {
   DRAFT
   ACTIVE
   INACTIVE
   OVERDUE
 }
-
-// ============================================================================
-// DOCUMENT LIBRARY
-// ============================================================================
 
 model Document {
   id            Int          @id @default(autoincrement())
@@ -297,64 +258,31 @@ model Document {
   grade         Int
   type          DocumentType
   fileUrl       String
-  thumbnailUrl  String?
   fileSize      Int
-  duration      Int? // for video/audio
   downloadCount Int          @default(0)
-  viewCount     Int          @default(0)
   tags          String[]     @default([])
   uploadedBy    Int
-  isPublic      Boolean      @default(false)
   isApproved    Boolean      @default(false)
   approvedBy    Int?
   approvedAt    DateTime?
   uploadedAt    DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  uploader User             @relation("DocumentUploader", fields: [uploadedBy], references: [id])
-  accesses DocumentAccess[]
+  uploader User @relation("DocumentUploader", fields: [uploadedBy], references: [id])
 
   @@map("documents")
 }
 
-model DocumentAccess {
-  id         Int          @id @default(autoincrement())
-  documentId Int
-  userId     Int
-  action     AccessAction
-  accessedAt DateTime     @default(now())
-  ipAddress  String?
-  userAgent  String?
-
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("document_accesses")
-}
-
 enum DocumentType {
   PDF
-  VIDEO
-  IMAGE
   PRESENTATION
   WORD
 }
 
-enum AccessAction {
-  VIEW
-  DOWNLOAD
-  SHARE
-}
-
-// ============================================================================
-// IELTS SYSTEM
-// ============================================================================
-
-model IeltsTest {
+model IeltsReadingTest {
   id           Int        @id @default(autoincrement())
   title        String
   description  String     @db.Text
-  skill        IeltsSkill
   level        IeltsLevel
   timeLimit    Int // minutes
   isActive     Boolean    @default(true)
@@ -362,74 +290,71 @@ model IeltsTest {
   updatedAt    DateTime   @updatedAt
   instructions String?    @db.Text
 
-  sections    IeltsSection[]
-  submissions IeltsSubmission[]
-  creator     User              @relation("IeltsTestCreator", fields: [createdBy], references: [id])
+  sections    IeltsReadingSection[]
+  submissions IeltsReadingSubmission[]
+  creator     User                     @relation("IeltsReadingTestCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   createdBy   Int
 
-  @@map("ielts_tests")
+  @@map("ielts_reading_tests")
 }
 
-model IeltsSection {
+model IeltsReadingSection {
   id           Int      @id @default(autoincrement())
   testId       Int
   title        String
   instructions String   @db.Text
   timeLimit    Int // minutes
   order        Int
-  passageText  String?  @db.Text // for reading
-  audioUrl     String? // for listening
+  passageText  String?  @db.Text
   imageUrl     String? // for diagrams
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  test      IeltsTest       @relation(fields: [testId], references: [id], onDelete: Cascade)
-  questions IeltsQuestion[]
+  test      IeltsReadingTest       @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questions IeltsReadingQuestion[]
 
-  @@map("ielts_sections")
+  @@map("ielts_reading_sections")
 }
 
-model IeltsQuestion {
-  id             Int               @id @default(autoincrement())
+model IeltsReadingQuestion {
+  id             Int                      @id @default(autoincrement())
   sectionId      Int
-  question       String            @db.Text
-  type           IeltsQuestionType
-  subQuestions   String[]          @default([]) // For matching questions
-  options        String[]          @default([])
-  correctAnswers String[]          @default([])
+  question       String                   @db.Text
+  type           IeltsReadingQuestionType
+  subQuestions   String[]                 @default([]) // For matching questions
+  options        String[]                 @default([])
+  correctAnswers String[]                 @default([])
   order          Int
   imageUrl       String?
-  points         Int               @default(1)
-  explanation    String?           @db.Text
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  points         Int                      @default(1)
+  explanation    String?                  @db.Text
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
 
-  section IeltsSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  answers IeltsAnswer[]
+  section IeltsReadingSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  answers IeltsReadingAnswer[]
 
-  @@map("ielts_questions")
+  @@map("ielts_reading_questions")
 }
 
-model IeltsSubmission {
-  id             Int        @id @default(autoincrement())
+model IeltsReadingSubmission {
+  id             Int       @id @default(autoincrement())
   testId         Int
   userId         Int
-  skill          IeltsSkill
-  score          Float      @default(0) // band score (0-9)
-  detailedScores Json       @default("{}")
-  feedback       String     @db.Text
-  submittedAt    DateTime   @default(now())
+  score          Float     @default(0) // band score (0-9)
+  detailedScores Json      @default("{}")
+  feedback       String    @db.Text
+  submittedAt    DateTime  @default(now())
   gradedAt       DateTime?
-  audioRecording String? // for speaking
 
-  test    IeltsTest     @relation(fields: [testId], references: [id], onDelete: Cascade)
-  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  answers IeltsAnswer[]
+  test    IeltsReadingTest     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers IeltsReadingAnswer[]
 
-  @@map("ielts_submissions")
+  @@map("ielts_reading_submissions")
 }
 
-model IeltsAnswer {
+model IeltsReadingAnswer {
   id           Int      @id @default(autoincrement())
   submissionId Int
   questionId   Int
@@ -437,17 +362,10 @@ model IeltsAnswer {
   isCorrect    Boolean  @default(false)
   createdAt    DateTime @default(now())
 
-  submission IeltsSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  question   IeltsQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  submission IeltsReadingSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question   IeltsReadingQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  @@map("ielts_answers")
-}
-
-enum IeltsSkill {
-  READING
-  WRITING
-  LISTENING
-  SPEAKING
+  @@map("ielts_reading_answers")
 }
 
 enum IeltsLevel {
@@ -456,7 +374,7 @@ enum IeltsLevel {
   ADVANCED
 }
 
-enum IeltsQuestionType {
+enum IeltsReadingQuestionType {
   MULTIPLE_CHOICE
   IDENTIFYING_INFORMATION // True/False/Not Given, Yes/No/Not Given
   MATCHING // Matching headings, features, sentence endings
@@ -464,120 +382,43 @@ enum IeltsQuestionType {
   SHORT_ANSWER
 }
 
-// ============================================================================
-// WRITING GRADER (AI)
-// ============================================================================
-
-model WritingAssessment {
-  id          Int         @id @default(autoincrement())
-  userId      Int
-  title       String
-  content     String      @db.Text
-  type        WritingType
-  prompt      String?     @db.Text
-  wordCount   Int         @default(0)
-  aiScore     Json        @default("{}")
-  humanScore  Json?
-  feedback    Json        @default("{}")
-  submittedAt DateTime    @default(now())
-  gradedAt    DateTime    @default(now())
-  isPublic    Boolean     @default(false)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("writing_assessments")
-}
-
-enum WritingType {
+enum IeltsWritingType {
   IELTS_TASK1
   IELTS_TASK2
 }
 
-// ----------------------------------------------------------------------------
-// WRITING TASKS (Teacher-created assignments)
-// ----------------------------------------------------------------------------
-
-model WritingTask {
-  id        Int         @id @default(autoincrement())
+model IeltsWritingTest {
+  id        Int              @id @default(autoincrement())
   title     String
-  prompt    String      @db.Text
-  type      WritingType
+  prompt    String           @db.Text
+  type      IeltsWritingType
   level     IeltsLevel
   createdBy Int
-  isActive  Boolean     @default(true)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
-  creator     User                @relation("WritingTaskCreator", fields: [createdBy], references: [id])
-  submissions WritingSubmission[]
+  creator     User                     @relation("IeltsWritingTestCreator", fields: [createdBy], references: [id])
+  submissions IeltsWritingSubmission[]
 
-  @@map("writing_tasks")
+  @@map("ielts_writing_tests")
 }
 
-model WritingSubmission {
-  id          Int       @id @default(autoincrement())
-  taskId      Int
-  userId      Int
-  content     String    @db.Text
-  submittedAt DateTime  @default(now())
-  gradedAt    DateTime?
-  aiScore     Json?
-  aiFeedback  Json?
+model IeltsWritingSubmission {
+  id            Int       @id @default(autoincrement())
+  taskId        Int
+  userId        Int
+  content       String    @db.Text
+  submittedAt   DateTime  @default(now())
+  gradedAt      DateTime?
+  aiScore       Json?
+  aiFeedback    Json?
+  humanScore    Json?
+  humanFeedback Json?
 
-  task WritingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task IeltsWritingTest @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, userId])
-  @@map("writing_submissions")
-}
-
-// ============================================================================
-// SYSTEM FEATURES
-// ============================================================================
-
-model Notification {
-  id        Int              @id @default(autoincrement())
-  userId    Int
-  title     String
-  message   String           @db.Text
-  type      NotificationType
-  isRead    Boolean          @default(false)
-  data      Json?            @default("{}")
-  createdAt DateTime         @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("notifications")
-}
-
-model SystemLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int?
-  action    String
-  resource  String
-  details   Json     @default("{}")
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@map("system_logs")
-}
-
-model SystemConfig {
-  id          Int      @id @default(autoincrement())
-  key         String   @unique
-  value       String   @db.Text
-  description String?  @db.Text
-  updatedAt   DateTime @updatedAt
-
-  @@map("system_configs")
-}
-
-enum NotificationType {
-  INFO
-  WARNING
-  ERROR
-  SUCCESS
+  @@map("ielts_writing_submissions")
 }

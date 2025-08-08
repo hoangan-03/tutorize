@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
-import { useIeltsSubmissionDetails } from "../../hooks/useIelts";
+import { useIeltsReadingSubmissionDetails } from "../../hooks/useIeltsReading";
 import { IeltsTestResult } from "./IeltsTestResult";
 
 export const IeltsSubmissionDetail: React.FC = () => {
@@ -14,7 +14,7 @@ export const IeltsSubmissionDetail: React.FC = () => {
     submission,
     isLoading: loading,
     error,
-  } = useIeltsSubmissionDetails(submissionId);
+  } = useIeltsReadingSubmissionDetails(submissionId);
 
   if (loading) {
     return (

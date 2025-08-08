@@ -52,14 +52,6 @@ export class AuthService {
             firstName,
             lastName,
             grade: role === $Enums.Role.STUDENT ? grade : null,
-            subject:
-              role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
-            preferences: {
-              language: 'vi',
-              theme: 'light',
-              notifications: true,
-              emailNotifications: true,
-            },
           },
         },
       },

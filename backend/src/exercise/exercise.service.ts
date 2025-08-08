@@ -28,7 +28,6 @@ export class ExerciseService {
         deadline: new Date(createExerciseDto.deadline),
         note: createExerciseDto.note,
         content: createExerciseDto.content,
-        latexContent: createExerciseDto.latexContent,
         status: 'DRAFT',
         createdBy: userId,
       },

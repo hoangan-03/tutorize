@@ -17,29 +17,29 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { IeltsService } from './ielts.service';
+import { IeltsReadingService } from './ielts-reading.service';
 import {
   CreateIeltsTestDto,
   UpdateIeltsTestDto,
   CreateIeltsSectionDto,
   CreateIeltsQuestionDto,
   SubmitIeltsDto,
-  IeltsFilterDto,
+  IeltsReadingFilterDto,
   UpdateIeltsSectionDto,
   UpdateIeltsQuestionDto,
-} from './dto/ielts.dto';
+} from './dto/ielts-reading.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Role } from '@prisma/client';
+import { IeltsLevel, Role } from '@prisma/client';
 
-@ApiTags('IELTS')
+@ApiTags('IELTS Reading')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('ielts')
-export class IeltsController {
-  constructor(private readonly ieltsService: IeltsService) {}
+@Controller('ielts-reading')
+export class IeltsReadingController {
+  constructor(private readonly ieltsReadingService: IeltsReadingService) {}
 
   @Post('tests')
   @Roles(Role.TEACHER)
@@ -49,7 +49,7 @@ export class IeltsController {
     @Body() createIeltsTestDto: CreateIeltsTestDto,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.create(createIeltsTestDto, user.id);
+    return this.ieltsReadingService.create(createIeltsTestDto, user.id);
   }
 
   @Get('tests')
@@ -57,18 +57,13 @@ export class IeltsController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({
-    name: 'skill',
-    required: false,
-    enum: ['READING', 'WRITING', 'LISTENING', 'SPEAKING'],
-  })
-  @ApiQuery({
     name: 'level',
     required: false,
-    enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'],
+    enum: IeltsLevel,
   })
   @ApiQuery({ name: 'search', required: false, type: String })
-  findAll(@Query() filterDto: IeltsFilterDto) {
-    return this.ieltsService.findAll(filterDto);
+  findAll(@Query() filterDto: IeltsReadingFilterDto) {
+    return this.ieltsReadingService.findAll(filterDto);
   }
 
   @Get('tests/:id')
@@ -76,7 +71,7 @@ export class IeltsController {
   @ApiResponse({ status: 200, description: 'Chi tiết bài test' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài test' })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.ieltsService.findOne(id);
+    return this.ieltsReadingService.findOne(id);
   }
 
   @Get('tests/:id/with-answers')
@@ -90,7 +85,7 @@ export class IeltsController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.findOneWithAnswers(id, user.id);
+    return this.ieltsReadingService.findOneWithAnswers(id, user.id);
   }
 
   @Patch('tests/:id')
@@ -104,7 +99,7 @@ export class IeltsController {
     @Body() updateIeltsTestDto: UpdateIeltsTestDto,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.update(id, updateIeltsTestDto, user.id);
+    return this.ieltsReadingService.update(id, updateIeltsTestDto, user.id);
   }
 
   @Delete('tests/:id')
@@ -114,7 +109,7 @@ export class IeltsController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy bài test' })
   @ApiResponse({ status: 403, description: 'Không có quyền xóa' })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    return this.ieltsService.remove(id, user.id);
+    return this.ieltsReadingService.remove(id, user.id);
   }
 
   @Post('tests/:id/sections')
@@ -128,7 +123,11 @@ export class IeltsController {
     @Body() createSectionDto: CreateIeltsSectionDto,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.createSection(testId, createSectionDto, user.id);
+    return this.ieltsReadingService.createSection(
+      testId,
+      createSectionDto,
+      user.id,
+    );
   }
 
   @Patch('sections/:id')
@@ -140,7 +139,7 @@ export class IeltsController {
     @Body() updateSectionDto: UpdateIeltsSectionDto,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.updateSection(
+    return this.ieltsReadingService.updateSection(
       sectionId,
       updateSectionDto,
       user.id,
@@ -155,7 +154,7 @@ export class IeltsController {
     @Param('id', ParseIntPipe) sectionId: number,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.removeSection(sectionId, user.id);
+    return this.ieltsReadingService.removeSection(sectionId, user.id);
   }
 
   @Post('sections/:id/questions')
@@ -169,7 +168,7 @@ export class IeltsController {
     @Body() createQuestionDto: CreateIeltsQuestionDto,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.createQuestion(
+    return this.ieltsReadingService.createQuestion(
       sectionId,
       createQuestionDto,
       user.id,
@@ -185,7 +184,7 @@ export class IeltsController {
     @Body() updateQuestionDto: UpdateIeltsQuestionDto,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.updateQuestion(
+    return this.ieltsReadingService.updateQuestion(
       questionId,
       updateQuestionDto,
       user.id,
@@ -200,7 +199,7 @@ export class IeltsController {
     @Param('id', ParseIntPipe) questionId: number,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.removeQuestion(questionId, user.id);
+    return this.ieltsReadingService.removeQuestion(questionId, user.id);
   }
 
   @Post('tests/:id/submit')
@@ -213,7 +212,7 @@ export class IeltsController {
     @Body() submitIeltsDto: SubmitIeltsDto,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.submit(id, submitIeltsDto, user.id);
+    return this.ieltsReadingService.submit(id, submitIeltsDto, user.id);
   }
 
   @Get('tests/:id/submissions')
@@ -226,14 +225,14 @@ export class IeltsController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: any,
   ) {
-    return this.ieltsService.getSubmissions(id, user.id);
+    return this.ieltsReadingService.getSubmissions(id, user.id);
   }
 
   @Get('my-submissions')
   @ApiOperation({ summary: 'Lấy danh sách bài nộp của tôi' })
   @ApiResponse({ status: 200, description: 'Danh sách bài nộp của tôi' })
   getMySubmissions(@CurrentUser() user: any) {
-    return this.ieltsService.getMySubmissions(user.id);
+    return this.ieltsReadingService.getMySubmissions(user.id);
   }
 
   @Get('submissions')
@@ -242,7 +241,7 @@ export class IeltsController {
   @ApiResponse({ status: 200, description: 'Danh sách tất cả bài nộp' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   getAllSubmissions(@CurrentUser() user: any) {
-    return this.ieltsService.getAllSubmissions(user.id);
+    return this.ieltsReadingService.getAllSubmissions(user.id);
   }
 
   @Get('submissions/:submissionId/details')
@@ -254,6 +253,6 @@ export class IeltsController {
     @Param('submissionId', ParseIntPipe) submissionId: number,
     @CurrentUser('id') userId: number,
   ) {
-    return this.ieltsService.getSubmissionDetails(submissionId, userId);
+    return this.ieltsReadingService.getSubmissionDetails(submissionId, userId);
   }
 }

@@ -26,24 +26,22 @@ export {
 } from "./useExercise";
 
 export {
-  useIeltsTests,
-  useIeltsTest,
-  useIeltsTestWithAnswers,
-  useIeltsSubmissions,
-  useIeltsTestSubmissions,
-  useIeltsSubmissionDetails,
-  useIeltsResourcesBySkill,
-  useIeltsTestManagement,
+  useIeltsReadingTests as useIeltsTests,
+  useIeltsReadingTest as useIeltsTest,
+  useIeltsReadingTestWithAnswers as useIeltsTestWithAnswers,
+  useIeltsReadingSubmissions as useIeltsSubmissions,
+  useIeltsReadingTestSubmissions as useIeltsTestSubmissions,
+  useIeltsReadingSubmissionDetails as useIeltsSubmissionDetails,
+  useIeltsReadingTestManagement as useIeltsTestManagement,
   useIeltsSectionManagement,
   useIeltsQuestionManagement,
-} from "./useIelts";
+} from "./useIeltsReading";
 
 export {
-  useWritingManagement,
-  useWritingAssessment,
-  useMyWritingStats,
-  useWritingStats,
-} from "./useWriting";
+  useIeltsWritingTest,
+  useIeltsWritingTestManagement,
+  useIeltsWritingSubmissions,
+} from "./useIeltsWriting";
 
 export { useAuth } from "./useAuth";
 

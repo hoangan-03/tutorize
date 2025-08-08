@@ -2,14 +2,14 @@ import api from "../lib/api";
 import {
   PaginationParams,
   PaginatedResult,
-  IeltsTest,
+  IeltsReadingTest,
   IeltsSection,
   IeltsQuestion,
   IeltsSubmission,
 } from "../types/api";
 
 export interface IeltsSubmissionResult extends IeltsSubmission {
-  test: IeltsTest & {
+  test: IeltsReadingTest & {
     sections: (IeltsSection & {
       questions: (IeltsQuestion & {
         userAnswer?: string;
@@ -19,7 +19,7 @@ export interface IeltsSubmissionResult extends IeltsSubmission {
   };
 }
 
-export const ieltsService = {
+export const ieltsReadingService = {
   // IELTS Test Management
   async getTests(
     params?: PaginationParams & {
@@ -27,64 +27,72 @@ export const ieltsService = {
       level?: string;
       search?: string;
     }
-  ): Promise<PaginatedResult<IeltsTest>> {
-    const response = await api.get<PaginatedResult<IeltsTest>>("/ielts/tests", {
-      params,
-    });
-    return response.data;
-  },
-
-  async getTest(id: number): Promise<IeltsTest> {
-    const response = await api.get<IeltsTest>(`/ielts/tests/${id}`);
-    return response.data;
-  },
-
-  async getTestWithAnswers(id: number): Promise<IeltsTest> {
-    const response = await api.get<IeltsTest>(
-      `/ielts/tests/${id}/with-answers`
+  ): Promise<PaginatedResult<IeltsReadingTest>> {
+    const response = await api.get<PaginatedResult<IeltsReadingTest>>(
+      "/ielts-reading/tests",
+      {
+        params,
+      }
     );
     return response.data;
   },
 
-  async createTest(testData: Partial<IeltsTest>): Promise<IeltsTest> {
+  async getTest(id: number): Promise<IeltsReadingTest> {
+    const response = await api.get<IeltsReadingTest>(
+      `/ielts-reading/tests/${id}`
+    );
+    return response.data;
+  },
+
+  async getTestWithAnswers(id: number): Promise<IeltsReadingTest> {
+    const response = await api.get<IeltsReadingTest>(
+      `/ielts-reading/tests/${id}/with-answers`
+    );
+    return response.data;
+  },
+
+  async createTest(
+    testData: Partial<IeltsReadingTest>
+  ): Promise<IeltsReadingTest> {
     // Filter out fields that shouldn't be sent for creation
     const createData = {
       title: testData.title,
       description: testData.description,
-      skill: testData.skill,
       level: testData.level,
       timeLimit: testData.timeLimit,
       instructions: testData.instructions,
       sections: testData.sections,
     };
 
-    const response = await api.post<IeltsTest>("/ielts/tests", createData);
+    const response = await api.post<IeltsReadingTest>(
+      "/ielts-reading/tests",
+      createData
+    );
     return response.data;
   },
 
   async updateTest(
     id: number,
-    testData: Partial<IeltsTest>
-  ): Promise<IeltsTest> {
+    testData: Partial<IeltsReadingTest>
+  ): Promise<IeltsReadingTest> {
     // Filter out fields that shouldn't be sent for update
     const updateData = {
       title: testData.title,
       description: testData.description,
-      skill: testData.skill,
       level: testData.level,
       timeLimit: testData.timeLimit,
       instructions: testData.instructions,
     };
 
-    const response = await api.patch<IeltsTest>(
-      `/ielts/tests/${id}`,
+    const response = await api.patch<IeltsReadingTest>(
+      `/ielts-reading/tests/${id}`,
       updateData
     );
     return response.data;
   },
 
   async deleteTest(id: number): Promise<void> {
-    await api.delete(`/ielts/tests/${id}`);
+    await api.delete(`/ielts-reading/tests/${id}`);
   },
 
   // Section Management
@@ -105,7 +113,7 @@ export const ieltsService = {
     };
 
     const response = await api.post<IeltsSection>(
-      `/ielts/tests/${testId}/sections`,
+      `/ielts-reading/tests/${testId}/sections`,
       createData
     );
     return response.data;
@@ -127,14 +135,14 @@ export const ieltsService = {
     };
 
     const response = await api.patch<IeltsSection>(
-      `/ielts/sections/${sectionId}`,
+      `/ielts-reading/sections/${sectionId}`,
       updateData
     );
     return response.data;
   },
 
   async removeSection(sectionId: number): Promise<void> {
-    await api.delete(`/ielts/sections/${sectionId}`);
+    await api.delete(`/ielts-reading/sections/${sectionId}`);
   },
 
   // Question Management
@@ -156,7 +164,7 @@ export const ieltsService = {
     };
 
     const response = await api.post<IeltsQuestion>(
-      `/ielts/sections/${sectionId}/questions`,
+      `/ielts-reading/sections/${sectionId}/questions`,
       createData
     );
     return response.data;
@@ -180,14 +188,14 @@ export const ieltsService = {
     };
 
     const response = await api.patch<IeltsQuestion>(
-      `/ielts/questions/${questionId}`,
+      `/ielts-reading/questions/${questionId}`,
       updateData
     );
     return response.data;
   },
 
   async removeQuestion(questionId: number): Promise<void> {
-    await api.delete(`/ielts/questions/${questionId}`);
+    await api.delete(`/ielts-reading/questions/${questionId}`);
   },
 
   // Test Taking
@@ -196,7 +204,7 @@ export const ieltsService = {
     answers: { questionId: number; answer: string }[]
   ): Promise<IeltsSubmission> {
     const response = await api.post<IeltsSubmission>(
-      `/ielts/tests/${testId}/submit`,
+      `/ielts-reading/tests/${testId}/submit`,
       { answers }
     );
     return response.data;
@@ -204,19 +212,23 @@ export const ieltsService = {
 
   // Submissions and Results
   async getMySubmissions(): Promise<IeltsSubmission[]> {
-    const response = await api.get<IeltsSubmission[]>("/ielts/my-submissions");
+    const response = await api.get<IeltsSubmission[]>(
+      "/ielts-reading/my-submissions"
+    );
     return response.data;
   },
 
   async getTestSubmissions(testId: number): Promise<IeltsSubmission[]> {
     const response = await api.get<PaginatedResult<IeltsSubmission>>(
-      `/ielts/tests/${testId}/submissions`
+      `/ielts-reading/tests/${testId}/submissions`
     );
     return response.data.data;
   },
 
   async getAllSubmissions(): Promise<IeltsSubmission[]> {
-    const response = await api.get<IeltsSubmission[]>("/ielts/submissions");
+    const response = await api.get<IeltsSubmission[]>(
+      "/ielts-reading/submissions"
+    );
     return response.data;
   },
 
@@ -224,14 +236,8 @@ export const ieltsService = {
     submissionId: number
   ): Promise<IeltsSubmissionResult> {
     const response = await api.get<IeltsSubmissionResult>(
-      `/ielts/submissions/${submissionId}/details`
+      `/ielts-reading/submissions/${submissionId}/details`
     );
-    return response.data;
-  },
-
-  // Get resources by skill (for IeltsCenter component)
-  async getResourcesBySkill(skill: string): Promise<IeltsTest[]> {
-    const response = await this.getTests({ skill });
     return response.data;
   },
 };

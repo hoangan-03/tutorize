@@ -71,9 +71,8 @@ Your authentication will persist in this browser session thanks to Swagger's per
     .addTag('Quizzes', 'Hệ thống quiz')
     .addTag('Exercises', 'Hệ thống bài tập')
     .addTag('Documents', 'Thư viện tài liệu')
-    .addTag('IELTS', 'Trung tâm luyện thi IELTS')
-    .addTag('Writing', 'Chấm điểm bài viết AI')
-    .addTag('Analytics', 'Thống kê và báo cáo')
+    .addTag('IELTS Writing', 'Luyện thi IELTS Writing')
+    .addTag('IELTS Reading', 'Luyện thi IELTS Reading')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

@@ -24,6 +24,7 @@
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset",
     "seed": "ts-node scripts/init-db.ts",
+    "drop-db": "ts-node scripts/drop-db.ts",
     "fix:line-endings": "node scripts/fix-line-endings.js",
     "migrate": "npx prisma generate && npx prisma db push",
     "migrate:reset": "npx prisma migrate reset --force"

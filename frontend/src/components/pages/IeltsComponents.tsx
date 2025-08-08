@@ -14,14 +14,14 @@ import {
 } from "lucide-react";
 import { StatCard } from "../ui";
 import {
-  IeltsTest,
-  WritingTask,
-  WritingType,
+  IeltsReadingTest,
+  IeltsWritingTest,
+  IeltsWritingType,
   IeltsSubmission,
+  IeltsSkill,
 } from "../../types/api";
-import { getLevelInfo, getSkillInfo } from "../utils";
+import { formatDateTime, getLevelInfo, getSkillInfo } from "../utils";
 
-// Stats Cards Component for Teacher View
 interface IeltsStatsProps {
   stats: {
     total: number;
@@ -29,7 +29,6 @@ interface IeltsStatsProps {
     listening: number;
     writing: number;
     speaking: number;
-    writingTasks: number;
   };
 }
 
@@ -61,12 +60,7 @@ export const IeltsStatsCards: React.FC<IeltsStatsProps> = ({ stats }) => {
       label: t("ielts.teacher.writingTests"),
       value: stats.writing,
     },
-    {
-      icon: <PenSquare className="h-6 w-6 text-green-600" />,
-      bgColor: "bg-green-100",
-      label: t("ielts.writingTasks.statsLabel"),
-      value: stats.writingTasks,
-    },
+
     {
       icon: <Mic className="h-6 w-6 text-teal-600" />,
       bgColor: "bg-teal-100",
@@ -76,7 +70,7 @@ export const IeltsStatsCards: React.FC<IeltsStatsProps> = ({ stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       {statCardConfigs.map((config, index) => (
         <StatCard
           key={index}
@@ -90,9 +84,8 @@ export const IeltsStatsCards: React.FC<IeltsStatsProps> = ({ stats }) => {
   );
 };
 
-// Test Card for Student View
 interface IeltsTestCardProps {
-  test: IeltsTest;
+  test: IeltsReadingTest;
   highestSubmission: IeltsSubmission | null;
   onStartTest: (id: number) => void;
   onViewResult: (id: number) => void;
@@ -109,6 +102,18 @@ export const IeltsTestCard: React.FC<IeltsTestCardProps> = ({
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col justify-between hover:shadow-xl transition-shadow">
       <div>
+        <div className="flex items-center space-x-2 mb-2">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800`}
+          >
+            {getSkillInfo(IeltsSkill.READING, t).label}
+          </span>
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800`}
+          >
+            {getLevelInfo(test.level, t).label}
+          </span>
+        </div>
         <h3 className="text-lg font-bold text-gray-900 mb-2 text-start">
           {test.title}
         </h3>
@@ -153,8 +158,8 @@ export const IeltsTestCard: React.FC<IeltsTestCardProps> = ({
 
 // Writing Task Card for Student View
 interface WritingTaskCardProps {
-  task: WritingTask;
-  onStartTask: (task: WritingTask) => void;
+  task: IeltsWritingTest;
+  onStartTask: (task: IeltsWritingTest) => void;
 }
 
 export const WritingTaskCard: React.FC<WritingTaskCardProps> = ({
@@ -169,24 +174,28 @@ export const WritingTaskCard: React.FC<WritingTaskCardProps> = ({
         <div className="flex items-center space-x-2 mb-2">
           <span
             className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              task.type === WritingType.IELTS_TASK1
+              task.type === IeltsWritingType.IELTS_TASK1
                 ? "bg-orange-100 text-orange-800"
                 : "bg-orange-100 text-orange-800"
             }`}
           >
-            Writing
+            {getSkillInfo(IeltsSkill.WRITING, t).label}
           </span>
           <span
             className={`px-2 py-1 rounded-full text-xs font-semibold ${
-              task.type === WritingType.IELTS_TASK1
+              task.type === IeltsWritingType.IELTS_TASK1
                 ? "bg-blue-100 text-blue-800"
                 : "bg-purple-100 text-purple-800"
             }`}
           >
-            {task.type === WritingType.IELTS_TASK1 ? "Task 1" : "Task 2"}
+            {task.type === IeltsWritingType.IELTS_TASK1 ? "Task 1" : "Task 2"}
           </span>
-          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-            {task.level}
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+              getLevelInfo(task.level, t).color
+            }`}
+          >
+            {getLevelInfo(task.level, t).label}
           </span>
         </div>
         <h3 className="text-lg font-bold text-gray-900 mb-2 text-start">
@@ -194,7 +203,7 @@ export const WritingTaskCard: React.FC<WritingTaskCardProps> = ({
         </h3>
         <div
           className="text-sm text-gray-600 line-clamp-3 mb-4 text-start prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: task.prompt }}
+          dangerouslySetInnerHTML={{ __html: task.prompt ?? "" }}
         />
       </div>
       <div>
@@ -217,7 +226,7 @@ export const WritingTaskCard: React.FC<WritingTaskCardProps> = ({
 
 // Item Row for Teacher View (both IELTS tests and Writing tasks)
 interface IeltsItemRowProps {
-  item: IeltsTest | WritingTask;
+  item: IeltsReadingTest | IeltsWritingTest;
   type: "test" | "task";
   onEdit?: (id: number) => void;
   onDelete?: (id: number) => void;
@@ -240,44 +249,58 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
           <div className="flex items-center space-x-3 mb-2">
             <h4 className="text-lg font-semibold text-gray-900">
               {type === "test"
-                ? (item as IeltsTest).title
-                : (item as WritingTask).title}
+                ? (item as IeltsReadingTest).title
+                : (item as IeltsWritingTest).title}
             </h4>
 
             {type === "test" && (
               <>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    getSkillInfo((item as IeltsTest).skill, t).color
+                    getSkillInfo(IeltsSkill.READING, t).color
                   }`}
                 >
-                  {getSkillInfo((item as IeltsTest).skill, t).label}
+                  {getSkillInfo(IeltsSkill.READING, t).label}
                 </span>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    getLevelInfo((item as IeltsTest).level, t).color
+                    getLevelInfo((item as IeltsReadingTest).level, t).color
                   }`}
                 >
-                  {getLevelInfo((item as IeltsTest).level, t).label}
+                  {getLevelInfo((item as IeltsReadingTest).level, t).label}
                 </span>
               </>
             )}
 
             {type === "task" && (
               <>
+                {" "}
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    getSkillInfo(IeltsSkill.WRITING, t).color
+                  }`}
+                >
+                  {getSkillInfo(IeltsSkill.WRITING, t).label}
+                </span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    (item as WritingTask).type === WritingType.IELTS_TASK1
+                    (item as IeltsWritingTest).type ===
+                    IeltsWritingType.IELTS_TASK1
                       ? "bg-blue-100 text-blue-800"
                       : "bg-purple-100 text-purple-800"
                   }`}
                 >
-                  {(item as WritingTask).type === WritingType.IELTS_TASK1
+                  {(item as IeltsWritingTest).type ===
+                  IeltsWritingType.IELTS_TASK1
                     ? "Task 1"
                     : "Task 2"}
                 </span>
-                <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                  {(item as WritingTask).level}
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    getLevelInfo((item as IeltsReadingTest).level, t).color
+                  }`}
+                >
+                  {getLevelInfo((item as IeltsReadingTest).level, t).label}
                 </span>
               </>
             )}
@@ -286,21 +309,21 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
           {type === "test" && (
             <>
               <p className="text-gray-600 mb-4 text-sm leading-relaxed text-start">
-                {(item as IeltsTest).description}
+                {(item as IeltsReadingTest).description}
               </p>
               <div className="flex items-center space-x-6 text-sm text-gray-500">
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-2" />
-                  {(item as IeltsTest).timeLimit
+                  {(item as IeltsReadingTest).timeLimit
                     ? t("ielts.teacher.minutes", {
-                        count: (item as IeltsTest).timeLimit,
+                        count: (item as IeltsReadingTest).timeLimit,
                       })
                     : t("ielts.teacher.unlimitedTime")}
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2" />
                   {t("ielts.teacher.createdAt")}:{" "}
-                  {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+                  {formatDateTime(item.createdAt)}
                 </div>
               </div>
             </>
@@ -311,16 +334,15 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
               <div
                 className="text-gray-600 text-sm line-clamp-2 prose max-w-none"
                 dangerouslySetInnerHTML={{
-                  __html: (item as WritingTask).prompt,
+                  __html: (item as IeltsWritingTest).prompt ?? "",
                 }}
               />
               <div className="flex items-center space-x-4 text-sm text-gray-500 mt-2">
-                <span>
-                  Tạo: {new Date(item.createdAt).toLocaleDateString("vi-VN")}
-                </span>
-                <span>
-                  Submissions: {(item as WritingTask).submissions?.length || 0}
-                </span>
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {t("ielts.teacher.createdAt")}:{" "}
+                  {formatDateTime(item.createdAt)}
+                </div>
               </div>
             </>
           )}

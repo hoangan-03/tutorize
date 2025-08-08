@@ -27,7 +27,6 @@ import {
   UpdateDocumentDto,
   DocumentFilterDto,
 } from './dto/document.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -120,18 +119,6 @@ export class DocumentController {
     @Res() res: Response,
   ) {
     return this.documentService.download(+id, user.id, res);
-  }
-
-  @Get(':id/access-history')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.TEACHER)
-  @ApiOperation({ summary: 'Lịch sử truy cập tài liệu (Teacher only)' })
-  @ApiResponse({ status: 200, description: 'Lịch sử truy cập' })
-  async getAccessHistory(
-    @Param('id', ParseIntPipe) id: number,
-    @Query() query: PaginationDto,
-  ) {
-    return this.documentService.getAccessHistory(+id, query);
   }
 
   @Post(':id/approve')

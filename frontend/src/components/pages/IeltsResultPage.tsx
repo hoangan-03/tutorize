@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useIeltsSubmissionDetails } from "../../hooks";
-import { IeltsSubmissionResult } from "../../services/ieltsService";
+import { IeltsSubmissionResult } from "../../services/ieltsReadingService";
 import { Header } from "../layout/Header";
 import {
   CheckCircleIcon,

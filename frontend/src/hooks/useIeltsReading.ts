@@ -1,18 +1,18 @@
 import useSWR, { mutate } from "swr";
-import { ieltsService } from "../services/ieltsService";
+import { ieltsReadingService } from "../services/ieltsReadingService";
 import {
   PaginationParams,
-  IeltsTest,
+  IeltsReadingTest,
   IeltsSection,
   IeltsQuestion,
 } from "../types/api";
 import { toast } from "react-toastify";
 
 // Get all IELTS tests with pagination
-export const useIeltsTests = (params?: PaginationParams) => {
+export const useIeltsReadingTests = (params?: PaginationParams) => {
   const { data, error, isLoading } = useSWR(
-    ["/ielts/tests", params],
-    ([, params]) => ieltsService.getTests(params),
+    ["/ielts-reading/tests", params],
+    ([, params]) => ieltsReadingService.getTests(params),
     {
       revalidateOnFocus: false,
     }
@@ -25,19 +25,19 @@ export const useIeltsTests = (params?: PaginationParams) => {
     totalPages: data?.totalPages || 1,
     isLoading,
     error,
-    mutate: () => mutate(["/ielts/tests", params]),
+    mutate: () => mutate(["/ielts-reading/tests", params]),
   };
 };
 
 // Get single IELTS test
-export const useIeltsTest = (id: number | null) => {
+export const useIeltsReadingTest = (id: number | null) => {
   const {
     data: test,
     error,
     isLoading,
   } = useSWR(
-    id ? `/ielts/tests/${id}` : null,
-    () => ieltsService.getTest(id!),
+    id ? `/ielts-reading/tests/${id}` : null,
+    () => ieltsReadingService.getTest(id!),
     {
       revalidateOnFocus: false,
     }
@@ -47,19 +47,19 @@ export const useIeltsTest = (id: number | null) => {
     test,
     isLoading,
     error,
-    mutate: () => mutate(`/ielts/tests/${id}`),
+    mutate: () => mutate(`/ielts-reading/tests/${id}`),
   };
 };
 
 // Get IELTS test with answers (for teacher view)
-export const useIeltsTestWithAnswers = (id: number | null) => {
+export const useIeltsReadingTestWithAnswers = (id: number | null) => {
   const {
     data: test,
     error,
     isLoading,
   } = useSWR(
-    id ? `/ielts/tests/${id}/with-answers` : null,
-    () => ieltsService.getTestWithAnswers(id!),
+    id ? `/ielts-reading/tests/${id}/with-answers` : null,
+    () => ieltsReadingService.getTestWithAnswers(id!),
     {
       revalidateOnFocus: false,
     }
@@ -69,37 +69,19 @@ export const useIeltsTestWithAnswers = (id: number | null) => {
     test,
     isLoading,
     error,
-    mutate: () => mutate(`/ielts/tests/${id}/with-answers`),
+    mutate: () => mutate(`/ielts-reading/tests/${id}/with-answers`),
   };
 };
 
 // Get user's IELTS submissions
-export const useIeltsSubmissions = () => {
-  const {
-    data: submissions,
-    error,
-    isLoading,
-  } = useSWR("/ielts/submissions/my", () => ieltsService.getMySubmissions(), {
-    revalidateOnFocus: false,
-  });
-
-  return {
-    submissions: submissions || [],
-    isLoading,
-    error,
-    mutate: () => mutate("/ielts/submissions/my"),
-  };
-};
-
-// Get test submissions (for teacher view)
-export const useIeltsTestSubmissions = (testId: number | null) => {
+export const useIeltsReadingSubmissions = () => {
   const {
     data: submissions,
     error,
     isLoading,
   } = useSWR(
-    testId ? `/ielts/tests/${testId}/submissions` : null,
-    () => ieltsService.getTestSubmissions(testId!),
+    "/ielts-reading/submissions/my",
+    () => ieltsReadingService.getMySubmissions(),
     {
       revalidateOnFocus: false,
     }
@@ -109,37 +91,65 @@ export const useIeltsTestSubmissions = (testId: number | null) => {
     submissions: submissions || [],
     isLoading,
     error,
-    mutate: () => mutate(`/ielts/tests/${testId}/submissions`),
+    mutate: () => mutate("/ielts-reading/submissions/my"),
   };
 };
 
-// Get all submissions (for teacher view)
-export const useIeltsAllSubmissions = () => {
+// Get test submissions (for teacher view)
+export const useIeltsReadingTestSubmissions = (testId: number | null) => {
   const {
     data: submissions,
     error,
     isLoading,
-  } = useSWR("/ielts/submissions/all", () => ieltsService.getAllSubmissions(), {
-    revalidateOnFocus: false,
-  });
+  } = useSWR(
+    testId ? `/ielts-reading/tests/${testId}/submissions` : null,
+    () => ieltsReadingService.getTestSubmissions(testId!),
+    {
+      revalidateOnFocus: false,
+    }
+  );
 
   return {
     submissions: submissions || [],
     isLoading,
     error,
-    mutate: () => mutate("/ielts/submissions/all"),
+    mutate: () => mutate(`/ielts-reading/tests/${testId}/submissions`),
+  };
+};
+
+// Get all submissions (for teacher view)
+export const useIeltsReadingAllSubmissions = () => {
+  const {
+    data: submissions,
+    error,
+    isLoading,
+  } = useSWR(
+    "/ielts-reading/submissions/all",
+    () => ieltsReadingService.getAllSubmissions(),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submissions: submissions || [],
+    isLoading,
+    error,
+    mutate: () => mutate("/ielts-reading/submissions/all"),
   };
 };
 
 // Get submission details
-export const useIeltsSubmissionDetails = (submissionId: number | null) => {
+export const useIeltsReadingSubmissionDetails = (
+  submissionId: number | null
+) => {
   const {
     data: submission,
     error,
     isLoading,
   } = useSWR(
-    submissionId ? `/ielts/submissions/${submissionId}` : null,
-    () => ieltsService.getSubmissionDetails(submissionId!),
+    submissionId ? `/ielts-reading/submissions/${submissionId}` : null,
+    () => ieltsReadingService.getSubmissionDetails(submissionId!),
     {
       revalidateOnFocus: false,
     }
@@ -149,85 +159,69 @@ export const useIeltsSubmissionDetails = (submissionId: number | null) => {
     submission,
     isLoading,
     error,
-    mutate: () => mutate(`/ielts/submissions/${submissionId}`),
-  };
-};
-
-// Get resources by skill
-export const useIeltsResourcesBySkill = (skill: string | null) => {
-  const {
-    data: resources,
-    error,
-    isLoading,
-  } = useSWR(
-    skill ? `/ielts/resources/${skill}` : null,
-    () => ieltsService.getResourcesBySkill(skill!),
-    {
-      revalidateOnFocus: false,
-    }
-  );
-
-  return {
-    resources: resources || [],
-    isLoading,
-    error,
-    mutate: () => mutate(`/ielts/resources/${skill}`),
+    mutate: () => mutate(`/ielts-reading/submissions/${submissionId}`),
   };
 };
 
 // IELTS test management hooks
-export const useIeltsTestManagement = () => {
-  const createTest = async (testData: Partial<IeltsTest>) => {
-    const newTest = await ieltsService.createTest(testData);
+export const useIeltsReadingTestManagement = () => {
+  const createTest = async (testData: Partial<IeltsReadingTest>) => {
+    const newTest = await ieltsReadingService.createTest(testData);
     toast.success("Test created successfully!");
     // Invalidate all test list caches with any params
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
     return newTest;
   };
 
-  const updateTest = async (testId: number, testData: Partial<IeltsTest>) => {
-    const updatedTest = await ieltsService.updateTest(testId, testData);
+  const updateIeltsReadingTest = async (
+    testId: number,
+    testData: Partial<IeltsReadingTest>
+  ) => {
+    const updatedTest = await ieltsReadingService.updateTest(testId, testData);
     toast.success("Test updated successfully!");
     // Invalidate specific test caches
-    mutate(`/ielts/tests/${testId}`, undefined, { revalidate: true });
-    mutate(`/ielts/tests/${testId}/with-answers`, undefined, {
+    mutate(`/ielts-reading/tests/${testId}`, undefined, { revalidate: true });
+    mutate(`/ielts-reading/tests/${testId}/with-answers`, undefined, {
       revalidate: true,
     });
     // Invalidate all test list caches with any params
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
     return updatedTest;
   };
 
-  const deleteTest = async (testId: number) => {
-    await ieltsService.deleteTest(testId);
+  const deleteIeltsReadingTest = async (testId: number) => {
+    await ieltsReadingService.deleteTest(testId);
     toast.success("Test deleted successfully!");
     // Invalidate all test list caches with any params
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
     // Also invalidate the specific test cache
-    mutate(`/ielts/tests/${testId}`, undefined, { revalidate: false });
-    mutate(`/ielts/tests/${testId}/with-answers`, undefined, {
+    mutate(`/ielts-reading/tests/${testId}`, undefined, { revalidate: false });
+    mutate(`/ielts-reading/tests/${testId}/with-answers`, undefined, {
       revalidate: false,
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const submitTest = async (testId: number, submissionData: any) => {
-    const result = await ieltsService.submitTest(testId, submissionData);
+  const submitIeltsReadingTest = async (
+    testId: number,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    submissionData: any
+  ) => {
+    const result = await ieltsReadingService.submitTest(testId, submissionData);
     toast.success("Test submitted successfully!");
-    mutate("/ielts/submissions/my", undefined, { revalidate: true });
-    mutate(`/ielts/tests/${testId}/submissions`, undefined, {
+    mutate("/ielts-reading/submissions/my", undefined, { revalidate: true });
+    mutate(`/ielts-reading/tests/${testId}/submissions`, undefined, {
       revalidate: true,
     });
     return result;
@@ -235,9 +229,9 @@ export const useIeltsTestManagement = () => {
 
   return {
     createTest,
-    updateTest,
-    deleteTest,
-    submitTest,
+    updateTest: updateIeltsReadingTest,
+    deleteTest: deleteIeltsReadingTest,
+    submitTest: submitIeltsReadingTest,
   };
 };
 
@@ -247,16 +241,19 @@ export const useIeltsSectionManagement = () => {
     testId: number,
     sectionData: Partial<IeltsSection>
   ) => {
-    const newSection = await ieltsService.createSection(testId, sectionData);
+    const newSection = await ieltsReadingService.createSection(
+      testId,
+      sectionData
+    );
     toast.success("Section created successfully!");
     // Invalidate specific test caches
-    mutate(`/ielts/tests/${testId}`, undefined, { revalidate: true });
-    mutate(`/ielts/tests/${testId}/with-answers`, undefined, {
+    mutate(`/ielts-reading/tests/${testId}`, undefined, { revalidate: true });
+    mutate(`/ielts-reading/tests/${testId}/with-answers`, undefined, {
       revalidate: true,
     });
     // Invalidate all test list caches
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
@@ -267,20 +264,20 @@ export const useIeltsSectionManagement = () => {
     sectionId: number,
     sectionData: Partial<IeltsSection>
   ) => {
-    const updatedSection = await ieltsService.updateSection(
+    const updatedSection = await ieltsReadingService.updateSection(
       sectionId,
       sectionData
     );
     toast.success("Section updated successfully!");
     // Mutate all related test caches
     mutate(
-      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      (key) => typeof key === "string" && key.includes("/ielts-reading/tests/"),
       undefined,
       { revalidate: true }
     );
     // Also invalidate test lists
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
@@ -288,17 +285,17 @@ export const useIeltsSectionManagement = () => {
   };
 
   const removeSection = async (sectionId: number) => {
-    await ieltsService.removeSection(sectionId);
+    await ieltsReadingService.removeSection(sectionId);
     toast.success("Section removed successfully!");
     // Mutate all related test caches
     mutate(
-      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      (key) => typeof key === "string" && key.includes("/ielts-reading/tests/"),
       undefined,
       { revalidate: true }
     );
     // Also invalidate test lists
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
@@ -317,20 +314,20 @@ export const useIeltsQuestionManagement = () => {
     sectionId: number,
     questionData: Partial<IeltsQuestion>
   ) => {
-    const newQuestion = await ieltsService.createQuestion(
+    const newQuestion = await ieltsReadingService.createQuestion(
       sectionId,
       questionData
     );
     toast.success("Question created successfully!");
     // Mutate all related test caches
     mutate(
-      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      (key) => typeof key === "string" && key.includes("/ielts-reading/tests/"),
       undefined,
       { revalidate: true }
     );
     // Also invalidate test lists
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
@@ -341,20 +338,20 @@ export const useIeltsQuestionManagement = () => {
     questionId: number,
     questionData: Partial<IeltsQuestion>
   ) => {
-    const updatedQuestion = await ieltsService.updateQuestion(
+    const updatedQuestion = await ieltsReadingService.updateQuestion(
       questionId,
       questionData
     );
     toast.success("Question updated successfully!");
     // Mutate all related test caches
     mutate(
-      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      (key) => typeof key === "string" && key.includes("/ielts-reading/tests/"),
       undefined,
       { revalidate: true }
     );
     // Also invalidate test lists
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );
@@ -362,17 +359,17 @@ export const useIeltsQuestionManagement = () => {
   };
 
   const removeQuestion = async (questionId: number) => {
-    await ieltsService.removeQuestion(questionId);
+    await ieltsReadingService.removeQuestion(questionId);
     toast.success("Question removed successfully!");
     // Mutate all related test caches
     mutate(
-      (key) => typeof key === "string" && key.includes("/ielts/tests/"),
+      (key) => typeof key === "string" && key.includes("/ielts-reading/tests/"),
       undefined,
       { revalidate: true }
     );
     // Also invalidate test lists
     mutate(
-      (key) => Array.isArray(key) && key[0] === "/ielts/tests",
+      (key) => Array.isArray(key) && key[0] === "/ielts-reading/tests",
       undefined,
       { revalidate: true }
     );

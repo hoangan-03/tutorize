@@ -34,7 +34,6 @@ export class DocumentService {
         fileSize: file ? file.size : createDocumentDto.fileSize,
         uploadedBy: userId,
         tags: createDocumentDto.tags || [],
-        isPublic: createDocumentDto.isPublic || false,
       },
     });
 
@@ -117,29 +116,8 @@ export class DocumentService {
     }
 
     // Check access permission
-    if (!document.isPublic && document.uploadedBy !== userId) {
+    if (document.uploadedBy !== userId) {
       throw new ForbiddenException('Không có quyền truy cập tài liệu này');
-    }
-
-    // Record access if user is provided
-    if (userId) {
-      await this.prisma.documentAccess.create({
-        data: {
-          documentId: id,
-          userId,
-          action: 'VIEW',
-        },
-      });
-
-      // Update view count
-      await this.prisma.document.update({
-        where: { id },
-        data: {
-          viewCount: {
-            increment: 1,
-          },
-        },
-      });
     }
 
     return document;
@@ -199,15 +177,6 @@ export class DocumentService {
   async download(id: number, userId: number, res: any) {
     const document = await this.findOne(id, userId);
 
-    // Record download access
-    await this.prisma.documentAccess.create({
-      data: {
-        documentId: id,
-        userId,
-        action: 'DOWNLOAD',
-      },
-    });
-
     // Update download count
     await this.prisma.document.update({
       where: { id },
@@ -232,42 +201,6 @@ export class DocumentService {
         approvedAt: new Date(),
       },
     });
-  }
-
-  async getAccessHistory(id: number, query: { page?: number; limit?: number }) {
-    const { page = 1, limit = 10 } = query;
-    const skip = (page - 1) * limit;
-
-    const [accesses, total] = await Promise.all([
-      this.prisma.documentAccess.findMany({
-        where: { documentId: id },
-        skip,
-        take: limit,
-        orderBy: { accessedAt: 'desc' },
-        include: {
-          user: {
-            select: {
-              id: true,
-
-              email: true,
-            },
-          },
-        },
-      }),
-      this.prisma.documentAccess.count({
-        where: { documentId: id },
-      }),
-    ]);
-
-    return {
-      data: accesses,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
   }
 
   private getMimeType(documentType: string): string {

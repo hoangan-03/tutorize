@@ -15,8 +15,7 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { email, password, firstName, lastName, role, grade, subject } =
-      createUserDto;
+    const { email, password, firstName, lastName, role, grade } = createUserDto;
 
     // Check if email exists
     const existingUser = await this.prisma.user.findUnique({
@@ -40,14 +39,6 @@ export class UserService {
             firstName,
             lastName,
             grade: role === $Enums.Role.STUDENT ? grade : null,
-            subject:
-              role === $Enums.Role.TEACHER ? (subject as $Enums.Subject) : null,
-            preferences: {
-              language: 'vi',
-              theme: 'light',
-              notifications: true,
-              emailNotifications: true,
-            },
           },
         },
       },

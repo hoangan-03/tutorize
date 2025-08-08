@@ -1,14 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { IeltsReadingQuestionType, PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import {
   Subject,
   DocumentType as DocType,
   ExerciseStatus,
   QuizStatus,
-  IeltsSkill,
   IeltsLevel,
   QuestionType,
-  IeltsQuestionType,
   Role,
 } from '@prisma/client';
 
@@ -27,17 +25,14 @@ async function main() {
     prisma.exerciseSubmission.deleteMany(),
     prisma.exerciseAttachment.deleteMany(),
     prisma.exercise.deleteMany(),
-    prisma.documentAccess.deleteMany(),
     prisma.document.deleteMany(),
-    prisma.ieltsAnswer.deleteMany(),
-    prisma.ieltsSubmission.deleteMany(),
-    prisma.ieltsQuestion.deleteMany(),
-    prisma.ieltsSection.deleteMany(),
-    prisma.ieltsTest.deleteMany(),
-    prisma.writingAssessment.deleteMany(),
-    prisma.notification.deleteMany(),
-    prisma.systemLog.deleteMany(),
-    prisma.systemConfig.deleteMany(),
+    prisma.ieltsReadingAnswer.deleteMany(),
+    prisma.ieltsReadingSubmission.deleteMany(),
+    prisma.ieltsReadingQuestion.deleteMany(),
+    prisma.ieltsReadingSection.deleteMany(),
+    prisma.ieltsReadingTest.deleteMany(),
+    prisma.ieltsWritingSubmission.deleteMany(),
+    prisma.ieltsWritingTest.deleteMany(),
     prisma.userProfile.deleteMany(),
     prisma.user.deleteMany(),
   ]);
@@ -56,15 +51,8 @@ async function main() {
         create: {
           firstName: 'An',
           lastName: 'Nguyen',
-          subject: Subject.MATH,
           phone: '0932669566',
           school: 'PTNK',
-          preferences: {
-            language: 'vi',
-            theme: 'light',
-            notifications: true,
-            emailNotifications: true,
-          },
         },
       },
     },
@@ -88,12 +76,6 @@ async function main() {
 
           grade: 10,
           school: 'PTNK',
-          preferences: {
-            language: 'vi',
-            theme: 'light',
-            notifications: true,
-            emailNotifications: true,
-          },
         },
       },
     },
@@ -113,12 +95,6 @@ async function main() {
           phone: '0912345678',
           grade: 8,
           school: 'THCS Le Anh Xuan',
-          preferences: {
-            language: 'vi',
-            theme: 'dark',
-            notifications: true,
-            emailNotifications: false,
-          },
         },
       },
     },
@@ -136,7 +112,6 @@ async function main() {
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
-      isPublic: true,
       tags: ['math', 'equation', 'algebra'],
       instructions: 'Làm bài cẩn thận',
       questions: {
@@ -190,7 +165,6 @@ async function main() {
       deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
-      isPublic: true,
       tags: ['math', 'function', 'algebra'],
       instructions: 'Đọc kỹ đề trước khi trả lời.',
       questions: {
@@ -270,7 +244,6 @@ async function main() {
       status: ExerciseStatus.ACTIVE,
       maxScore: 100,
       allowLateSubmission: true,
-      isPublic: true,
     },
   });
 
@@ -288,7 +261,6 @@ async function main() {
       status: ExerciseStatus.ACTIVE,
       maxScore: 100,
       allowLateSubmission: true,
-      isPublic: true,
     },
   });
 
@@ -305,22 +277,17 @@ async function main() {
       fileUrl: '/documents/math-formulas.pdf',
       fileSize: 2048000, // 2MB
       uploadedBy: teacher.id,
-      isPublic: true,
-      isApproved: true,
-      approvedBy: teacher.id,
-      approvedAt: new Date(),
       tags: ['công thức', 'toán học', 'THPT'],
     },
   });
 
   // Create Comprehensive IELTS Reading Test
   console.log('📖 Creating comprehensive IELTS Reading Test...');
-  await prisma.ieltsTest.create({
+  await prisma.ieltsReadingTest.create({
     data: {
       title: 'Comprehensive IELTS Reading Test',
       description:
         'A full reading test covering all question types for demonstration. Total 40 questions.',
-      skill: IeltsSkill.READING,
       level: IeltsLevel.INTERMEDIATE,
       timeLimit: 60,
       createdBy: teacher.id,
@@ -347,7 +314,7 @@ async function main() {
                 {
                   question:
                     'Complete the sentences below. Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.',
-                  type: IeltsQuestionType.COMPLETION,
+                  type: IeltsReadingQuestionType.COMPLETION,
                   subQuestions: [
                     'The earliest form of glass discovered by humans was a volcanic type called _____.',
                     'The production of glass vessels was transformed by a Roman invention known as _____.',
@@ -369,7 +336,7 @@ async function main() {
                 {
                   question:
                     'Do the following statements agree with the information given in the text? Choose <strong>TRUE</strong>, <strong>FALSE</strong>, or <strong>NOT GIVEN</strong>.',
-                  type: IeltsQuestionType.IDENTIFYING_INFORMATION,
+                  type: IeltsReadingQuestionType.IDENTIFYING_INFORMATION,
                   subQuestions: [
                     'The first man-made glass was produced in 3500 BC.',
                     'The Romans used glass for making jewelry.',
@@ -384,7 +351,7 @@ async function main() {
                 {
                   question:
                     'Answer the questions below. Use <strong>NO MORE THAN THREE WORDS</strong> from the passage for each answer.',
-                  type: IeltsQuestionType.SHORT_ANSWER,
+                  type: IeltsReadingQuestionType.SHORT_ANSWER,
                   subQuestions: [
                     'Where was the first manufactured glass believed to have been made?',
                     'What made Roman glass vessels more widespread?',
@@ -423,7 +390,7 @@ async function main() {
                 {
                   question:
                     'The reading passage has four paragraphs, A-D. Choose the correct heading for each paragraph from the list of headings below.',
-                  type: IeltsQuestionType.MATCHING,
+                  type: IeltsReadingQuestionType.MATCHING,
                   subQuestions: [
                     'Paragraph A',
                     'Paragraph B',
@@ -445,7 +412,7 @@ async function main() {
                 {
                   question:
                     'Complete the summary below. Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.',
-                  type: IeltsQuestionType.COMPLETION,
+                  type: IeltsReadingQuestionType.COMPLETION,
                   subQuestions: [
                     'The Megalodon is considered one of the largest predators in history, with its name meaning "big _____".',
                     'It was a _____ species, living in many parts of the world.',
@@ -467,7 +434,7 @@ async function main() {
                 {
                   question:
                     'Do the following statements agree with the information given in the text? Choose <strong>TRUE</strong>, <strong>FALSE</strong>, or <strong>NOT GIVEN</strong>.',
-                  type: IeltsQuestionType.IDENTIFYING_INFORMATION,
+                  type: IeltsReadingQuestionType.IDENTIFYING_INFORMATION,
                   subQuestions: [
                     'The Megalodon existed at the same time as early humans.',
                     'The Megalodon primarily ate fish.',
@@ -501,7 +468,7 @@ async function main() {
                 {
                   question:
                     'Match each statement with the correct time period it describes.',
-                  type: IeltsQuestionType.MATCHING,
+                  type: IeltsReadingQuestionType.MATCHING,
                   subQuestions: [
                     'Books were copied manually and were very expensive.',
                     'The ability to mass-produce texts helped to spread new religious ideas.',
@@ -521,7 +488,7 @@ async function main() {
                 {
                   question:
                     'Answer the questions below. Use <strong>NO MORE THAN THREE WORDS AND/OR A NUMBER</strong> from the passage for each answer.',
-                  type: IeltsQuestionType.SHORT_ANSWER,
+                  type: IeltsReadingQuestionType.SHORT_ANSWER,
                   subQuestions: [
                     'Who invented the printing press with movable type?',
                     'What was the main disadvantage of copying books by hand?',
@@ -543,7 +510,7 @@ async function main() {
                 {
                   question:
                     'Complete the sentences below. Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.',
-                  type: IeltsQuestionType.COMPLETION,
+                  type: IeltsReadingQuestionType.COMPLETION,
                   subQuestions: [
                     "Gutenberg's key innovation was combining the press with movable metal _____.",
                     'The mass availability of books led to a significant increase in _____ rates.',
@@ -562,38 +529,15 @@ async function main() {
     },
   });
 
-  // Create system config
-  console.log('⚙️ Creating system configuration...');
-  await prisma.systemConfig.createMany({
-    data: [
-      {
-        key: 'PLATFORM_NAME',
-        value: 'Tutor Platform',
-        description: 'Tên nền tảng',
-      },
-      {
-        key: 'MAX_FILE_SIZE',
-        value: '10485760',
-        description: 'Kích thước file tối đa (bytes)',
-      },
-      {
-        key: 'ALLOWED_FILE_TYPES',
-        value: 'pdf,doc,docx,jpg,jpeg,png,mp3,mp4',
-        description: 'Các loại file được phép upload',
-      },
-    ],
-  });
-
   console.log('✅ Database initialization completed successfully!');
   console.log(`
     📊 Created:
-    - 1 Teacher (teacher@gmail.com / Teacher123@)
-    - 2 Students (student1@gmail.com, student2@gmail.com / Student123@)
+    - 1 Teacher (teacher@gmail.com / Teacher123!)
+    - 2 Students (student1@gmail.com, student2@gmail.com / Student123!)
     - 2 Sample quiz with each 3 questions
     - 2 Sample exercise
     - 1 Sample document
     - 1 Comprehensive IELTS Reading Test
-    - System configuration
   `);
 }
 

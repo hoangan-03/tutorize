@@ -10,14 +10,14 @@ import {
   CreateIeltsSectionDto,
   CreateIeltsQuestionDto,
   SubmitIeltsDto,
-  IeltsFilterDto,
+  IeltsReadingFilterDto,
   UpdateIeltsSectionDto,
   UpdateIeltsQuestionDto,
-} from './dto/ielts.dto';
-import { IeltsSkill, Role } from '@prisma/client';
+} from './dto/ielts-reading.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
-export class IeltsService {
+export class IeltsReadingService {
   constructor(private prisma: PrismaService) {}
 
   async create(createIeltsTestDto: CreateIeltsTestDto, createdBy: number) {
@@ -31,7 +31,7 @@ export class IeltsService {
       };
     });
 
-    return this.prisma.ieltsTest.create({
+    return this.prisma.ieltsReadingTest.create({
       data: {
         ...testData,
         description: testData.description ?? '',
@@ -62,15 +62,11 @@ export class IeltsService {
     });
   }
 
-  async findAll(filterDto: IeltsFilterDto) {
-    const { page = 1, limit = 10, skill, level, search, createdBy } = filterDto;
+  async findAll(filterDto: IeltsReadingFilterDto) {
+    const { page = 1, limit = 10, level, search, createdBy } = filterDto;
     const skip = (page - 1) * limit;
 
     const where: any = {};
-
-    if (skill) {
-      where.skill = skill;
-    }
 
     if (level) {
       where.level = level;
@@ -88,7 +84,7 @@ export class IeltsService {
     }
 
     const [data, total] = await Promise.all([
-      this.prisma.ieltsTest.findMany({
+      this.prisma.ieltsReadingTest.findMany({
         where,
         skip,
         take: limit,
@@ -117,7 +113,7 @@ export class IeltsService {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.ieltsTest.count({ where }),
+      this.prisma.ieltsReadingTest.count({ where }),
     ]);
 
     return {
@@ -132,7 +128,7 @@ export class IeltsService {
   }
 
   async findOne(id: number) {
-    const ieltsTest = await this.prisma.ieltsTest.findUnique({
+    const ieltsTest = await this.prisma.ieltsReadingTest.findUnique({
       where: { id },
       include: {
         creator: {
@@ -179,7 +175,7 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    const ieltsTest = await this.prisma.ieltsTest.findUnique({
+    const ieltsTest = await this.prisma.ieltsReadingTest.findUnique({
       where: { id },
       include: {
         creator: {
@@ -212,7 +208,7 @@ export class IeltsService {
     updateIeltsTestDto: UpdateIeltsTestDto,
     userId: number,
   ) {
-    const ieltsTest = await this.prisma.ieltsTest.findUnique({
+    const ieltsTest = await this.prisma.ieltsReadingTest.findUnique({
       where: { id },
     });
 
@@ -224,7 +220,7 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsTest.update({
+    return this.prisma.ieltsReadingTest.update({
       where: { id },
       data: updateIeltsTestDto,
       include: {
@@ -245,7 +241,7 @@ export class IeltsService {
   }
 
   async remove(id: number, userId: number) {
-    const ieltsTest = await this.prisma.ieltsTest.findUnique({
+    const ieltsTest = await this.prisma.ieltsReadingTest.findUnique({
       where: { id },
     });
 
@@ -257,7 +253,7 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsTest.delete({
+    return this.prisma.ieltsReadingTest.delete({
       where: { id },
     });
   }
@@ -267,7 +263,7 @@ export class IeltsService {
     createSectionDto: CreateIeltsSectionDto,
     userId: number,
   ) {
-    const ieltsTest = await this.prisma.ieltsTest.findUnique({
+    const ieltsTest = await this.prisma.ieltsReadingTest.findUnique({
       where: { id: testId },
     });
 
@@ -279,14 +275,13 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsSection.create({
+    return this.prisma.ieltsReadingSection.create({
       data: {
         title: createSectionDto.title,
         instructions: createSectionDto.instructions ?? '',
         passageText: createSectionDto.passageText ?? '',
         timeLimit: createSectionDto.timeLimit ?? 30,
         order: createSectionDto.order,
-        audioUrl: createSectionDto.audioUrl ?? '',
         imageUrl: createSectionDto.imageUrl ?? '',
         test: {
           connect: { id: testId },
@@ -300,7 +295,7 @@ export class IeltsService {
     updateSectionDto: UpdateIeltsSectionDto,
     userId: number,
   ) {
-    const section = await this.prisma.ieltsSection.findUnique({
+    const section = await this.prisma.ieltsReadingSection.findUnique({
       where: { id: sectionId },
       include: { test: true },
     });
@@ -313,7 +308,7 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsSection.update({
+    return this.prisma.ieltsReadingSection.update({
       where: { id: sectionId },
       data: {
         title: updateSectionDto.title,
@@ -321,14 +316,13 @@ export class IeltsService {
         passageText: updateSectionDto.passageText,
         timeLimit: updateSectionDto.timeLimit,
         order: updateSectionDto.order,
-        audioUrl: updateSectionDto.audioUrl,
         imageUrl: updateSectionDto.imageUrl,
       },
     });
   }
 
   async removeSection(sectionId: number, userId: number) {
-    const section = await this.prisma.ieltsSection.findUnique({
+    const section = await this.prisma.ieltsReadingSection.findUnique({
       where: { id: sectionId },
       include: { test: true },
     });
@@ -341,7 +335,7 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsSection.delete({
+    return this.prisma.ieltsReadingSection.delete({
       where: { id: sectionId },
     });
   }
@@ -352,7 +346,7 @@ export class IeltsService {
     createQuestionDto: CreateIeltsQuestionDto,
     userId: number,
   ) {
-    const section = await this.prisma.ieltsSection.findUnique({
+    const section = await this.prisma.ieltsReadingSection.findUnique({
       where: { id: sectionId },
       include: { test: true },
     });
@@ -365,7 +359,7 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsQuestion.create({
+    return this.prisma.ieltsReadingQuestion.create({
       data: {
         ...createQuestionDto,
         sectionId,
@@ -378,7 +372,7 @@ export class IeltsService {
     updateQuestionDto: UpdateIeltsQuestionDto,
     userId: number,
   ) {
-    const question = await this.prisma.ieltsQuestion.findUnique({
+    const question = await this.prisma.ieltsReadingQuestion.findUnique({
       where: { id: questionId },
       include: { section: { include: { test: true } } },
     });
@@ -391,14 +385,14 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsQuestion.update({
+    return this.prisma.ieltsReadingQuestion.update({
       where: { id: questionId },
       data: updateQuestionDto,
     });
   }
 
   async removeQuestion(questionId: number, userId: number) {
-    const question = await this.prisma.ieltsQuestion.findUnique({
+    const question = await this.prisma.ieltsReadingQuestion.findUnique({
       where: { id: questionId },
       include: { section: { include: { test: true } } },
     });
@@ -411,14 +405,14 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsQuestion.delete({
+    return this.prisma.ieltsReadingQuestion.delete({
       where: { id: questionId },
     });
   }
 
   // Submission
   async submit(testId: number, submitIeltsDto: SubmitIeltsDto, userId: number) {
-    const ieltsTest = await this.prisma.ieltsTest.findUnique({
+    const ieltsTest = await this.prisma.ieltsReadingTest.findUnique({
       where: { id: testId },
       include: {
         sections: {
@@ -513,18 +507,17 @@ export class IeltsService {
       totalQuestions > 0 ? (correctAnswersCount / totalQuestions) * 100 : 0;
     const bandScore = this.convertToIeltsBand(percentage);
 
-    const submission = await this.prisma.ieltsSubmission.create({
+    const submission = await this.prisma.ieltsReadingSubmission.create({
       data: {
         testId,
         userId,
-        skill: ieltsTest.skill,
         score: bandScore,
         detailedScores: {
           correctAnswers: correctAnswersCount,
           totalQuestions,
           percentage: Math.round(percentage * 100) / 100,
         },
-        feedback: this.generateFeedback(bandScore, ieltsTest.skill),
+        feedback: this.generateFeedback(bandScore),
         submittedAt: new Date(),
       },
     });
@@ -569,7 +562,7 @@ export class IeltsService {
           isAnswerCorrect = isCorrect(answer.answer, question.correctAnswers);
         }
 
-        await this.prisma.ieltsAnswer.create({
+        await this.prisma.ieltsReadingAnswer.create({
           data: {
             submissionId: submission.id,
             questionId: answer.questionId,
@@ -580,7 +573,7 @@ export class IeltsService {
       }
     }
 
-    return this.prisma.ieltsSubmission.findUnique({
+    return this.prisma.ieltsReadingSubmission.findUnique({
       where: { id: submission.id },
       include: {
         test: true,
@@ -611,15 +604,8 @@ export class IeltsService {
     return 2.0;
   }
 
-  private generateFeedback(bandScore: number, skill: IeltsSkill): string {
-    const skillName =
-      skill === IeltsSkill.READING
-        ? 'Reading'
-        : skill === IeltsSkill.LISTENING
-          ? 'Listening'
-          : skill === IeltsSkill.WRITING
-            ? 'Writing'
-            : 'Speaking';
+  private generateFeedback(bandScore: number): string {
+    const skillName = 'Reading';
 
     if (bandScore >= 8.5) {
       return `Excellent performance in ${skillName}! You demonstrate exceptional command of the English language.`;
@@ -637,7 +623,7 @@ export class IeltsService {
   }
 
   async getSubmissions(testId: number, userId: number) {
-    const ieltsTest = await this.prisma.ieltsTest.findUnique({
+    const ieltsTest = await this.prisma.ieltsReadingTest.findUnique({
       where: { id: testId },
     });
 
@@ -649,7 +635,7 @@ export class IeltsService {
       throw new ForbiddenException('Forbidden');
     }
 
-    return this.prisma.ieltsSubmission.findMany({
+    return this.prisma.ieltsReadingSubmission.findMany({
       where: { testId },
       include: {
         user: {
@@ -670,14 +656,13 @@ export class IeltsService {
   }
 
   async getMySubmissions(userId: number) {
-    return this.prisma.ieltsSubmission.findMany({
+    return this.prisma.ieltsReadingSubmission.findMany({
       where: { userId },
       include: {
         test: {
           select: {
             id: true,
             title: true,
-            skill: true,
             level: true,
           },
         },
@@ -688,14 +673,14 @@ export class IeltsService {
 
   async getAllSubmissions(teacherId: number) {
     // Get all tests created by this teacher
-    const teacherTests = await this.prisma.ieltsTest.findMany({
+    const teacherTests = await this.prisma.ieltsReadingTest.findMany({
       where: { createdBy: teacherId },
       select: { id: true },
     });
 
     const testIds = teacherTests.map((test) => test.id);
 
-    return this.prisma.ieltsSubmission.findMany({
+    return this.prisma.ieltsReadingSubmission.findMany({
       where: {
         testId: { in: testIds },
       },
@@ -716,7 +701,6 @@ export class IeltsService {
           select: {
             id: true,
             title: true,
-            skill: true,
             level: true,
           },
         },
@@ -726,7 +710,7 @@ export class IeltsService {
   }
 
   async getSubmissionDetails(submissionId: number, userId: number) {
-    const submission = await this.prisma.ieltsSubmission.findUnique({
+    const submission = await this.prisma.ieltsReadingSubmission.findUnique({
       where: { id: submissionId },
       include: {
         user: {

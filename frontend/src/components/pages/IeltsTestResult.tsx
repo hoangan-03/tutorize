@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { IeltsSubmissionResult } from "../../services/ieltsService";
-import { useIeltsSubmissionDetails } from "../../hooks/useIelts";
+import { IeltsSubmissionResult } from "../../services/ieltsReadingService";
+import { useIeltsReadingSubmissionDetails } from "../../hooks/useIeltsReading";
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -22,7 +22,7 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
     submission,
     isLoading: loading,
     error,
-  } = useIeltsSubmissionDetails(submissionId);
+  } = useIeltsReadingSubmissionDetails(submissionId);
 
   const questionNumberOffsets = useMemo(() => {
     if (!submission?.test) return [];

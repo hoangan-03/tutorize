@@ -9,9 +9,9 @@ import { UserModule } from './user/user.module';
 import { QuizModule } from './quiz/quiz.module';
 import { ExerciseModule } from './exercise/exercise.module';
 import { DocumentModule } from './document/document.module';
-import { WritingModule } from './writing/writing.module';
-import { IeltsModule } from './ielts/ielts.module';
+import { IeltsReadingModule } from './ielts-reading/ielts-reading.module';
 import { UploadModule } from './upload/upload.module';
+import { IeltsWritingModule } from './ielts-writing/ielts-writing.module';
 
 @Module({
   imports: [
@@ -36,8 +36,8 @@ import { UploadModule } from './upload/upload.module';
     QuizModule,
     ExerciseModule,
     DocumentModule,
-    WritingModule,
-    IeltsModule,
+    IeltsReadingModule,
+    IeltsWritingModule,
     UploadModule,
   ],
   controllers: [AppController],

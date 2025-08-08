@@ -11,7 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IeltsSkill, IeltsLevel, IeltsQuestionType } from '@prisma/client';
+import { IeltsLevel, IeltsReadingQuestionType } from '@prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class CreateIeltsTestDto {
@@ -24,10 +24,6 @@ export class CreateIeltsTestDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @ApiProperty({ enum: IeltsSkill, description: 'Kỹ năng IELTS' })
-  @IsEnum(IeltsSkill)
-  skill: IeltsSkill;
 
   @ApiProperty({ enum: IeltsLevel, description: 'Cấp độ IELTS' })
   @IsEnum(IeltsLevel)
@@ -65,11 +61,6 @@ export class UpdateIeltsTestDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @ApiPropertyOptional({ enum: IeltsSkill, description: 'Kỹ năng IELTS' })
-  @IsOptional()
-  @IsEnum(IeltsSkill)
-  skill?: IeltsSkill;
 
   @ApiPropertyOptional({ enum: IeltsLevel, description: 'Cấp độ IELTS' })
   @IsOptional()
@@ -183,9 +174,9 @@ export class CreateIeltsQuestionDto {
   @IsString()
   question: string;
 
-  @ApiProperty({ enum: IeltsQuestionType, description: 'Loại câu hỏi' })
-  @IsEnum(IeltsQuestionType)
-  type: IeltsQuestionType;
+  @ApiProperty({ enum: IeltsReadingQuestionType, description: 'Loại câu hỏi' })
+  @IsEnum(IeltsReadingQuestionType)
+  type: IeltsReadingQuestionType;
 
   @ApiPropertyOptional({
     description: 'Các câu hỏi phụ (cho Matching)',
@@ -242,12 +233,12 @@ export class UpdateIeltsQuestionDto {
   question?: string;
 
   @ApiPropertyOptional({
-    enum: IeltsQuestionType,
+    enum: IeltsReadingQuestionType,
     description: 'Loại câu hỏi',
   })
   @IsOptional()
-  @IsEnum(IeltsQuestionType)
-  type?: IeltsQuestionType;
+  @IsEnum(IeltsReadingQuestionType)
+  type?: IeltsReadingQuestionType;
 
   @ApiPropertyOptional({
     description: 'Các câu hỏi phụ (cho Matching)',
@@ -311,12 +302,7 @@ export class SubmitIeltsDto {
   }[];
 }
 
-export class IeltsFilterDto extends PaginationDto {
-  @ApiPropertyOptional({ enum: IeltsSkill, description: 'Lọc theo kỹ năng' })
-  @IsOptional()
-  @IsEnum(IeltsSkill)
-  skill?: IeltsSkill;
-
+export class IeltsReadingFilterDto extends PaginationDto {
   @ApiPropertyOptional({ enum: IeltsLevel, description: 'Lọc theo cấp độ' })
   @IsOptional()
   @IsEnum(IeltsLevel)

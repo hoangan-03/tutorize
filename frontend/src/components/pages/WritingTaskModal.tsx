@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { WritingType, IeltsLevel } from "../../types/api";
+import { IeltsLevel, IeltsWritingType } from "../../types/api";
 import { RichTextEditor } from "../ui/RichTextEditor";
 import { X } from "lucide-react";
 
@@ -9,7 +9,7 @@ interface WritingTaskModalProps {
   onSave: (data: {
     title: string;
     prompt: string;
-    type: WritingType;
+    type: IeltsWritingType;
     level: IeltsLevel;
   }) => Promise<void>;
 }
@@ -22,7 +22,7 @@ export const WritingTaskModal: React.FC<WritingTaskModalProps> = ({
   const [formData, setFormData] = useState({
     title: "",
     prompt: "",
-    type: WritingType.IELTS_TASK1,
+    type: IeltsWritingType.IELTS_TASK1,
     level: IeltsLevel.BEGINNER,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +39,7 @@ export const WritingTaskModal: React.FC<WritingTaskModalProps> = ({
       setFormData({
         title: "",
         prompt: "",
-        type: WritingType.IELTS_TASK1,
+        type: IeltsWritingType.IELTS_TASK1,
         level: IeltsLevel.BEGINNER,
       });
       onClose();
@@ -107,14 +107,14 @@ export const WritingTaskModal: React.FC<WritingTaskModalProps> = ({
                 id="type"
                 value={formData.type}
                 onChange={(e) =>
-                  handleInputChange("type", e.target.value as WritingType)
+                  handleInputChange("type", e.target.value as IeltsWritingType)
                 }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
-                <option value={WritingType.IELTS_TASK1}>
+                <option value={IeltsWritingType.IELTS_TASK1}>
                   IELTS Writing Task 1
                 </option>
-                <option value={WritingType.IELTS_TASK2}>
+                <option value={IeltsWritingType.IELTS_TASK2}>
                   IELTS Writing Task 2
                 </option>
               </select>
@@ -168,7 +168,7 @@ export const WritingTaskModal: React.FC<WritingTaskModalProps> = ({
             <h4 className="font-medium text-blue-900 mb-2">
               Hướng dẫn tạo đề bài:
             </h4>
-            {formData.type === WritingType.IELTS_TASK1 ? (
+            {formData.type === IeltsWritingType.IELTS_TASK1 ? (
               <div className="text-sm text-blue-800">
                 <p className="mb-2">
                   <strong>Task 1:</strong> Mô tả biểu đồ, bảng, sơ đồ hoặc quy

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useIeltsAllSubmissions } from "../../hooks/useIelts";
+import { useIeltsReadingAllSubmissions } from "../../hooks/useIeltsReading";
 import { IeltsSkill, IeltsLevel } from "../../types/api";
 import { BookOpen, Calendar, User, Eye, BarChart3, Search } from "lucide-react";
 import { getBandScoreColor, getLevelInfo, getSkillInfo } from "../utils";
@@ -9,7 +9,7 @@ import { getBandScoreColor, getLevelInfo, getSkillInfo } from "../utils";
 export const IeltsSubmissionsList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { submissions, isLoading, error } = useIeltsAllSubmissions();
+  const { submissions, isLoading, error } = useIeltsReadingAllSubmissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [skillFilter, setSkillFilter] = useState<IeltsSkill | "ALL">("ALL");
   const [levelFilter, setLevelFilter] = useState<IeltsLevel | "ALL">("ALL");

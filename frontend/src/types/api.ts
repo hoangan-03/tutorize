@@ -98,7 +98,7 @@ export enum IeltsQuestionType {
   SHORT_ANSWER = "SHORT_ANSWER",
 }
 
-export enum WritingType {
+export enum IeltsWritingType {
   IELTS_TASK1 = "IELTS_TASK1",
   IELTS_TASK2 = "IELTS_TASK2",
 }
@@ -131,9 +131,7 @@ export interface User {
   documentsUploaded?: Document[];
   documentAccesses?: DocumentAccess[];
   ieltsSubmissions?: IeltsSubmission[];
-  writingAssessments?: WritingAssessment[];
-  notifications?: Notification[];
-  systemLogs?: SystemLog[];
+  ieltsWritingSubmissions?: IeltsWritingSubmission[];
 }
 
 export interface UserProfile {
@@ -385,11 +383,10 @@ export interface DocumentAccess {
 }
 
 // IELTS Types
-export interface IeltsTest {
+export interface IeltsReadingTest {
   id: number;
   title: string;
   description: string;
-  skill: IeltsSkill;
   level: IeltsLevel;
   timeLimit: number;
   isActive: boolean;
@@ -416,7 +413,7 @@ export interface IeltsSection {
   createdAt: string;
   updatedAt: string;
 
-  test?: IeltsTest;
+  test?: IeltsReadingTest;
   questions?: IeltsQuestion[];
 }
 
@@ -450,7 +447,6 @@ export interface IeltsSubmission {
   id: number;
   testId: number;
   userId: number;
-  skill: IeltsSkill;
   score: number;
   detailedScores: IeltsDetailedScores;
   feedback: string;
@@ -458,7 +454,7 @@ export interface IeltsSubmission {
   gradedAt?: string;
   audioRecording?: string;
 
-  test?: IeltsTest;
+  test?: IeltsReadingTest;
   user?: User;
   answers?: IeltsAnswer[];
 }
@@ -475,87 +471,34 @@ export interface IeltsAnswer {
   question?: IeltsQuestion;
 }
 
-// Writing Assessment Types
-export interface WritingAssessment {
+export interface IeltsWritingTest {
   id: number;
-  userId: number;
   title: string;
-  content: string;
-  type: WritingType;
   prompt?: string;
-  wordCount: number;
-  aiScore: Record<string, unknown>;
-  humanScore?: Record<string, unknown>;
-  feedback: Record<string, unknown>;
-  submittedAt: string;
-  gradedAt: string;
-  isPublic: boolean;
-
-  user?: User;
-}
-
-// Writing Task Types (Teacher-created assignments)
-export interface WritingTask {
-  id: number;
-  title: string;
-  prompt: string;
-  type: WritingType;
+  type: IeltsWritingType;
   level: IeltsLevel;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 
   creator?: User;
-  submissions?: WritingSubmission[];
+  submissions?: IeltsWritingSubmission[];
 }
 
-export interface WritingSubmission {
+export interface IeltsWritingSubmission {
   id: number;
-  taskId: number;
+  testId: number;
   userId: number;
   content: string;
   submittedAt: string;
   gradedAt?: string;
   aiScore?: Record<string, unknown>;
   aiFeedback?: Record<string, unknown>;
+  humanScore?: Record<string, unknown>;
+  humanFeedback?: Record<string, unknown>;
 
-  task?: WritingTask;
+  test?: IeltsWritingTest;
   user?: User;
-}
-
-// System Types
-export interface Notification {
-  id: number;
-  userId: number;
-  title: string;
-  message: string;
-  type: NotificationType;
-  isRead: boolean;
-  data?: Record<string, unknown>;
-  createdAt: string;
-
-  user?: User;
-}
-
-export interface SystemLog {
-  id: number;
-  userId?: number;
-  action: string;
-  resource: string;
-  details: Record<string, unknown>;
-  ipAddress?: string;
-  userAgent?: string;
-  createdAt: string;
-
-  user?: User;
-}
-
-export interface SystemConfig {
-  id: number;
-  key: string;
-  value: string;
-  description?: string;
-  updatedAt: string;
 }
 
 // Pagination
