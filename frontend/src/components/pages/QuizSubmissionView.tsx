@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { formatDateTime } from "../utils";
 import {
   ArrowLeft,
   User,
@@ -227,7 +228,7 @@ export const QuizSubmissionView: React.FC = () => {
                   {t("quizzes.submission.submittedAt")}
                 </p>
                 <p className="font-semibold">
-                  {new Date(submission.submittedAt).toLocaleString("vi-VN")}
+                  {formatDateTime(submission.submittedAt)}
                 </p>
               </div>
             </div>

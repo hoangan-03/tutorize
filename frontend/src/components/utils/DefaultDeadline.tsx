@@ -12,24 +12,4 @@ export const getDefaultDeadline = (): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export const formatDate = (dateString: string): string => {
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  };
-  const date = new Date(dateString);
-  return date.toLocaleDateString("vi-VN", options);
-};
-
-export const formatDateTime = (dateString: string): string => {
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  };
-  const date = new Date(dateString);
-  return date.toLocaleString("vi-VN", options);
-};
+// Deprecated: moved to utils/date.ts. Keep re-exports for backward compatibility if needed.

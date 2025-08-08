@@ -16,14 +16,15 @@ import {
   Phone,
   MapPin,
   School,
-  Calendar,
   Save,
   Key,
   Check,
   X,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { convertISOToDMY } from "../utils";
 import { Role, Subject } from "../../types/api";
+import DateInput from "../ui/DateInput";
 
 interface AuthFormProps {
   mode: "login" | "signup" | "forgot-password" | "change-password" | "profile";
@@ -148,17 +149,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
       let formattedDateOfBirth = "";
 
       if (user.profile.dateOfBirth) {
-        const dateStr = user.profile.dateOfBirth;
-        if (dateStr.includes("-")) {
-          const parts = dateStr.split("-");
-          if (parts.length === 3) {
-            if (parts[0].length === 2) {
-              formattedDateOfBirth = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            } else {
-              formattedDateOfBirth = dateStr;
-            }
-          }
-        }
+        const raw = String(user.profile.dateOfBirth);
+        // Support both ISO (YYYY-MM-DD or with time) and DMY inputs
+        const isoLike = raw.length >= 10 ? raw.substring(0, 10) : raw;
+        formattedDateOfBirth = convertISOToDMY(isoLike);
       }
 
       setFormData((prev) => ({
@@ -347,16 +341,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     try {
       let formattedDateOfBirth: string | undefined = undefined;
 
-      // Only include dateOfBirth if it has a valid value
+      // Only include dateOfBirth if it has a valid value (expect DD-MM-YYYY)
       if (formData.dateOfBirth && formData.dateOfBirth.trim() !== "") {
-        const parts = formData.dateOfBirth.split("-");
-        if (parts.length === 3 && parts[0].length === 4) {
-          // Convert from YYYY-MM-DD (HTML date input) to DD-MM-YYYY (backend format)
-          formattedDateOfBirth = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        } else if (parts.length === 3 && parts[0].length === 2) {
-          // Already in DD-MM-YYYY format
-          formattedDateOfBirth = formData.dateOfBirth;
-        }
+        formattedDateOfBirth = formData.dateOfBirth; // stored/sent as DD-MM-YYYY
       }
 
       const profileData: any = {
@@ -507,11 +494,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
         {(mode === "profile" || mode === "change-password") && (
           <button
             onClick={() => navigate(-1)}
-            className="mb-4 flex items-center text-blue-600 hover:text-blue-500 pl-4"
+            className="mb-4 flex items-center text-blue-600 hover:text-blue-500 pl-4 lg:pl-0"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t("common.back")}
@@ -534,7 +521,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
         {renderAuthLinks()}
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center">
@@ -1141,24 +1128,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                   >
                     {t("auth.dateOfBirth")}
                   </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="dateOfBirth"
-                      name="dateOfBirth"
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={(e) =>
-                        handleInputChange("dateOfBirth", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {t("auth.dateFormat")}
-                  </p>
+                  <DateInput
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={(value) =>
+                      handleInputChange("dateOfBirth", value)
+                    }
+                  />
                 </div>
 
                 <div>

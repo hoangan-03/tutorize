@@ -38,7 +38,7 @@ import {
   useStudentStats,
 } from "../../hooks";
 import { mutate } from "swr";
-import { formatDate } from "../utils";
+import { formatDate, formatDateTime } from "../utils";
 import { StatCard } from "../ui";
 
 const StudentQuizView: React.FC = () => {
@@ -1189,16 +1189,7 @@ const StudentQuizView: React.FC = () => {
                             {t("quizzes.attempt")} #{index + 1}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            {new Date(submission.submittedAt).toLocaleString(
-                              "vi-VN",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
+                            {formatDateTime(submission.submittedAt)}
                           </p>
                         </div>
                         <div className="text-right">

@@ -13,9 +13,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { WritingType } from '@prisma/client';
 
-// Re-export PaginationDto để có thể import từ file này
-export { PaginationDto };
-
 export class CreateWritingAssessmentDto {
   @ApiProperty({ description: 'Tiêu đề bài viết' })
   @IsString()

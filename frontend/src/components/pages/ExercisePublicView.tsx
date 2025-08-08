@@ -12,9 +12,8 @@ import { useExercises } from "../../hooks";
 import { Exercise } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { Badge } from "../ui/Badge";
 import { formatDate } from "../utils";
-import { StatCard } from "../ui";
+import { StatCard, Badge } from "../ui";
 
 export const ExercisePublicView: React.FC = () => {
   const { isTeacher } = useAuth();

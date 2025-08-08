@@ -20,7 +20,6 @@ import { IeltsSkill, Role } from '@prisma/client';
 export class IeltsService {
   constructor(private prisma: PrismaService) {}
 
-  // IELTS Test Management
   async create(createIeltsTestDto: CreateIeltsTestDto, createdBy: number) {
     const { sections, ...testData } = createIeltsTestDto;
 
@@ -42,7 +41,7 @@ export class IeltsService {
         },
         sections: sectionsCreateData
           ? {
-              create: sectionsCreateData as any, // Type assertion to bypass type error
+              create: sectionsCreateData as any,
             }
           : undefined,
       },
@@ -154,7 +153,6 @@ export class IeltsService {
                 options: true,
                 order: true,
                 points: true,
-                // Don't include correct answers for students
               },
               orderBy: { order: 'asc' },
             },
@@ -264,7 +262,6 @@ export class IeltsService {
     });
   }
 
-  // Section Management
   async createSection(
     testId: number,
     createSectionDto: CreateIeltsSectionDto,
