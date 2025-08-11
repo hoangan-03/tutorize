@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useIeltsReadingAllSubmissions } from "../../hooks/useIeltsReading";
 import { IeltsSkill, IeltsLevel } from "../../types/api";
 import { BookOpen, Calendar, User, Eye, BarChart3, Search } from "lucide-react";
-import { getBandScoreColor, getLevelInfo, getSkillInfo } from "../utils";
+import { getBandScoreColor, getLevelInfo } from "../utils";
 
 export const IeltsSubmissionsList: React.FC = () => {
   const { t } = useTranslation();
@@ -32,15 +32,12 @@ export const IeltsSubmissionsList: React.FC = () => {
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
 
-      const matchesSkill =
-        skillFilter === "ALL" || submission.test?.skill === skillFilter;
-
       const matchesLevel =
         levelFilter === "ALL" || submission.test?.level === levelFilter;
 
-      return matchesSearch && matchesSkill && matchesLevel;
+      return matchesSearch && matchesLevel;
     });
-  }, [submissions, searchTerm, skillFilter, levelFilter]);
+  }, [submissions, searchTerm, levelFilter]);
 
   if (isLoading) {
     return (
@@ -232,15 +229,6 @@ export const IeltsSubmissionsList: React.FC = () => {
                           {submission.test?.title ||
                             t("ielts.submissions.unknownTest")}
                         </h3>
-                        {submission.test?.skill && (
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              getSkillInfo(submission.test.skill, t).color
-                            }`}
-                          >
-                            {getSkillInfo(submission.test.skill, t).label}
-                          </span>
-                        )}
                         {submission.test?.level && (
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${

@@ -1,55 +1,73 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsObject,
+} from 'class-validator';
 import { IeltsLevel, IeltsWritingType } from '@prisma/client';
 
-export class CreateWritingTestDto {
-  @ApiProperty({ description: 'Tiêu đề' })
-  @IsString()
+export class CreateIeltsWritingTestDto {
   @IsNotEmpty()
+  @IsString()
   title: string;
 
-  @ApiProperty({ description: 'Đề bài' })
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   prompt: string;
 
-  @ApiProperty({ enum: IeltsWritingType })
   @IsEnum(IeltsWritingType)
   type: IeltsWritingType;
 
-  @ApiPropertyOptional({ description: 'Level', enum: IeltsLevel })
   @IsOptional()
   @IsEnum(IeltsLevel)
   level?: IeltsLevel;
 }
 
-export class SubmitWritingTestDto {
-  @ApiProperty({ description: 'Nội dung bài viết (HTML/Rich Text)' })
+export class UpdateIeltsWritingTestDto {
+  @IsOptional()
   @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  prompt?: string;
+
+  @IsOptional()
+  @IsEnum(IeltsWritingType)
+  type?: IeltsWritingType;
+
+  @IsOptional()
+  @IsEnum(IeltsLevel)
+  level?: IeltsLevel;
+}
+
+export class SubmitIeltsWritingTestDto {
   @IsNotEmpty()
+  @IsString()
   content: string;
 }
 
-export class WritingTestQueryDto extends PaginationDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  level?: string;
+export class ManualGradeIeltsWritingTestDto {
+  @IsObject()
+  score: Record<string, number>;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  type?: string;
+  @IsObject()
+  feedback: Record<string, string>;
 }
 
-export class ManualGradeTestDto {
-  @ApiProperty({ description: 'Điểm' })
-  @IsNotEmpty()
-  score: JSON;
-  // base on 4 criteria: task achievement, coherence and cohesion, lexical resource, and grammatical range
+export class IeltsWritingTestQueryDto {
+  @IsOptional()
+  @IsEnum(IeltsLevel)
+  level?: IeltsLevel;
 
-  @ApiProperty({ description: 'Feedback' })
-  @IsNotEmpty()
-  feedback: JSON;
+  @IsOptional()
+  @IsEnum(IeltsWritingType)
+  type?: IeltsWritingType;
+
+  @IsOptional()
+  page?: number;
+
+  @IsOptional()
+  limit?: number;
 }

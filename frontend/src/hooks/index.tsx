@@ -39,8 +39,13 @@ export {
 
 export {
   useIeltsWritingTest,
+  useIeltsWritingTestById,
   useIeltsWritingTestManagement,
-  useIeltsWritingSubmissions,
+  useIeltsWritingTestSubmissions,
+  useIeltsWritingTestSubmission,
+  useIeltsWritingMySubmissions,
+  useIeltsWritingMySubmission,
+  useIeltsWritingSubmissionForGrading,
 } from "./useIeltsWriting";
 
 export { useAuth } from "./useAuth";

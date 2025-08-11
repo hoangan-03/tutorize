@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   IeltsReadingTest,
   IeltsSkill,
   IeltsSubmission,
   IeltsWritingSubmission,
-  IeltsWritingType,
   IeltsWritingTest,
-  IeltsLevel,
+  IeltsItemType,
 } from "../../types/api";
 import {
   useAuth,
@@ -16,17 +16,16 @@ import {
   useIeltsTestManagement,
 } from "../../hooks";
 import { IeltsTestForm } from "./IeltsTestForm";
-import { WritingTaskForm } from "./WritingTaskForm";
+import { WritingTestManage } from "./WritingTestManage";
 import { BookOpen, Plus, PenSquare } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { formatDateTime } from "../utils";
-import { ieltsWritingService } from "../../services/ieltsWritingService";
+
 import { RichTextEditor } from "../ui/RichTextEditor";
-import { WritingTaskModal } from "./WritingTaskModal";
+
 import {
+  useIeltsWritingMySubmissions,
   useIeltsWritingTest,
   useIeltsWritingTestManagement,
-  useIeltsWritingSubmissions,
 } from "../../hooks/useIeltsWriting";
 import {
   IeltsStatsCards,
@@ -42,7 +41,15 @@ const StudentIeltsView: React.FC<{
   loading: boolean;
   onStartTest: (id: number) => void;
   onViewResult: (id: number) => void;
-}> = ({ tests, submissions, loading, onStartTest, onViewResult }) => {
+  onViewWritingResult: (id: number) => void;
+}> = ({
+  tests,
+  submissions,
+  loading,
+  onStartTest,
+  onViewResult,
+  onViewWritingResult,
+}) => {
   const { t } = useTranslation();
   const [activeSkill, setActiveSkill] = useState<IeltsSkill>(
     IeltsSkill.READING
@@ -55,20 +62,15 @@ const StudentIeltsView: React.FC<{
     { name: IeltsSkill.SPEAKING, label: t("ielts.speaking") },
   ];
 
-  const [writingTests, setWritingTests] = useState<IeltsWritingTest[]>([]);
-  const [currentWritingTest, setCurrentWritingTest] = useState<IeltsWritingTest | null>(null);
+  const [currentWritingTest, setCurrentWritingTest] =
+    useState<IeltsWritingTest | null>(null);
   const [submissionContent, setSubmissionContent] = useState<string>("");
 
-  // Get writing submissions
-  const { submissions: writingSubmissions } = useIeltsWritingSubmissions();
-
-  useEffect(() => {
-    if (activeSkill === IeltsSkill.WRITING) {
-      ieltsWritingService
-        .listTests({ page: 1, limit: 20 })
-        .then((res) => setWritingTests(res.data || []));
-    }
-  }, [activeSkill]);
+  // Get writing tests and submissions
+  const { tasks: writingTests } = useIeltsWritingTest({ page: 1, limit: 20 });
+  const { submissions: writingSubmissions } = useIeltsWritingMySubmissions();
+  const { submitWritingSubmission, gradeWritingTest } =
+    useIeltsWritingTestManagement();
 
   const filteredTests = useMemo(() => {
     // Since IeltsReadingTest is only for READING, show tests only when READING is active
@@ -207,7 +209,7 @@ const StudentIeltsView: React.FC<{
               />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {writingTests.map((task) => (
+                {writingTests.map((task: IeltsWritingTest) => (
                   <WritingTaskCard
                     key={task.id}
                     task={task}
@@ -238,7 +240,7 @@ const StudentIeltsView: React.FC<{
                   <button
                     className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-lime-600 hover:bg-lime-700 max-w-[150px]"
                     onClick={async () => {
-                      await ieltsWritingService.submitTest(
+                      await submitWritingSubmission(
                         currentWritingTest.id,
                         submissionContent
                       );
@@ -249,25 +251,21 @@ const StudentIeltsView: React.FC<{
                   <button
                     className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 max-w-[150px]"
                     onClick={async () => {
-                      await ieltsWritingService.manualGradeTest(
-                        currentWritingTest.id,
-
-                        {
-                          score: {
-                            taskResponse: 0.5,
-                            coherenceAndCohesion: 0.5,
-                            lexicalResource: 0.5,
-                            grammaticalRange: 0.5,
-                          },
-                          feedback: {
-                            taskResponse: "Feedback for task achievement",
-                            coherenceAndCohesion:
-                              "Feedback for coherence and cohesion",
-                            lexicalResource: "Feedback for lexical resource",
-                            grammaticalRange: "Feedback for grammatical range",
-                          },
-                        }
-                      );
+                      await gradeWritingTest(currentWritingTest.id, {
+                        score: {
+                          taskResponse: 0.5,
+                          coherenceAndCohesion: 0.5,
+                          lexicalResource: 0.5,
+                          grammaticalRange: 0.5,
+                        },
+                        feedback: {
+                          taskResponse: "Feedback for task achievement",
+                          coherenceAndCohesion:
+                            "Feedback for coherence and cohesion",
+                          lexicalResource: "Feedback for lexical resource",
+                          grammaticalRange: "Feedback for grammatical range",
+                        },
+                      });
                     }}
                   >
                     {t("ielts.writingTasks.gradeWithAI")}
@@ -286,11 +284,12 @@ const StudentIeltsView: React.FC<{
           {(() => {
             // Filter submissions based on active skill
             type AnySubmission = IeltsSubmission | IeltsWritingSubmission;
-            const filteredSubmissions: AnySubmission[] = activeSkill === IeltsSkill.READING 
-              ? submissions 
-              : activeSkill === IeltsSkill.WRITING 
-              ? writingSubmissions 
-              : [];
+            const filteredSubmissions: AnySubmission[] =
+              activeSkill === IeltsSkill.READING
+                ? submissions
+                : activeSkill === IeltsSkill.WRITING
+                ? writingSubmissions
+                : [];
 
             if (filteredSubmissions.length === 0) {
               return (
@@ -331,15 +330,24 @@ const StudentIeltsView: React.FC<{
                             {t("ielts.score")}
                           </p>
                           <p className="text-xl font-bold text-indigo-600">
-                            {activeSkill === IeltsSkill.WRITING 
-                              ? (submission as IeltsWritingSubmission).aiScore || (submission as IeltsWritingSubmission).humanScore 
-                                ? "Chấm điểm" 
+                            {activeSkill === IeltsSkill.WRITING
+                              ? (submission as IeltsWritingSubmission)
+                                  .aiScore ||
+                                (submission as IeltsWritingSubmission)
+                                  .humanScore
+                                ? "Chấm điểm"
                                 : "Chưa chấm"
-                              : ((submission as IeltsSubmission).score?.toFixed(1) || "0.0")}
+                              : (submission as IeltsSubmission).score?.toFixed(
+                                  1
+                                ) || "0.0"}
                           </p>
                         </div>
                         <button
-                          onClick={() => onViewResult(submission.id)}
+                          onClick={() =>
+                            activeSkill === IeltsSkill.WRITING
+                              ? onViewWritingResult(submission.id)
+                              : onViewResult(submission.id)
+                          }
                           className="ml-4 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700"
                         >
                           {t("ielts.review")}
@@ -362,8 +370,8 @@ const TeacherIeltsView: React.FC<{
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onCreate: () => void;
-  onViewSubmissions: () => void;
-  onEditWritingTask: (taskId: number) => void;
+  onViewSubmissions: (type: IeltsItemType) => void;
+  onEditWritingTask: (testId: number | null) => void;
 }> = ({
   readingTests,
   loading,
@@ -374,49 +382,29 @@ const TeacherIeltsView: React.FC<{
   onEditWritingTask,
 }) => {
   const { t } = useTranslation();
-  const [isWritingTestModalOpen, setIsWritingTestModalOpen] = useState(false);
 
-  // Writing Tests hooks
   const { tasks: writingTest } = useIeltsWritingTest();
-  const { createTask, deleteTask, getWritingTestSubmissions } =
-    useIeltsWritingTestManagement();
+  const { deleteWritingTest } = useIeltsWritingTestManagement();
 
   const stats = {
     total: readingTests.length + writingTest.length,
-    reading: readingTests.length, 
-    listening: 0, 
+    reading: readingTests.length,
+    listening: 0,
     speaking: 0,
     writing: writingTest.length,
   };
 
-  const handleCreateWritingTest = async (data: {
-    title: string;
-    prompt: string;
-    type: IeltsWritingType;
-    level: IeltsLevel;
-  }) => {
-    await createTask(data);
-    setIsWritingTestModalOpen(false);
+  const handleCreateWritingTest = () => {
+    onEditWritingTask(null); // Pass null for create new
   };
 
-  const handleDeleteWritingTest = async (taskId: number) => {
+  const handleDeleteWritingTest = async (testId: number) => {
     if (window.confirm(t("ielts.teacher.confirmDelete"))) {
       try {
-        await deleteTask(taskId);
+        await deleteWritingTest(testId);
       } catch (error) {
         console.error("Failed to delete Writing Test:", error);
       }
-    }
-  };
-
-  const handleViewWritingSubmissions = async (taskId: number) => {
-    try {
-      const submissions = await getWritingTestSubmissions(taskId);
-      console.log("Writing Task submissions:", submissions);
-      // TODO: Navigate to submissions page or show in modal
-      // navigate(`/writing-tasks/${taskId}/submissions`);
-    } catch (error) {
-      console.error("Failed to fetch Writing Task submissions:", error);
     }
   };
 
@@ -444,7 +432,7 @@ const TeacherIeltsView: React.FC<{
             <div className="flex flex-col items-end space-y-3">
               <div className="flex space-x-3">
                 <button
-                  onClick={() => setIsWritingTestModalOpen(true)}
+                  onClick={handleCreateWritingTest}
                   className="flex items-center px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                 >
                   <PenSquare className="h-5 w-5 mr-2" />
@@ -465,7 +453,6 @@ const TeacherIeltsView: React.FC<{
         {/* Stats Cards */}
         <IeltsStatsCards stats={stats} />
 
-        {/* Test List */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {loading ? (
             <div className="flex justify-center items-center py-16">
@@ -487,7 +474,7 @@ const TeacherIeltsView: React.FC<{
                 <IeltsItemRow
                   key={test.id}
                   item={test}
-                  type="test"
+                  type={IeltsItemType.READING_TEST}
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onViewSubmissions={onViewSubmissions}
@@ -497,7 +484,6 @@ const TeacherIeltsView: React.FC<{
           )}
         </div>
 
-        {/* Writing Tasks Section */}
         {writingTest.length > 0 && (
           <div className="mt-8 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="divide-y divide-gray-100">
@@ -505,25 +491,16 @@ const TeacherIeltsView: React.FC<{
                 <IeltsItemRow
                   key={task.id}
                   item={task}
-                  type="task"
+                  type={IeltsItemType.WRITING_TEST}
                   onEdit={onEditWritingTask}
                   onDelete={handleDeleteWritingTest}
-                  onViewSubmissions={() =>
-                    handleViewWritingSubmissions(task.id)
-                  }
+                  onViewSubmissions={onViewSubmissions}
                 />
               ))}
             </div>
           </div>
         )}
       </div>
-
-      {/* Writing Task Modal */}
-      <WritingTaskModal
-        isOpen={isWritingTestModalOpen}
-        onClose={() => setIsWritingTestModalOpen(false)}
-        onSave={handleCreateWritingTest}
-      />
     </div>
   );
 };
@@ -533,7 +510,9 @@ export const IeltsCenter: React.FC = () => {
   const { user } = useAuth();
   const [view, setView] = useState<"list" | "form" | "writingForm">("list");
   const [currentTestId, setCurrentTestId] = useState<number | null>(null);
-  const [currentWritingTaskId, setCurrentWritingTaskId] = useState<number | null>(null);
+  const [currentWritingTaskId, setCurrentWritingTaskId] = useState<
+    number | null
+  >(null);
 
   const testsParams = useMemo(() => {
     if (user?.role === "TEACHER") {
@@ -542,7 +521,8 @@ export const IeltsCenter: React.FC = () => {
     return {};
   }, [user?.role]);
 
-  const { tests: readingTests, isLoading: loading } = useIeltsTests(testsParams);
+  const { tests: readingTests, isLoading: loading } =
+    useIeltsTests(testsParams);
   const { submissions } = useIeltsSubmissions();
   const { deleteTest } = useIeltsTestManagement();
   const navigate = useNavigate();
@@ -565,6 +545,18 @@ export const IeltsCenter: React.FC = () => {
     navigate(`/ielts/result/${submissionId}`);
   };
 
+  const handleViewWritingResult = (submissionId: number) => {
+    navigate(`/ielts-writing/my-submission/${submissionId}`);
+  };
+
+  const handleViewAllSubmissionsByTestType = (type: IeltsItemType) => {
+    if (type === IeltsItemType.READING_TEST) {
+      navigate("/ielts/submissions");
+    } else if (type === IeltsItemType.WRITING_TEST) {
+      navigate("/ielts-writing/submissions");
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (window.confirm(t("ielts.teacher.confirmDelete"))) {
       try {
@@ -575,12 +567,8 @@ export const IeltsCenter: React.FC = () => {
     }
   };
 
-  const handleViewSubmissions = () => {
-    navigate("/ielts/submissions");
-  };
-
-  const handleEditWritingTask = (taskId: number) => {
-    setCurrentWritingTaskId(taskId);
+  const handleEditWritingTask = (testId: number | null) => {
+    setCurrentWritingTaskId(testId);
     setView("writingForm");
   };
 
@@ -595,7 +583,12 @@ export const IeltsCenter: React.FC = () => {
   }
 
   if (view === "writingForm") {
-    return <WritingTaskForm taskId={currentWritingTaskId} onBack={handleBackToList} />;
+    return (
+      <WritingTestManage
+        testId={currentWritingTaskId}
+        onBack={handleBackToList}
+      />
+    );
   }
 
   if (user?.role === "TEACHER") {
@@ -606,7 +599,7 @@ export const IeltsCenter: React.FC = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onCreate={handleCreate}
-        onViewSubmissions={handleViewSubmissions}
+        onViewSubmissions={handleViewAllSubmissionsByTestType}
         onEditWritingTask={handleEditWritingTask}
       />
     );
@@ -619,6 +612,7 @@ export const IeltsCenter: React.FC = () => {
       loading={loading}
       onStartTest={handleStartTest}
       onViewResult={handleViewResult}
+      onViewWritingResult={handleViewWritingResult}
     />
   );
 };

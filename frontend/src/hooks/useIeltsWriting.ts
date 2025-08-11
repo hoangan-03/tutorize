@@ -3,12 +3,11 @@ import { ieltsWritingService } from "../services/ieltsWritingService";
 import { PaginationParams, IeltsWritingType, IeltsLevel } from "../types/api";
 import { toast } from "react-toastify";
 
-// IELTS Writing Tests hooks
 export const useIeltsWritingTest = (
   params?: PaginationParams & { level?: string; type?: string }
 ) => {
   const { data, error, isLoading } = useSWR(
-    ["/ielts-writing/tests", params],
+    ["/ielts-writing", params],
     ([, params]) => ieltsWritingService.listTests(params),
     {
       revalidateOnFocus: false,
@@ -22,14 +21,30 @@ export const useIeltsWritingTest = (
     totalPages: data?.totalPages || 1,
     isLoading,
     error,
-    mutate: () => mutate(["/ielts-writing/tests", params]),
+    mutate: () => mutate(["/ielts-writing", params]),
   };
 };
 
-// IELTS Writing Submissions hooks
-export const useIeltsWritingSubmissions = () => {
+export const useIeltsWritingTestById = (testId: number | null) => {
   const { data, error, isLoading } = useSWR(
-    "/ielts-writing/submissions",
+    testId ? `/ielts-writing/${testId}` : null,
+    () => (testId ? ieltsWritingService.getTest(testId) : null),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    test: data || null,
+    isLoading,
+    error,
+    mutate: () => mutate(`/ielts-writing/${testId}`),
+  };
+};
+
+export const useIeltsWritingMySubmissions = () => {
+  const { data, error, isLoading } = useSWR(
+    "/ielts-writing/my-submissions",
     () => ieltsWritingService.getMySubmissions(),
     {
       revalidateOnFocus: false,
@@ -40,46 +55,122 @@ export const useIeltsWritingSubmissions = () => {
     submissions: data || [],
     isLoading,
     error,
-    mutate: () => mutate("/ielts-writing/submissions"),
+    mutate: () => mutate("/ielts-writing/my-submissions"),
   };
 };
 
-// IELTS Writing Test management hooks
+export const useIeltsWritingMySubmission = (submissionId: number) => {
+  const { data, error, isLoading } = useSWR(
+    `/ielts-writing/my-submission/${submissionId}`,
+    () => ieltsWritingService.getMySubmission(submissionId),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submission: data || null,
+    isLoading,
+    error,
+    mutate: () => mutate(`/ielts-writing/my-submission/${submissionId}`),
+  };
+};
+
+export const useIeltsWritingSubmissionForGrading = (submissionId: number) => {
+  const { data, error, isLoading } = useSWR(
+    `/ielts-writing/submission/${submissionId}`,
+    () => ieltsWritingService.getSubmissionForGrading(submissionId),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submission: data || null,
+    isLoading,
+    error,
+    mutate: () => mutate(`/ielts-writing/submission/${submissionId}`),
+  };
+};
+
+export const useIeltsWritingTestSubmissions = (testId: number) => {
+  const { data, error, isLoading } = useSWR(
+    `/ielts-writing/${testId}/submissions`,
+    () => ieltsWritingService.getWritingTestSubmissions(testId),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submissions: data || [],
+    isLoading,
+    error,
+    mutate: () => mutate(`/ielts-writing/${testId}/submissions`),
+  };
+};
+
+export const useIeltsWritingTestSubmission = (
+  testId: number,
+  submissionId: number
+) => {
+  const { data, error, isLoading } = useSWR(
+    `/ielts-writing/${testId}/submission/${submissionId}`,
+    () => ieltsWritingService.getWritingTestSubmission(testId, submissionId),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submission: data || null,
+    isLoading,
+    error,
+    mutate: () => mutate(`/ielts-writing/${testId}/submission/${submissionId}`),
+  };
+};
+
 export const useIeltsWritingTestManagement = () => {
-  const createTest = async (data: {
+  const createWritingTest = async (data: {
     title: string;
     prompt: string;
     type: IeltsWritingType;
     level?: IeltsLevel;
   }) => {
-    const task = await ieltsWritingService.createTest(data);
-    mutate("/ielts-writing/tests");
+    const task = await ieltsWritingService.createWritingTest(data);
+    mutate("/ielts-writing");
     toast.success("Tạo Writing Task thành công!");
     return task;
   };
 
-  const submitTask = async (taskId: number, content: string) => {
-    const submission = await ieltsWritingService.submitTest(taskId, content);
-    mutate(`/ielts-writing/tests/${taskId}`);
+  const submitWritingSubmission = async (testId: number, content: string) => {
+    const submission = await ieltsWritingService.submitWritingSubmission(
+      testId,
+      content
+    );
+    mutate(`/ielts-writing/${testId}`);
     toast.success("Nộp bài thành công!");
     return submission;
   };
 
-  const gradeTask = async (
-    taskId: number,
+  const gradeWritingTest = async (
+    testId: number,
     data: {
       score: Record<string, unknown>;
       feedback: Record<string, unknown>;
     }
   ) => {
-    const result = await ieltsWritingService.manualGradeTest(taskId, data);
-    mutate(`/ielts-writing/tests/${taskId}`);
+    const result = await ieltsWritingService.manualGradeWritingTest(
+      testId,
+      data
+    );
+    mutate(`/ielts-writing/${testId}`);
     toast.success("Chấm điểm AI hoàn tất!");
     return result;
   };
 
-  const editTask = async (
-    taskId: number,
+  const editWritingTest = async (
+    testId: number,
     data: {
       title?: string;
       prompt?: string;
@@ -87,30 +178,41 @@ export const useIeltsWritingTestManagement = () => {
       level?: IeltsLevel;
     }
   ) => {
-    const task = await ieltsWritingService.editTest(taskId, data);
-    mutate("/ielts-writing/tests");
-    mutate(`/ielts-writing/tests/${taskId}`);
+    const task = await ieltsWritingService.editWritingTest(testId, data);
+    mutate("/ielts-writing");
+    mutate(`/ielts-writing/${testId}`);
     toast.success("Cập nhật Writing Task thành công!");
     return task;
   };
 
-  const deleteTask = async (taskId: number) => {
-    await ieltsWritingService.deleteTest(taskId);
-    mutate("/ielts-writing/tests");
+  const deleteWritingTest = async (testId: number) => {
+    await ieltsWritingService.deleteWritingTest(testId);
+    mutate("/ielts-writing");
     toast.success("Xóa Writing Task thành công!");
   };
 
-  const getWritingTestSubmissions = async (taskId: number) => {
-    const submissions = await ieltsWritingService.getTestSubmissions(taskId);
-    return submissions;
+  const gradeSubmission = async (
+    submissionId: number,
+    data: {
+      score: Record<string, unknown>;
+      feedback: Record<string, unknown>;
+    }
+  ) => {
+    const result = await ieltsWritingService.gradeSubmission(
+      submissionId,
+      data
+    );
+    mutate(`/ielts-writing/submission/${submissionId}`);
+    toast.success("Chấm điểm thành công!");
+    return result;
   };
 
   return {
-    createTask: createTest,
-    submitTask,
-    gradeTask,
-    editTask,
-    deleteTask,
-    getWritingTestSubmissions,
+    createWritingTest,
+    submitWritingSubmission,
+    gradeWritingTest,
+    editWritingTest,
+    deleteWritingTest,
+    gradeSubmission,
   };
 };

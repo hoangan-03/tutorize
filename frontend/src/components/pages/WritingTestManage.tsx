@@ -1,64 +1,64 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Save } from "lucide-react";
-import { IeltsWritingType, IeltsLevel, IeltsWritingTest } from "../../types/api";
-import { useIeltsWritingTestManagement } from "../../hooks/useIeltsWriting";
+import {
+  IeltsWritingType,
+  IeltsLevel,
+  IeltsWritingTest,
+} from "../../types/api";
+import {
+  useIeltsWritingTestManagement,
+  useIeltsWritingTestById,
+} from "../../hooks/useIeltsWriting";
 import { RichTextEditor } from "../ui/RichTextEditor";
-import { ieltsWritingService } from "../../services/ieltsWritingService";
 
-interface WritingTaskFormProps {
+interface WritingTestManageProps {
   onBack: () => void;
-  taskId?: number | null;
+  testId?: number | null;
 }
 
-export const WritingTaskForm: React.FC<WritingTaskFormProps> = ({
+export const WritingTestManage: React.FC<WritingTestManageProps> = ({
   onBack,
-  taskId,
+  testId,
 }) => {
   const { t } = useTranslation();
-  const { createTask, editTask } = useIeltsWritingTestManagement();
-  
+  const { createWritingTest, editWritingTest } =
+    useIeltsWritingTestManagement();
+
+  const { test: existingTask, isLoading: loading } = useIeltsWritingTestById(
+    testId || null
+  );
+
   const [task, setTask] = useState<Partial<IeltsWritingTest>>({
     title: "",
     prompt: "",
     type: IeltsWritingType.IELTS_TASK1,
     level: IeltsLevel.INTERMEDIATE,
   });
-  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load existing task for editing
+  // Update task state when existingTask is loaded
   useEffect(() => {
-    if (taskId) {
-      setLoading(true);
-      ieltsWritingService
-        .getTest(taskId)
-        .then((existingTask) => {
-          if (existingTask) {
-            setTask({
-              title: existingTask.title || "",
-              prompt: existingTask.prompt || "",
-              type: existingTask.type,
-              level: existingTask.level,
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error loading writing task:", error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+    if (existingTask) {
+      setTask({
+        title: existingTask.title || "",
+        prompt: existingTask.prompt || "",
+        type: existingTask.type,
+        level: existingTask.level,
+      });
     }
-  }, [taskId]);
+  }, [existingTask]);
 
-  const handleInputChange = (field: keyof IeltsWritingTest, value: string | IeltsWritingType | IeltsLevel) => {
+  const handleInputChange = (
+    field: keyof IeltsWritingTest,
+    value: string | IeltsWritingType | IeltsLevel
+  ) => {
     setTask((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!task.title?.trim() || !task.prompt?.trim()) {
       return;
     }
@@ -72,12 +72,12 @@ export const WritingTaskForm: React.FC<WritingTaskFormProps> = ({
         level: task.level!,
       };
 
-      if (taskId) {
-        await editTask(taskId, taskData);
+      if (testId) {
+        await editWritingTest(testId, taskData);
       } else {
-        await createTask(taskData);
+        await createWritingTest(taskData);
       }
-      
+
       onBack();
     } catch (error) {
       console.error("Error saving writing task:", error);
@@ -96,7 +96,7 @@ export const WritingTaskForm: React.FC<WritingTaskFormProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -109,25 +109,31 @@ export const WritingTaskForm: React.FC<WritingTaskFormProps> = ({
                 >
                   <ArrowLeft className="h-5 w-5 text-gray-600" />
                 </button>
-                <div>
+                <div className="flex flex-col text-start">
                   <h1 className="text-2xl font-bold text-gray-900">
-                    {taskId ? "Chỉnh sửa Writing Task" : "Tạo Writing Task mới"}
+                    {testId ? "Chỉnh sửa Writing Test" : "Tạo Writing Test mới"}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">
-                    {taskId 
-                      ? "Cập nhật thông tin writing task" 
-                      : "Tạo một writing task mới cho học sinh"}
+                    {testId
+                      ? "Cập nhật thông tin writing test"
+                      : "Tạo một writing test mới cho học sinh"}
                   </p>
                 </div>
               </div>
               <button
                 form="writing-task-form"
                 type="submit"
-                disabled={isSubmitting || !task.title?.trim() || !task.prompt?.trim()}
+                disabled={
+                  isSubmitting || !task.title?.trim() || !task.prompt?.trim()
+                }
                 className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="h-4 w-4 mr-2" />
-                {isSubmitting ? "Đang lưu..." : taskId ? "Cập nhật" : "Tạo Task"}
+                {isSubmitting
+                  ? "Đang lưu..."
+                  : testId
+                  ? "Cập nhật"
+                  : "Tạo Task"}
               </button>
             </div>
           </div>
@@ -135,7 +141,11 @@ export const WritingTaskForm: React.FC<WritingTaskFormProps> = ({
 
         {/* Form */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <form id="writing-task-form" onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form
+            id="writing-task-form"
+            onSubmit={handleSubmit}
+            className="p-6 space-y-6"
+          >
             {/* Title */}
             <div>
               <label
@@ -168,7 +178,10 @@ export const WritingTaskForm: React.FC<WritingTaskFormProps> = ({
                   id="type"
                   value={task.type || IeltsWritingType.IELTS_TASK1}
                   onChange={(e) =>
-                    handleInputChange("type", e.target.value as IeltsWritingType)
+                    handleInputChange(
+                      "type",
+                      e.target.value as IeltsWritingType
+                    )
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
@@ -219,40 +232,6 @@ export const WritingTaskForm: React.FC<WritingTaskFormProps> = ({
                   className="border-0"
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Bạn có thể sử dụng rich text để format đề bài, thêm hình ảnh, v.v.
-              </p>
-            </div>
-
-            {/* Task Type Guidelines */}
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">
-                Hướng dẫn tạo đề bài:
-              </h4>
-              {task.type === IeltsWritingType.IELTS_TASK1 ? (
-                <div className="text-sm text-blue-800">
-                  <p className="mb-2">
-                    <strong>Task 1:</strong> Mô tả biểu đồ, bảng, sơ đồ hoặc quy
-                    trình
-                  </p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Yêu cầu viết ít nhất 150 từ</li>
-                    <li>Mô tả thông tin chính, xu hướng, so sánh</li>
-                    <li>Sử dụng ngôn ngữ học thuật, tránh ý kiến cá nhân</li>
-                  </ul>
-                </div>
-              ) : (
-                <div className="text-sm text-blue-800">
-                  <p className="mb-2">
-                    <strong>Task 2:</strong> Viết luận về một chủ đề
-                  </p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Yêu cầu viết ít nhất 250 từ</li>
-                    <li>Đưa ra quan điểm, lập luận với ví dụ</li>
-                    <li>Cấu trúc: mở bài, thân bài, kết luận</li>
-                  </ul>
-                </div>
-              )}
             </div>
           </form>
         </div>

@@ -41,6 +41,9 @@ import { StudentSubmissionDetail } from "./components/pages/StudentSubmissionDet
 import { TeacherSubmissionView } from "./components/pages/TeacherSubmissionView";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
 import { IeltsResultPage } from "./components/pages/IeltsResultPage";
+import { IeltsWritingResultPage } from "./components/pages/IeltsWritingResultPage";
+import { IeltsWritingSubmissionsList } from "./components/pages/IeltsWritingSubmissionsList";
+import { IeltsWritingSubmissionDetail } from "./components/pages/IeltsWritingSubmissionDetail";
 import { Role } from "./types/api";
 
 const RoleBasedRedirect = () => {
@@ -399,6 +402,48 @@ function AppContent() {
             <ProtectedRoute>
               <main>
                 <IeltsResultPage />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* IELTS Writing Routes */}
+        <Route
+          path="/ielts-writing/result/:submissionId"
+          element={
+            <ProtectedRoute>
+              <main>
+                <IeltsWritingResultPage />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ielts-writing/submissions"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <IeltsWritingSubmissionsList />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ielts-writing/submission/:submissionId"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <IeltsWritingSubmissionDetail />
               </main>
             </ProtectedRoute>
           }

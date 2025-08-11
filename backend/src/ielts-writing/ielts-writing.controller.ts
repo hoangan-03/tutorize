@@ -2,95 +2,206 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Body,
   Param,
   Query,
   UseGuards,
   ParseIntPipe,
-  Delete,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-import { IeltsWritingService } from './ielts-writing.service';
-import {
-  SubmitWritingTestDto,
-  WritingTestQueryDto,
-  CreateWritingTestDto,
-  ManualGradeTestDto,
-} from './dto/ielts-writing.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { IeltsWritingService } from './ielts-writing.service';
+import {
+  CreateIeltsWritingTestDto,
+  UpdateIeltsWritingTestDto,
+  SubmitIeltsWritingTestDto,
+  ManualGradeIeltsWritingTestDto,
+  IeltsWritingTestQueryDto,
+} from './dto/ielts-writing.dto';
 import { Role } from '@prisma/client';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('IELTS Writing')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ielts-writing')
 export class IeltsWritingController {
-  constructor(private readonly ieltswritingService: IeltsWritingService) {}
+  constructor(private readonly ieltsWritingService: IeltsWritingService) {}
 
-  @Post('tests')
-  @Roles(Role.TEACHER)
-  @ApiOperation({ summary: 'Tạo Writing Task (giáo viên)' })
-  @ApiResponse({ status: 201, description: 'Writing Task được tạo thành công' })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
-  createWritingTest(
-    @Body() dto: CreateWritingTestDto,
-    @CurrentUser('sub') userId: number,
-  ) {
-    console.log('Controller received data:', { dto, userId });
-    return this.ieltswritingService.createWritingTest(dto, userId);
-  }
-
-  @Get('tests')
-  @ApiOperation({
-    summary: 'Danh sách Writing Test',
+  @Get('my-submissions')
+  @Roles(Role.STUDENT)
+  @ApiOperation({ summary: 'Lấy danh sách nộp bài test IELTS của người dùng' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy danh sách nộp bài test thành công',
   })
-  getTests(@Query() query: WritingTestQueryDto) {
-    return this.ieltswritingService.getTests(query);
+  async getUserSubmissions(@CurrentUser('id') userId: number) {
+    console.log('Getting IELTS Writing submissions for user:', userId);
+    return await this.ieltsWritingService.getMySubmissions(userId);
   }
 
-  @Delete('tests/:id')
+  @Get('/my-submission/:submissionId')
+  @Roles(Role.STUDENT)
+  @ApiOperation({ summary: 'Lấy thông tin nộp bài test IELTS của người dùng' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy thông tin nộp bài test thành công',
+  })
+  async getMySubmission(
+    @CurrentUser('id') userId: number,
+    @Param('submissionId', ParseIntPipe) submissionId: number,
+  ) {
+    console.log('Getting IELTS Writing submission for user:', userId);
+    return await this.ieltsWritingService.getMySubmission(userId, submissionId);
+  }
+
+  @Post('')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Tạo bài test IELTS mới' })
+  @ApiResponse({ status: 201, description: 'Tạo bài test thành công' })
+  async createTest(
+    @CurrentUser('id') userId: number,
+    @Body() createDto: CreateIeltsWritingTestDto,
+  ) {
+    console.log('Creating IELTS Writing test by user:', userId);
+    return await this.ieltsWritingService.createTest(userId, createDto);
+  }
+
+  @Get('')
+  @ApiOperation({ summary: 'Lấy danh sách bài test IELTS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy danh sách bài test thành công',
+  })
+  async getTests(@Query() query: IeltsWritingTestQueryDto) {
+    console.log('Getting IELTS Writing tests with query:', query);
+    return await this.ieltsWritingService.getTests(query);
+  }
+
+  @Get('/:testId')
+  @ApiOperation({ summary: 'Lấy thông tin bài test IELTS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy thông tin bài test thành công',
+  })
+  async getTestById(@Param('testId', ParseIntPipe) testId: number) {
+    console.log('Getting IELTS Writing test by ID:', testId);
+    return await this.ieltsWritingService.getTestById(testId);
+  }
+
+  @Put('/:testId')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Cập nhật bài test IELTS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Cập nhật bài test thành công',
+  })
+  async updateTest(
+    @Param('testId', ParseIntPipe) testId: number,
+    @CurrentUser('id') userId: number,
+    @Body() updateDto: UpdateIeltsWritingTestDto,
+  ) {
+    console.log('Updating IELTS Writing test:', testId, 'by user:', userId);
+    return await this.ieltsWritingService.updateTest(testId, userId, updateDto);
+  }
+
+  @Delete('/:testId')
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Xóa bài test IELTS' })
-  @ApiResponse({ status: 200, description: 'Xóa thành công' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy bài test' })
-  @ApiResponse({ status: 403, description: 'Không có quyền xóa' })
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    return this.ieltswritingService.removeWritingTest(id, user.id);
-  }
-
-  @Post('tests/:testId/submit')
-  @Roles(Role.STUDENT)
-  @ApiOperation({ summary: 'Học sinh nộp bài viết' })
-  submitTest(
-    @Param('testId') testId: number,
-    @Body() dto: SubmitWritingTestDto,
-    @CurrentUser('sub') userId: number,
-  ) {
-    return this.ieltswritingService.submitTest(testId, userId, dto);
-  }
-
-  @Post('tests/:testId/manual-grade')
-  @Roles(Role.TEACHER)
-  @ApiOperation({
-    summary: 'Giáo viên chấm bài viết đã nộp và trả feedback',
+  @ApiResponse({
+    status: 200,
+    description: 'Xóa bài test thành công',
   })
-  gradeTest(
-    @Param('testId') testId: number,
-    @CurrentUser('sub') userId: number,
-    @Body() manualGradeDto: ManualGradeTestDto,
+  async deleteTest(
+    @Param('testId', ParseIntPipe) testId: number,
+    @CurrentUser('id') userId: number,
   ) {
-    return this.ieltswritingService.manualGradeTest(
+    console.log('Deleting IELTS Writing test:', testId, 'by user:', userId);
+    return await this.ieltsWritingService.deleteTest(testId, userId);
+  }
+
+  @Post('/:testId/submit')
+  @Roles(Role.STUDENT)
+  @ApiOperation({ summary: 'Nộp bài test IELTS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Nộp bài test thành công',
+  })
+  async submitTest(
+    @Param('testId', ParseIntPipe) testId: number,
+    @CurrentUser('id') userId: number,
+    @Body() submitDto: SubmitIeltsWritingTestDto,
+  ) {
+    console.log('Submitting IELTS Writing test:', testId, 'by user:', userId);
+    return await this.ieltsWritingService.submitTest(testId, userId, submitDto);
+  }
+
+  @Post('/:testId/manual-grade')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Chấm điểm bài test IELTS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Chấm điểm bài test thành công',
+  })
+  async manualGradeTest(
+    @Param('testId', ParseIntPipe) testId: number,
+    @CurrentUser('id') userId: number,
+    @Body() gradeDto: ManualGradeIeltsWritingTestDto,
+  ) {
+    console.log(
+      'Manual grading IELTS Writing test:',
+      testId,
+      'by user:',
+      userId,
+    );
+    return await this.ieltsWritingService.manualGradeTest(
       testId,
       userId,
-      manualGradeDto,
+      gradeDto,
+    );
+  }
+
+  @Get('/:testId/submissions')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Lấy danh sách nộp bài test IELTS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy danh sách nộp bài test thành công',
+  })
+  async getTestSubmissions(@Param('testId', ParseIntPipe) testId: number) {
+    console.log('Getting submissions for IELTS Writing test:', testId);
+    return await this.ieltsWritingService.getTestSubmissions(testId);
+  }
+
+  @Get('/:testId/submission/:submissionId')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Lấy thông tin nộp bài test IELTS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy thông tin nộp bài test thành công',
+  })
+  async getTestSubmission(
+    @Param('testId', ParseIntPipe) testId: number,
+    @Param('submissionId', ParseIntPipe) submissionId: number,
+  ) {
+    console.log(
+      'Getting submission for IELTS Writing test:',
+      testId,
+      'submission:',
+      submissionId,
+    );
+    return await this.ieltsWritingService.getTestSubmission(
+      testId,
+      submissionId,
     );
   }
 }

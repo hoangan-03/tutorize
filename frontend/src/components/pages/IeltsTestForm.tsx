@@ -7,10 +7,9 @@ import {
   useIeltsQuestionManagement,
 } from "../../hooks";
 import {
-  IeltsTest,
+  IeltsReadingTest,
   IeltsSection,
   IeltsQuestion,
-  IeltsSkill,
   IeltsLevel,
   IeltsQuestionType,
 } from "../../types/api";
@@ -40,10 +39,9 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
   const { createQuestion, updateQuestion, removeQuestion } =
     useIeltsQuestionManagement();
 
-  const [test, setTest] = useState<Partial<IeltsTest>>({
+  const [test, setTest] = useState<Partial<IeltsReadingTest>>({
     title: "",
     description: "",
-    skill: IeltsSkill.READING,
     level: IeltsLevel.INTERMEDIATE,
     timeLimit: 60,
     instructions: "",
@@ -312,22 +310,6 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                         >
                           {t("ielts.form.skill")}
                         </label>
-                        <select
-                          id="skill"
-                          name="skill"
-                          value={test.skill || "READING"}
-                          onChange={handleInputChange}
-                          className={inputClass}
-                        >
-                          <option value="READING">{t("ielts.reading")}</option>
-                          <option value="LISTENING">
-                            {t("ielts.listening")}
-                          </option>
-                          <option value="WRITING">{t("ielts.writing")}</option>
-                          <option value="SPEAKING">
-                            {t("ielts.speaking")}
-                          </option>
-                        </select>
                       </div>
 
                       <div className="sm:col-span-2">

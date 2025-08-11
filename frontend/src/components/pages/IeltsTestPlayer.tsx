@@ -1,7 +1,11 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
-import { IeltsQuestion, IeltsQuestionType, IeltsTest } from "../../types/api";
+import {
+  IeltsQuestion,
+  IeltsQuestionType,
+  IeltsReadingTest,
+} from "../../types/api";
 import {
   useAuth,
   useIeltsTest,
@@ -260,7 +264,7 @@ export const IeltsTestPlayer: React.FC = () => {
   const [answers, setAnswers] = useState<AnswerState>({});
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [testStartTime, setTestStartTime] = useState<number>(0);
-  const [currentTest, setCurrentTest] = useState<IeltsTest | null>(null);
+  const [currentTest, setCurrentTest] = useState<IeltsReadingTest | null>(null);
 
   const {
     test,

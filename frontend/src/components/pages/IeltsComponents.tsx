@@ -19,6 +19,7 @@ import {
   IeltsWritingType,
   IeltsSubmission,
   IeltsSkill,
+  IeltsItemType,
 } from "../../types/api";
 import { formatDateTime, getLevelInfo, getSkillInfo } from "../utils";
 
@@ -224,13 +225,12 @@ export const WritingTaskCard: React.FC<WritingTaskCardProps> = ({
   );
 };
 
-// Item Row for Teacher View (both IELTS tests and Writing tasks)
 interface IeltsItemRowProps {
   item: IeltsReadingTest | IeltsWritingTest;
-  type: "test" | "task";
+  type: IeltsItemType;
   onEdit?: (id: number) => void;
   onDelete?: (id: number) => void;
-  onViewSubmissions?: () => void;
+  onViewSubmissions?: (type: IeltsItemType) => void;
 }
 
 export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
@@ -248,12 +248,12 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
         <div className="flex-1">
           <div className="flex items-center space-x-3 mb-2">
             <h4 className="text-lg font-semibold text-gray-900">
-              {type === "test"
+              {type === IeltsItemType.READING_TEST
                 ? (item as IeltsReadingTest).title
                 : (item as IeltsWritingTest).title}
             </h4>
 
-            {type === "test" && (
+            {type === IeltsItemType.READING_TEST && (
               <>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -272,7 +272,7 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
               </>
             )}
 
-            {type === "task" && (
+            {type === IeltsItemType.WRITING_TEST && (
               <>
                 {" "}
                 <span
@@ -306,7 +306,7 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
             )}
           </div>
 
-          {type === "test" && (
+          {type === IeltsItemType.READING_TEST && (
             <>
               <p className="text-gray-600 mb-4 text-sm leading-relaxed text-start">
                 {(item as IeltsReadingTest).description}
@@ -329,15 +329,15 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
             </>
           )}
 
-          {type === "task" && (
+          {type === IeltsItemType.WRITING_TEST && (
             <>
               <div
-                className="text-gray-600 text-sm line-clamp-2 prose max-w-none"
+                className="text-gray-600 text-sm line-clamp-2 prose max-w-none text-start"
                 dangerouslySetInnerHTML={{
                   __html: (item as IeltsWritingTest).prompt ?? "",
                 }}
               />
-              <div className="flex items-center space-x-4 text-sm text-gray-500 mt-2">
+              <div className="flex items-center space-x-4 text-sm text-gray-500 mt-4">
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2" />
                   {t("ielts.teacher.createdAt")}:{" "}
@@ -351,7 +351,7 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
         <div className="flex items-center space-x-1">
           {onViewSubmissions && (
             <button
-              onClick={onViewSubmissions}
+              onClick={() => onViewSubmissions(type)}
               className="p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
               title={t("ielts.teacher.viewSubmissions")}
             >

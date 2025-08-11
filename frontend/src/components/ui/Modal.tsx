@@ -49,29 +49,18 @@ const Modal: React.FC<ModalProps> = ({
   autoClose = false,
   autoCloseDelay = 5000,
 }) => {
-  // Auto close functionality
   useEffect(() => {
-    console.log("Modal auto-close effect:", {
-      isOpen,
-      autoClose,
-      type,
-      autoCloseDelay,
-    });
     if (isOpen && autoClose && type !== "confirm") {
-      console.log("Setting auto-close timer for", autoCloseDelay, "ms");
       const timer = setTimeout(() => {
-        console.log("Auto-close timer triggered, calling onClose");
         onClose();
       }, autoCloseDelay);
 
       return () => {
-        console.log("Clearing auto-close timer");
         clearTimeout(timer);
       };
     }
   }, [isOpen, autoClose, autoCloseDelay, onClose, type]);
 
-  // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -92,7 +81,6 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Theme configuration based on type
   const getTheme = () => {
     switch (type) {
       case "success":
@@ -145,7 +133,6 @@ const Modal: React.FC<ModalProps> = ({
 
   const theme = getTheme();
 
-  // Size classes
   const getSizeClasses = () => {
     switch (size) {
       case "sm":
@@ -159,7 +146,6 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  // Default button texts
   const getDefaultTexts = () => {
     switch (type) {
       case "confirm":
@@ -177,7 +163,6 @@ const Modal: React.FC<ModalProps> = ({
 
   const defaultTexts = getDefaultTexts();
 
-  // Button classes with improved design
   const getConfirmButtonClass = () => {
     if (confirmButtonClass) return confirmButtonClass;
 
@@ -208,10 +193,8 @@ const Modal: React.FC<ModalProps> = ({
       onClick={onClose}
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black bg-opacity-50 transition-opacity" />
 
-      {/* Modal */}
       <div
         className={`
           relative rounded-2xl shadow-2xl transform transition-all w-full mx-4 overflow-hidden
@@ -220,15 +203,11 @@ const Modal: React.FC<ModalProps> = ({
         `}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Accent bar */}
         <div className={`h-1.5 w-full ${theme.accent}`}></div>
 
-        {/* Background gradient */}
         <div className={`${theme.bgGradient}`}>
-          {/* Header */}
           <div className="flex items-start justify-between p-6 pb-4">
             <div className="flex items-start space-x-4 flex-1">
-              {/* Icon container with gradient background */}
               <div
                 className={`
                 flex-shrink-0 rounded-2xl p-3 shadow-lg transform transition-transform hover:scale-105
@@ -242,7 +221,7 @@ const Modal: React.FC<ModalProps> = ({
                 <h3 className={`text-2xl font-bold ${theme.headerColor} mb-1`}>
                   {title || (type === "confirm" ? "Xác nhận" : "Thông báo")}
                 </h3>
-                {/* Subtle line under title */}
+
                 <div
                   className={`h-0.5 w-16 ${theme.accent} rounded-full opacity-60`}
                 ></div>

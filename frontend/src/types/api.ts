@@ -494,11 +494,18 @@ export interface IeltsWritingSubmission {
   gradedAt?: string;
   aiScore?: Record<string, unknown>;
   aiFeedback?: Record<string, unknown>;
+  aiGeneralScore?: number;
   humanScore?: Record<string, unknown>;
   humanFeedback?: Record<string, unknown>;
+  humanGeneralScore?: number;
 
   test?: IeltsWritingTest;
   user?: User;
+}
+
+export enum IeltsItemType {
+  READING_TEST = "READING_TEST",
+  WRITING_TEST = "WRITING_TEST",
 }
 
 // Pagination

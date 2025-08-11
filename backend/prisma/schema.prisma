@@ -405,20 +405,22 @@ model IeltsWritingTest {
 }
 
 model IeltsWritingSubmission {
-  id            Int       @id @default(autoincrement())
-  taskId        Int
-  userId        Int
-  content       String    @db.Text
-  submittedAt   DateTime  @default(now())
-  gradedAt      DateTime?
-  aiScore       Json?
-  aiFeedback    Json?
-  humanScore    Json?
-  humanFeedback Json?
+  id                Int       @id @default(autoincrement())
+  testId            Int
+  userId            Int
+  content           String    @db.Text
+  submittedAt       DateTime  @default(now())
+  gradedAt          DateTime?
+  aiScore           Json?
+  aiFeedback        Json?
+  humanScore        Json?
+  humanFeedback     Json?
+  aiGeneralScore    Float?
+  humanGeneralScore Float?
 
-  task IeltsWritingTest @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  test IeltsWritingTest @relation(fields: [testId], references: [id], onDelete: Cascade)
   user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([taskId, userId])
+  @@unique([testId, userId])
   @@map("ielts_writing_submissions")
 }
