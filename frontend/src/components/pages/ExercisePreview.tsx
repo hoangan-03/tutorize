@@ -10,11 +10,9 @@ import {
   Eye,
   Type,
 } from "lucide-react";
-import { InlineMath } from "react-katex";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { Exercise, Subject } from "../../types/api";
+import { Exercise } from "../../types/api";
 import { formatDate } from "../utils";
+import { generateExercisePDF } from "../../utils/pdfGenerator";
 
 interface ExercisePreviewProps {
   exercise: Exercise;
@@ -30,9 +28,9 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
   isReadOnly = false,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [previewMode, setPreviewMode] = React.useState<
-    "content" | "latex" | "reading"
-  >("reading");
+  const [previewMode, setPreviewMode] = React.useState<"content" | "reading">(
+    "reading"
+  );
 
   const [selectedFont, setSelectedFont] =
     React.useState<string>("Cambria Math");
@@ -52,214 +50,15 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 
   const downloadAsPDF = async () => {
     try {
-      const tempElement = document.createElement("div");
-      tempElement.style.position = "absolute";
-      tempElement.style.left = "-9999px";
-      tempElement.style.top = "0";
-      tempElement.style.width = "794px";
-      tempElement.style.backgroundColor = "white";
-      tempElement.style.padding = "40px";
-      tempElement.style.minHeight = "1000px";
-      tempElement.style.overflow = "visible";
-      tempElement.style.fontFamily =
-        popularFonts.find((font) => font.name === selectedFont)?.value ||
-        '"Cambria Math", Cambria, serif';
-
-      const cleanContent = exercise.content
-        .replace(/class="[^"]*"/g, "")
-        .replace(/style="[^"]*"/g, "")
-        .replace(/<([^>]+)>/g, (_match, content) => {
-          return `<${content
-            .replace(/class="[^"]*"/g, "")
-            .replace(/style="[^"]*"/g, "")}>`;
-        });
-
-      tempElement.innerHTML = `
-         <div style="font-family: ${
-           popularFonts.find((font) => font.name === selectedFont)?.value ||
-           '"Cambria Math", Cambria, serif'
-         }; line-height: 1.8; color: #374151; background: #ffffff;">
-           <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; background: #ffffff;">
-             <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">${
-               exercise.name
-             }</h1>
-             <div style="font-size: 14px; color: #6b7280; background: #ffffff;">
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Môn học:</strong> ${
-                 exercise.subject
-               }</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Lớp:</strong> ${
-                 exercise.grade
-               }</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Hạn nộp:</strong> ${formatDate(
-                 exercise.deadline
-               )}</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Giáo viên:</strong> ${
-                 exercise.createdBy
-               }</p>
-               ${
-                 exercise.note
-                   ? `<p style="margin: 15px 0 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">Ghi chú:</strong> ${exercise.note}</p>`
-                   : ""
-               }
-             </div>
-           </div>
-           <div style="font-size: 18px; line-height: 1.8; background: #ffffff;">
-             <div style="margin-bottom: 20px; background: #ffffff;">
-               <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">Nội dung bài tập:</h2>
-             </div>
-             <div style="color: #374151; background: #ffffff; font-size: 18px; line-height: 1.8;">
-               ${cleanContent}
-             </div>
-           </div>
-         </div>
-       `;
-
-      document.body.appendChild(tempElement);
-
-      await document.fonts.ready;
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      tempElement.style.height = "auto";
-      const actualHeight = Math.max(
-        tempElement.scrollHeight,
-        tempElement.offsetHeight,
-        1000
-      );
-
-      const canvas = await html2canvas(tempElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        width: 794,
-        height: actualHeight,
-        scrollX: 0,
-        scrollY: 0,
-        ignoreElements: (element) => {
-          return (
-            element.tagName === "STYLE" ||
-            element.tagName === "LINK" ||
-            element.classList?.contains("tailwind") ||
-            element.classList?.contains("prose")
-          );
-        },
-        onclone: (clonedDoc) => {
-          const styles = clonedDoc.querySelectorAll(
-            'style, link[rel="stylesheet"]'
-          );
-          styles.forEach((style) => style.remove());
-
-          const safeStyle = clonedDoc.createElement("style");
-          safeStyle.textContent = `
-             * { 
-               background-color: #ffffff !important; 
-               border-color: #e5e7eb !important;
-             }
-             p, div, span, h1, h2, h3, h4, h5, h6 { 
-               color: #374151 !important; 
-               background-color: #ffffff !important;
-             }
-             strong, b { 
-               color: #1f2937 !important; 
-               background-color: #ffffff !important;
-             }
-           `;
-          clonedDoc.head.appendChild(safeStyle);
-        },
+      await generateExercisePDF(exercise, {
+        selectedFont,
+        popularFonts,
+        showHeader: false,
+        formatDate,
       });
-
-      document.body.removeChild(tempElement);
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png");
-
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      if (imgHeight <= pageHeight) {
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      } else {
-        let remainingHeight = imgHeight;
-        let sourceY = 0;
-        let pageNumber = 0;
-
-        while (remainingHeight > 0) {
-          const heightToUse = Math.min(pageHeight, remainingHeight);
-
-          if (pageNumber > 0) {
-            pdf.addPage();
-          }
-
-          const sourceHeight = (heightToUse * canvas.height) / imgHeight;
-
-          const pageCanvas = document.createElement("canvas");
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          const pageCtx = pageCanvas.getContext("2d");
-
-          if (pageCtx) {
-            pageCtx.drawImage(
-              canvas,
-              0,
-              sourceY,
-              canvas.width,
-              sourceHeight,
-              0,
-              0,
-              canvas.width,
-              sourceHeight
-            );
-
-            const pageImgData = pageCanvas.toDataURL("image/png");
-            pdf.addImage(pageImgData, "PNG", 0, 0, imgWidth, heightToUse);
-          }
-
-          sourceY += sourceHeight;
-          remainingHeight -= heightToUse;
-          pageNumber++;
-        }
-      }
-
-      const fileName = `${exercise.name.replace(/[<>:"/\\|?*]/g, "_")}.pdf`;
-      pdf.save(fileName);
     } catch (error) {
       console.error("PDF Error:", error);
-
-      try {
-        const pdf = new jsPDF();
-        pdf.setFontSize(16);
-        pdf.text(exercise.name, 20, 30);
-
-        pdf.setFontSize(12);
-        pdf.text(`Mon hoc: ${exercise.subject}`, 20, 50);
-        pdf.text(`Lop: ${exercise.grade}`, 20, 65);
-        pdf.text(`Han nop: ${formatDate(exercise.deadline)}`, 20, 80);
-        pdf.text(`Giao vien: ${exercise.createdBy}`, 20, 95);
-
-        const simpleContent = exercise.content
-          .replace(/<[^>]+>/g, " ")
-          .replace(/[^\u0020-\u007E]/g, "?")
-          .substring(0, 1000);
-
-        const lines = pdf.splitTextToSize(simpleContent, 170);
-        let y = 120;
-        lines.forEach((line: string) => {
-          if (y > 270) {
-            pdf.addPage();
-            y = 20;
-          }
-          pdf.text(line, 20, y);
-          y += 7;
-        });
-
-        pdf.save(`${exercise.name.replace(/[^\w]/g, "_")}.pdf`);
-      } catch (fallbackError) {
-        console.error("Fallback PDF Error:", fallbackError);
-        alert(
-          "Không thể tạo PDF. Bạn có thể sử dụng Print của trình duyệt (Ctrl+P) để in/lưu PDF."
-        );
-      }
+      alert("Unable to generate PDF.");
     }
   };
 
@@ -419,19 +218,6 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                     >
                       Rich Text
                     </button>
-                    {exercise.subject === Subject.MATH &&
-                      exercise.latexContent && (
-                        <button
-                          onClick={() => setPreviewMode("latex")}
-                          className={`px-3 py-1 text-sm rounded ${
-                            previewMode === "latex"
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                        >
-                          LaTeX
-                        </button>
-                      )}
                   </div>
 
                   {previewMode === "reading" && (
@@ -526,36 +312,14 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                     </div>
                   </div>
                 </div>
-              ) : previewMode === "content" ? (
+              ) : (
                 <div
                   className="prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: exercise.content }}
                 />
-              ) : (
-                <div className="prose max-w-none">
-                  <div className="space-y-4">
-                    {exercise.latexContent?.split("\n").map((line, i) => {
-                      if (line.includes("$") && !line.includes("$$")) {
-                        const parts = line.split("$");
-                        return (
-                          <p key={i}>
-                            {parts.map((part, idx) =>
-                              idx % 2 === 0 ? (
-                                part
-                              ) : (
-                                <InlineMath key={idx} math={part} />
-                              )
-                            )}
-                          </p>
-                        );
-                      }
-                      return <p key={i}>{line}</p>;
-                    })}
-                  </div>
-                </div>
               )}
 
-              {!exercise.content && !exercise.latexContent && (
+              {!exercise.content && (
                 <div className="text-center py-12 text-gray-500">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p>Bài tập chưa có nội dung</p>

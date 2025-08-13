@@ -21,8 +21,6 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { InlineMath } from "react-katex";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import { useExercise, useModal } from "../../hooks";
 import {
   ExerciseStatus,
@@ -35,6 +33,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/Badge";
 import { exerciseService } from "../../services/exerciseService";
 import { UploadService } from "../../services/uploadService";
+import { generateExercisePDF } from "../../utils/pdfGenerator";
 
 import "katex/dist/katex.min.css";
 import { formatDate, formatDateTime } from "../utils";
@@ -351,316 +350,24 @@ export const ExerciseDetailView: React.FC = () => {
     if (!exerciseData) return;
 
     try {
-      // Create a temporary PDF preview element
-      const tempElement = document.createElement("div");
-      tempElement.style.position = "absolute";
-      tempElement.style.left = "-9999px";
-      tempElement.style.top = "0";
-      tempElement.style.width = "794px"; // A4 width in pixels at 96 DPI
-      tempElement.style.backgroundColor = "white";
-      tempElement.style.padding = "40px";
-      tempElement.style.minHeight = "1000px"; // Ensure minimum height
-      tempElement.style.overflow = "visible";
-      tempElement.style.fontFamily =
-        popularFonts.find((font) => font.name === selectedFont)?.value ||
-        '"Cambria Math", Cambria, serif';
-
-      // Safely get exercise content
-      const exerciseContent = exerciseData.content || "";
-
-      // Create PDF content with safe hex colors (no oklch)
-      const cleanContent = exerciseContent
-        .replace(/class="[^"]*"/g, "") // Remove all CSS classes
-        .replace(/style="[^"]*"/g, "") // Remove existing styles
-        .replace(/<([^>]+)>/g, (_match: string, content: string) => {
-          // Clean up any problematic attributes
-          return `<${content
-            .replace(/class="[^"]*"/g, "")
-            .replace(/style="[^"]*"/g, "")}>`;
-        });
-
-      const exerciseTitle = (
-        exerciseData.name || t("exercisePublicView.defaultTitle")
-      ).toString();
-      const exerciseSubject = (
-        exerciseData.subject || t("exercisePublicView.defaultSubject")
-      ).toString();
-      const exerciseGrade = (
-        exerciseData.grade || t("exercisePublicView.defaultGrade")
-      ).toString();
-      const exerciseDeadline =
-        exerciseData.deadline ||
-        exerciseData.createdAt ||
-        new Date().toISOString();
-      const exerciseTeacher = (
-        exerciseData.creator?.profile?.firstName ||
-        t("exercisePublicView.defaultTeacher")
-      ).toString();
-      const exerciseNote = (exerciseData.note || "").toString();
-
-      tempElement.innerHTML = `
-         <div style="font-family: ${
-           popularFonts.find((font) => font.name === selectedFont)?.value ||
-           '"Cambria Math", Cambria, serif'
-         }; line-height: 1.8; color: #374151; background: #ffffff;">
-           <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; background: #ffffff;">
-             <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">${exerciseTitle}</h1>
-             <div style="font-size: 14px; color: #6b7280; background: #ffffff;">
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
-                 "exercisePublicView.subject"
-               )}:</strong> ${exerciseSubject}</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
-                 "exercisePublicView.grade"
-               )}:</strong> ${exerciseGrade}</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
-                 "exercisePublicView.deadline"
-               )}:</strong> ${formatDate(exerciseDeadline)}</p>
-               <p style="margin: 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
-                 "exercisePublicView.teacher"
-               )}:</strong> ${exerciseTeacher}</p>
-               ${
-                 exerciseNote && exerciseNote.trim()
-                   ? `<p style="margin: 15px 0 5px 0; color: #374151; background: #ffffff;"><strong style="color: #1f2937;">${t(
-                       "exercisePublicView.note"
-                     )}:</strong> ${exerciseNote}</p>`
-                   : ""
-               }
-             </div>
-           </div>
-           <div style="font-size: 18px; line-height: 1.8; background: #ffffff;">
-             <div style="margin-bottom: 20px; background: #ffffff;">
-               <h2 style="font-size: 20px; font-weight: 600; margin: 0 0 15px 0; color: #1f2937; background: #ffffff;">${t(
-                 "exercisePublicView.content"
-               )}:</h2>
-             </div>
-             <div style="color: #374151; background: #ffffff; font-size: 18px; line-height: 1.8;">
-               ${cleanContent || `<p>${t("exercisePublicView.noContent")}</p>`}
-             </div>
-           </div>
-         </div>
-       `;
-
-      document.body.appendChild(tempElement);
-
-      // Wait for fonts to load and DOM to settle
-      await document.fonts.ready;
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Force layout calculation and get accurate height
-      tempElement.style.height = "auto";
-      const actualHeight = Math.max(
-        tempElement.scrollHeight,
-        tempElement.offsetHeight,
-        1000
-      );
-
-      console.log("Element dimensions:", {
-        scrollHeight: tempElement.scrollHeight,
-        offsetHeight: tempElement.offsetHeight,
-        actualHeight: actualHeight,
+      await generateExercisePDF(exerciseData, {
+        selectedFont,
+        popularFonts,
+        showHeader: false,
+        // headerInfo: {
+        //   subject: exerciseData.subject,
+        //   grade: exerciseData.grade?.toString(),
+        //   deadline: exerciseData.deadline,
+        //   teacher:
+        //     exerciseData.creator?.profile?.firstName ||
+        //     t("exercisePublicView.defaultTeacher"),
+        //   note: exerciseData.note || "",
+        // },
+        formatDate,
       });
-
-      // Capture the element as canvas with high quality
-      const canvas = await html2canvas(tempElement, {
-        scale: 2, // Higher resolution
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        width: 794,
-        height: actualHeight,
-        scrollX: 0,
-        scrollY: 0,
-        ignoreElements: (element) => {
-          // Skip elements that might cause oklch issues
-          return (
-            element.tagName === "STYLE" ||
-            element.tagName === "LINK" ||
-            element.classList?.contains("tailwind") ||
-            element.classList?.contains("prose")
-          );
-        },
-        onclone: (clonedDoc) => {
-          // Remove any problematic stylesheets
-          const styles = clonedDoc.querySelectorAll(
-            'style, link[rel="stylesheet"]'
-          );
-          styles.forEach((style) => style.remove());
-
-          // Add safe inline styles
-          const safeStyle = clonedDoc.createElement("style");
-          safeStyle.textContent = `
-             * { 
-               background-color: #ffffff !important; 
-               border-color: #e5e7eb !important;
-             }
-             p, div, span, h1, h2, h3, h4, h5, h6 { 
-               color: #374151 !important; 
-               background-color: #ffffff !important;
-             }
-             strong, b { 
-               color: #1f2937 !important; 
-               background-color: #ffffff !important;
-             }
-           `;
-          clonedDoc.head.appendChild(safeStyle);
-        },
-      });
-
-      // Remove temporary element
-      document.body.removeChild(tempElement);
-
-      // Create PDF
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png");
-
-      // Calculate dimensions to fit A4
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      console.log("PDF dimensions:", {
-        canvasWidth: canvas.width,
-        canvasHeight: canvas.height,
-        imgWidth: imgWidth,
-        imgHeight: imgHeight,
-        pageHeight: pageHeight,
-        pagesNeeded: Math.ceil(imgHeight / pageHeight),
-      });
-
-      if (imgHeight <= pageHeight) {
-        // Single page - content fits
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      } else {
-        // Multiple pages needed
-        let remainingHeight = imgHeight;
-        let sourceY = 0;
-        let pageNumber = 0;
-
-        while (remainingHeight > 0) {
-          const heightToUse = Math.min(pageHeight, remainingHeight);
-
-          if (pageNumber > 0) {
-            pdf.addPage();
-          }
-
-          // Calculate source position and size for this page
-          const sourceHeight = (heightToUse * canvas.height) / imgHeight;
-
-          // Create a temporary canvas for this page slice
-          const pageCanvas = document.createElement("canvas");
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          const pageCtx = pageCanvas.getContext("2d");
-
-          if (pageCtx) {
-            pageCtx.drawImage(
-              canvas,
-              0,
-              sourceY,
-              canvas.width,
-              sourceHeight, // source
-              0,
-              0,
-              canvas.width,
-              sourceHeight // destination
-            );
-
-            const pageImgData = pageCanvas.toDataURL("image/png");
-            pdf.addImage(pageImgData, "PNG", 0, 0, imgWidth, heightToUse);
-          }
-
-          sourceY += sourceHeight;
-          remainingHeight -= heightToUse;
-          pageNumber++;
-        }
-      }
-
-      // Save PDF with safe filename
-      const safeFileName = exerciseTitle
-        .replace(/[<>:"/\\|?*]/g, "_")
-        .substring(0, 50); // Limit length
-      pdf.save(`${safeFileName}.pdf`);
     } catch (error) {
       console.error("PDF Error:", error);
-
-      // Fallback: Try simple text-based PDF
-      try {
-        const pdf = new jsPDF();
-
-        // Safely get title for fallback
-        const fallbackTitle = (
-          exerciseData.name || t("exercisePublicView.defaultTitle")
-        ).toString();
-        const fallbackSubject = (
-          exerciseData.subject || t("exercisePublicView.defaultSubject")
-        ).toString();
-        const fallbackGrade = (
-          exerciseData.grade || t("exercisePublicView.defaultGrade")
-        ).toString();
-        const fallbackTeacher = (
-          exerciseData.creator?.profile?.firstName ||
-          t("exercisePublicView.defaultTeacher")
-        ).toString();
-        const fallbackDeadline =
-          exerciseData.deadline ||
-          exerciseData.createdAt ||
-          new Date().toISOString();
-        const fallbackContent =
-          exerciseData.content || t("exercisePublicView.noContent");
-
-        pdf.setFontSize(16);
-        pdf.text(fallbackTitle, 20, 30);
-
-        pdf.setFontSize(12);
-        pdf.text(
-          `${t("exercisePublicView.subject")}: ${fallbackSubject}`,
-          20,
-          50
-        );
-        pdf.text(`${t("exercisePublicView.grade")}: ${fallbackGrade}`, 20, 65);
-        pdf.text(
-          `${t("exercisePublicView.deadline")}: ${new Date(
-            fallbackDeadline
-          ).toLocaleDateString()}`,
-          20,
-          80
-        );
-        pdf.text(
-          `${t("exercisePublicView.teacher")}: ${fallbackTeacher}`,
-          20,
-          95
-        );
-
-        // Simple content without Vietnamese chars
-        const simpleContent = fallbackContent
-          .replace(/<[^>]+>/g, " ")
-          .replace(/[^\u0020-\u007E]/g, "?") // Replace non-printable ASCII with ?
-          .substring(0, 1000);
-
-        const lines = pdf.splitTextToSize(simpleContent, 170);
-        let y = 120;
-        lines.forEach((line: string) => {
-          if (y > 270) {
-            pdf.addPage();
-            y = 20;
-          }
-          pdf.text(line, 20, y);
-          y += 7;
-        });
-
-        const safeFileName = fallbackTitle
-          .replace(/[^\w\s-]/g, "_")
-          .substring(0, 50);
-        pdf.save(`${safeFileName}.pdf`);
-      } catch (fallbackError) {
-        console.error("Fallback PDF Error:", fallbackError);
-        // Final fallback to browser print
-        showError(
-          t("exercisePublicView.printFallback") ||
-            "Không thể tải PDF. Vui lòng thử in trang.",
-          t("common.error") || "Lỗi"
-        );
-      }
+      showError(t("exercisePublicView.printFallback"));
     }
   };
 
