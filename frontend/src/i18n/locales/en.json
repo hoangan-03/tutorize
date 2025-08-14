@@ -705,16 +705,16 @@
       "basic": "Extremely Limited User"
     },
     "writingTasks": {
-      "title": "Writing Tasks",
-      "noTasksYet": "No Writing Tasks Yet",
-      "noTasksDescription": "Teachers haven't created any Writing Tasks for you to practice.",
-      "startTask": "Start Task",
+      "title": "Writing Tests",
+      "noTasksYet": "No writing test yet",
+      "noTasksDescription": "Teachers haven't created any writing tests for you to practice.",
+      "startTask": "Start test",
       "close": "Close",
       "submit": "Submit",
       "gradeWithAI": "Grade with AI",
-      "manageDescription": "Manage created Writing Tasks",
-      "createTask": "Create Writing Task",
-      "statsLabel": "Writing Tasks"
+      "manageDescription": "Manage created writing tests",
+      "createTask": "Create writing test",
+      "statsLabel": "Writing Tests"
     }
   },
   "ieltsWriting": {

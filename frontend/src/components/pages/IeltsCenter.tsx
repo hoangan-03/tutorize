@@ -204,8 +204,8 @@ const StudentIeltsView: React.FC<{
             {writingTests.length === 0 ? (
               <EmptyState
                 icon={<PenSquare className="h-16 w-16" />}
-                title={t("ielts.writingTasks.noTasksYet")}
-                description={t("ielts.writingTasks.noTasksDescription")}
+                title={t("ielts.noTests")}
+                description={t("ielts.noTestsForSkill")}
               />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

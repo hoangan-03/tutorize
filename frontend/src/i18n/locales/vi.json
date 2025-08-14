@@ -684,16 +684,16 @@
       "selectOption": "Chọn..."
     },
     "writingTasks": {
-      "title": "Writing Tasks",
-      "noTasksYet": "Chưa có Writing Task nào",
-      "noTasksDescription": "Giáo viên chưa tạo Writing Task nào cho bạn luyện tập.",
+      "title": "Writing Tests",
+      "noTasksYet": "Chưa có bài test nào",
+      "noTasksDescription": "Giáo viên chưa tạo bài test nào cho bạn luyện tập.",
       "startTask": "Làm bài",
       "close": "Đóng",
       "submit": "Nộp bài",
       "gradeWithAI": "Chấm điểm AI",
-      "manageDescription": "Quản lý các Writing Task đã tạo",
-      "createTask": "Tạo Writing Task",
-      "statsLabel": "Writing Tasks"
+      "manageDescription": "Quản lý các bài test writing đã tạo",
+      "createTask": "Tạo bài test writing",
+      "statsLabel": "Bài test writing"
     }
   },
   "ieltsWriting": {
