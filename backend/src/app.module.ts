@@ -12,6 +12,7 @@ import { DocumentModule } from './document/document.module';
 import { IeltsReadingModule } from './ielts-reading/ielts-reading.module';
 import { UploadModule } from './upload/upload.module';
 import { IeltsWritingModule } from './ielts-writing/ielts-writing.module';
+import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { IeltsWritingModule } from './ielts-writing/ielts-writing.module';
     IeltsReadingModule,
     IeltsWritingModule,
     UploadModule,
+    PdfModule,
   ],
   controllers: [AppController],
   providers: [AppService],
