@@ -24,6 +24,14 @@ interface QuizFormData {
   timeLimit: number;
   deadline: string | null;
   status: QuizStatus;
+  // Newly added configurable fields
+  tags: string[];
+  instructions: string;
+  maxAttempts: number;
+  isAllowedReviewed: boolean;
+  isAllowedViewAnswerAfterSubmit: boolean;
+  shuffleQuestions: boolean;
+  shuffleAnswers: boolean;
   questions: FormQuestion[];
 }
 
@@ -97,6 +105,15 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
       ? formatDateForInput(quiz.deadline)
       : getDefaultDeadline(),
     status: quiz?.status || QuizStatus.DRAFT,
+    // Added fields with defaults or existing quiz values
+    tags: quiz?.tags || [],
+    instructions: quiz?.instructions || "",
+    maxAttempts: quiz?.maxAttempts || 1,
+    isAllowedReviewed: quiz?.isAllowedReviewed ?? false,
+    isAllowedViewAnswerAfterSubmit:
+      quiz?.isAllowedViewAnswerAfterSubmit ?? false,
+    shuffleQuestions: quiz?.shuffleQuestions ?? false,
+    shuffleAnswers: quiz?.shuffleAnswers ?? false,
     questions: (quiz?.questions || []).map((q: Question, index: number) => ({
       id: q.id,
       question: q.question,
@@ -178,6 +195,8 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
     const quizDataToSave = {
       ...formData,
       deadline: formData.deadline ? formatDateForAPI(formData.deadline) : null,
+  // Ensure tags are trimmed and filtered
+  tags: formData.tags.map((t) => t.trim()).filter((t) => t.length > 0),
     };
 
     onSave(quizDataToSave);
@@ -357,6 +376,126 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Mô tả ngắn về quiz"
             />
+          </div>
+          {/* Additional Configurable Fields */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
+                Tags (phân cách bằng dấu phẩy)
+              </label>
+              <input
+                type="text"
+                value={formData.tags.join(", ")}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    tags: e.target.value
+                      .split(/[,\n]/)
+                      .map((t) => t.trim())
+                      .filter((t) => t.length > 0),
+                  }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="ví dụ: kiểm tra, chương 1, hình học"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
+                Số lần làm bài tối đa
+              </label>
+              <input
+                title="Max attempts"
+                type="number"
+                min={1}
+                value={formData.maxAttempts}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    maxAttempts: Math.max(1, parseInt(e.target.value) || 1),
+                  }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
+              Hướng dẫn làm bài (hiển thị cho học sinh)
+            </label>
+            <textarea
+              value={formData.instructions}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  instructions: e.target.value,
+                }))
+              }
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Nhập hướng dẫn làm bài (tùy chọn)"
+            />
+          </div>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.isAllowedReviewed}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isAllowedReviewed: e.target.checked,
+                  }))
+                }
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                aria-label="Cho phép xem lại bài"
+              />
+              <span className="text-sm text-gray-700">Cho phép xem lại bài</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.isAllowedViewAnswerAfterSubmit}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isAllowedViewAnswerAfterSubmit: e.target.checked,
+                  }))
+                }
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                aria-label="Hiển thị đáp án sau khi nộp"
+              />
+              <span className="text-sm text-gray-700">Hiển thị đáp án sau khi nộp</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.shuffleQuestions}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    shuffleQuestions: e.target.checked,
+                  }))
+                }
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                aria-label="Xáo trộn câu hỏi"
+              />
+              <span className="text-sm text-gray-700">Xáo trộn câu hỏi</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.shuffleAnswers}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    shuffleAnswers: e.target.checked,
+                  }))
+                }
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                aria-label="Xáo trộn đáp án"
+              />
+              <span className="text-sm text-gray-700">Xáo trộn đáp án</span>
+            </label>
           </div>
         </div>
 

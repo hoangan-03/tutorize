@@ -104,6 +104,16 @@ export const QuizManagement: React.FC = () => {
         return transformedQuestion;
       }) || [];
 
+    const extendedFormData = formData as typeof formData & {
+      tags?: string[];
+      instructions?: string;
+      maxAttempts?: number;
+      isAllowedReviewed?: boolean;
+      isAllowedViewAnswerAfterSubmit?: boolean;
+      shuffleQuestions?: boolean;
+      shuffleAnswers?: boolean;
+    };
+
     const transformedData: Partial<Quiz> = {
       title: String(formData.title || "").trim(),
       description: String(formData.description || "").trim(),
@@ -114,6 +124,21 @@ export const QuizManagement: React.FC = () => {
         ? new Date(formData.deadline).toISOString()
         : undefined,
       status: formData.status || QuizStatus.DRAFT,
+      tags: Array.isArray(extendedFormData.tags)
+        ? extendedFormData.tags
+            .map((t: string) => t.trim())
+            .filter((t: string) => t.length > 0)
+        : [],
+      instructions: extendedFormData.instructions
+        ? String(extendedFormData.instructions).trim()
+        : undefined,
+      maxAttempts: extendedFormData.maxAttempts
+        ? Number(extendedFormData.maxAttempts)
+        : undefined,
+      isAllowedReviewed: !!extendedFormData.isAllowedReviewed,
+      isAllowedViewAnswerAfterSubmit: !!extendedFormData.isAllowedViewAnswerAfterSubmit,
+      shuffleQuestions: !!extendedFormData.shuffleQuestions,
+      shuffleAnswers: !!extendedFormData.shuffleAnswers,
       questions: cleanQuestions,
     };
 

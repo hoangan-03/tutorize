@@ -21,71 +21,118 @@ export class QuizService {
   constructor(private prisma: PrismaService) {}
 
   async create(createQuizDto: CreateQuizDto, createdBy: number) {
-    const { questions, ...quizData } = createQuizDto;
-    const quiz = await this.prisma.quiz.create({
-      data: {
-        ...quizData,
-        createdBy: createdBy,
-        totalQuestions: questions.length,
-        questions: {
-          create: questions.map((question) => {
-            // For multiple choice questions, convert correctAnswer to index if it's a text option
-            let processedCorrectAnswer = question.correctAnswer;
+    const { questions, ...quizData } = createQuizDto as any;
+    const safeTags = Array.isArray((createQuizDto as any).tags)
+      ? ((createQuizDto as any).tags as string[])
+      : [];
 
-            if (
-              question.type === QuestionType.MULTIPLE_CHOICE &&
-              question.options &&
-              question.options.length > 0
-            ) {
-              // If correctAnswer is a text that matches one of the options, convert to index
-              const optionIndex = question.options.findIndex(
-                (option) => option === question.correctAnswer,
+    // Convert deadline string to Date instance
+    let deadline: Date | null = null;
+    if (quizData.deadline) {
+      const d = new Date(quizData.deadline);
+      if (isNaN(d.getTime())) {
+        throw new BadRequestException('Invalid deadline date');
+      }
+      deadline = d;
+    }
+
+    const sanitizedData: any = {
+      title: quizData.title,
+      description: quizData.description,
+      subject: quizData.subject,
+      grade: quizData.grade,
+      timeLimit: quizData.timeLimit,
+      deadline: deadline,
+      status: quizData.status,
+      tags: safeTags,
+      instructions: quizData.instructions ?? null,
+      maxAttempts: quizData.maxAttempts ?? 1,
+      isAllowedReviewed: quizData.isAllowedReviewed ?? false,
+      isAllowedViewAnswerAfterSubmit:
+        quizData.isAllowedViewAnswerAfterSubmit ?? false,
+      shuffleQuestions: quizData.shuffleQuestions ?? false,
+      shuffleAnswers: quizData.shuffleAnswers ?? false,
+      createdBy: createdBy,
+      totalQuestions: questions.length,
+      questions: {
+        create: questions.map((question: any) => {
+          if (question.type === QuestionType.MULTIPLE_CHOICE) {
+            if (!question.options || question.options.length < 2) {
+              throw new BadRequestException(
+                'MULTIPLE_CHOICE question must have at least 2 options',
               );
-              if (optionIndex !== -1) {
-                processedCorrectAnswer = optionIndex.toString();
-              }
             }
-
-            // For True/False questions, normalize to lowercase
-            if (question.type === QuestionType.TRUE_FALSE) {
-              if (question.correctAnswer?.toLowerCase() === 'true') {
-                processedCorrectAnswer = 'true';
-              } else if (question.correctAnswer?.toLowerCase() === 'false') {
-                processedCorrectAnswer = 'false';
-              }
+            if (question.correctAnswer == null) {
+              throw new BadRequestException(
+                'MULTIPLE_CHOICE question missing correctAnswer',
+              );
             }
-
-            return {
-              ...question,
-              options: question.options || [],
-              correctAnswer: processedCorrectAnswer
-                ? processedCorrectAnswer.toString()
-                : '',
-            };
-          }),
-        },
+            const asNumber = parseInt(question.correctAnswer, 10);
+            const isIndexRef =
+              !isNaN(asNumber) &&
+              asNumber >= 0 &&
+              asNumber < (question.options?.length || 0);
+            const isTextRef = question.options?.includes(
+              question.correctAnswer,
+            );
+            if (!isIndexRef && !isTextRef) {
+              throw new BadRequestException(
+                'correctAnswer must be a valid option index or option text',
+              );
+            }
+          }
+          let processedCorrectAnswer = question.correctAnswer;
+          if (
+            question.type === QuestionType.MULTIPLE_CHOICE &&
+            question.options &&
+            question.options.length > 0
+          ) {
+            const optionIndex = question.options.findIndex(
+              (option: string) => option === question.correctAnswer,
+            );
+            if (optionIndex !== -1) {
+              processedCorrectAnswer = optionIndex.toString();
+            }
+          }
+          if (question.type === QuestionType.TRUE_FALSE) {
+            if (question.correctAnswer?.toLowerCase() === 'true') {
+              processedCorrectAnswer = 'true';
+            } else if (question.correctAnswer?.toLowerCase() === 'false') {
+              processedCorrectAnswer = 'false';
+            }
+          }
+          return {
+            ...question,
+            options: question.options || [],
+            correctAnswer: processedCorrectAnswer
+              ? processedCorrectAnswer.toString()
+              : '',
+          };
+        }),
       },
-      include: {
-        questions: {
-          orderBy: { order: 'asc' },
-        },
-        creator: {
-          select: {
-            id: true,
-            profile: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
+    };
 
-            email: true,
+    try {
+      const quiz = await this.prisma.quiz.create({
+        data: sanitizedData,
+        include: {
+          questions: { orderBy: { order: 'asc' } },
+          creator: {
+            select: {
+              id: true,
+              profile: { select: { firstName: true, lastName: true } },
+              email: true,
+            },
           },
         },
-      },
-    });
-
-    return quiz;
+      });
+      return quiz;
+    } catch (err: any) {
+      console.error('Quiz create error:', err?.code, err?.message, err);
+      throw new BadRequestException(
+        'Không thể tạo quiz. Vui lòng kiểm tra dữ liệu đầu vào.',
+      );
+    }
   }
 
   async findAll(filterDto: QuizFilterDto): Promise<PaginatedResultDto> {
@@ -102,7 +149,6 @@ export class QuizService {
     } = filterDto;
     const skip = (page - 1) * limit;
 
-    // Auto check and update overdue quizzes
     await this.checkAndUpdateOverdueQuizzes();
 
     const where: any = {};
@@ -177,7 +223,6 @@ export class QuizService {
   }
 
   async findOne(id: number, userId?: number) {
-    // Auto check and update overdue quizzes
     await this.checkAndUpdateOverdueQuizzes();
 
     const quiz = await this.prisma.quiz.findUnique({
@@ -309,7 +354,18 @@ export class QuizService {
       throw new ForbiddenException('Không có quyền cập nhật quiz này');
     }
 
-    const { questions, ...quizData } = updateQuizDto;
+    // Exclude non-persisted fields (showResultsImmediately) during update as well
+    const { questions, /* showResultsImmediately (ignored) */ ...quizData } =
+      updateQuizDto as any;
+
+    // Convert deadline if provided
+    if (quizData.deadline) {
+      const d = new Date(quizData.deadline);
+      if (isNaN(d.getTime())) {
+        throw new BadRequestException('Invalid deadline date');
+      }
+      quizData.deadline = d;
+    }
 
     // Prepare update data
     const updateData: any = {
@@ -397,7 +453,6 @@ export class QuizService {
     // Auto check and update overdue status after updating quiz
     await this.checkAndUpdateOverdueQuizzes();
 
-    // Get the latest quiz data after potential status update
     const finalQuiz = await this.prisma.quiz.findUnique({
       where: { id },
       include: {
