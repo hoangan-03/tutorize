@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { BookOpen, FileText, Award, PenTool, ChevronRight } from "lucide-react";
+import { BookOpen, FileText, Award, ChevronRight } from "lucide-react";
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -120,7 +120,7 @@ export const LandingPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <PenTool className="h-6 w-6" />
                 </div>
@@ -130,7 +130,7 @@ export const LandingPage: React.FC = () => {
                 <p className="mt-2 ml-16 text-base text-gray-500 text-start">
                   {t("landing.aiGraderDescription")}
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -147,7 +147,7 @@ export const LandingPage: React.FC = () => {
               {t("landing.statsSubtitle")}
             </p>
           </div>
-          <dl className="mt-10 text-center sm:max-w-3xl sm:mx-auto sm:grid sm:grid-cols-3 sm:gap-8">
+          <dl className="mt-10 text-center sm:max-w-3xl sm:mx-auto sm:grid sm:grid-cols-2 sm:gap-8">
             <div className="flex flex-col">
               <dt className="order-2 mt-2 text-lg leading-6 font-medium text-blue-200">
                 {t("landing.students")}
@@ -156,14 +156,14 @@ export const LandingPage: React.FC = () => {
                 10,000+
               </dd>
             </div>
-            <div className="flex flex-col mt-10 sm:mt-0">
+            {/* <div className="flex flex-col mt-10 sm:mt-0">
               <dt className="order-2 mt-2 text-lg leading-6 font-medium text-blue-200">
                 {t("landing.documents")}
               </dt>
               <dd className="order-1 text-5xl font-extrabold text-white">
                 5,000+
               </dd>
-            </div>
+            </div> */}
             <div className="flex flex-col mt-10 sm:mt-0">
               <dt className="order-2 mt-2 text-lg leading-6 font-medium text-blue-200">
                 {t("landing.avgIeltsScore")}
@@ -188,7 +188,7 @@ export const LandingPage: React.FC = () => {
                 <div className="md:flex md:items-center md:justify-center">
                   <div className="md:flex-shrink-0">
                     <div className="mx-auto h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                      <span className="text-white font-semibold">LH</span>
+                      <span className="text-white font-semibold">AN</span>
                     </div>
                   </div>
                   <div className="mt-3 text-center md:mt-0 md:ml-4 md:flex md:items-center">
@@ -215,7 +215,7 @@ export const LandingPage: React.FC = () => {
 
       {/* CTA Section */}
       <div className="bg-gray-50">
-        <div className="max-w-8xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-16 lg:flex lg:items-center lg:justify-between">
+        <div className="max-w-8xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-16 flex items-center lg:justify-between flex-col lg:flex-row">
           <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
             <span className="block">{t("landing.ctaTitle")}</span>
             <span className="block text-blue-600">

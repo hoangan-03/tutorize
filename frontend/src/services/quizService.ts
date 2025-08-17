@@ -236,4 +236,13 @@ export const quizService = {
     const response = await api.get(`/quizzes/${quizId}/submission-history`);
     return response.data;
   },
+
+  // Get submission for student review
+  async getSubmissionForReview(
+    quizId: number, 
+    submissionId: number
+  ): Promise<QuizSubmission> {
+    const response = await api.get(`/quizzes/${quizId}/review/${submissionId}`);
+    return response.data;
+  },
 };

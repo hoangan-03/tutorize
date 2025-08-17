@@ -221,6 +221,23 @@ export class QuizController {
     return this.quizService.getQuizSubmissionHistory(id, user.id);
   }
 
+  @Get(':id/review/:submissionId')
+  @ApiOperation({ summary: 'Xem lại bài nộp quiz (học sinh)' })
+  @ApiResponse({ status: 200, description: 'Chi tiết bài nộp để xem lại' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy quiz hoặc bài nộp' })
+  @ApiResponse({ status: 403, description: 'Không có quyền xem bài nộp' })
+  getQuizSubmissionForReview(
+    @Param('id', ParseIntPipe) quizId: number,
+    @Param('submissionId', ParseIntPipe) submissionId: number,
+    @CurrentUser() user: any,
+  ) {
+    return this.quizService.getSubmissionForReview(
+      quizId,
+      submissionId,
+      user.id,
+    );
+  }
+
   @Get(':id/detailed-stats')
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Thống kê chi tiết quiz (Teacher only)' })

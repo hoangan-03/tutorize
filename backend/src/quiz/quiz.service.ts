@@ -1118,6 +1118,103 @@ export class QuizService {
     };
   }
 
+  async getSubmissionForReview(
+    quizId: number,
+    submissionId: number,
+    userId: number,
+  ) {
+    // First get the quiz to check the review settings
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      select: {
+        id: true,
+        title: true,
+        isAllowedReviewed: true,
+        isAllowedViewAnswerAfterSubmit: true,
+        createdBy: true,
+      },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException('Không tìm thấy quiz');
+    }
+
+    // Check if the quiz allows review
+    if (!quiz.isAllowedReviewed) {
+      throw new ForbiddenException('Quiz này không cho phép xem lại bài làm');
+    }
+
+    // Get the submission
+    const submission = await this.prisma.quizSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+            email: true,
+          },
+        },
+        quiz: {
+          select: {
+            id: true,
+            title: true,
+            subject: true,
+            grade: true,
+            totalQuestions: true,
+            timeLimit: true,
+            isAllowedViewAnswerAfterSubmit: true,
+            createdBy: true,
+          },
+        },
+        answers: {
+          include: {
+            question: {
+              select: {
+                id: true,
+                question: true,
+                type: true,
+                options: true,
+                correctAnswer: quiz.isAllowedViewAnswerAfterSubmit, // Only include correct answer if allowed
+                explanation: quiz.isAllowedViewAnswerAfterSubmit, // Only include explanation if allowed
+                points: true,
+                order: true,
+                imageUrl: true,
+                audioUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            question: {
+              order: 'asc',
+            },
+          },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Không tìm thấy bài nộp');
+    }
+
+    // Check if this submission belongs to the specified quiz
+    if (submission.quizId !== quizId) {
+      throw new ForbiddenException('Bài nộp không thuộc về quiz này');
+    }
+
+    // Check permission: user can only view their own submission
+    if (submission.userId !== userId) {
+      throw new ForbiddenException('Bạn chỉ có thể xem bài nộp của mình');
+    }
+
+    return submission;
+  }
+
   async getMyStats(userId: number) {
     const [completedCount, submissions, totalTimeSpent, recentSubmissions] =
       await Promise.all([

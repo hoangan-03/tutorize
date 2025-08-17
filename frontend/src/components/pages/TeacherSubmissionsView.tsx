@@ -231,7 +231,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
               {t("teacherSubmissionsView.filterByStatus")}
             </label>
             <select
-              title="Lọc theo trạng thái"
+              title={t("teacherSubmissionsView.filterByStatus")}
               value={filterStatus}
               onChange={(e) =>
                 setFilterStatus(e.target.value as SubmissionStatus | "ALL")
@@ -355,7 +355,7 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                               <div className="flex items-center space-x-2">
                                 <div className="flex items-center">
                                   <input
-                                    title="Điểm"
+                                    title={t("teacherSubmissionsView.score")}
                                     type="number"
                                     value={gradeScore}
                                     onChange={(e) =>

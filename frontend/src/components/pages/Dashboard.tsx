@@ -51,7 +51,6 @@ export const Dashboard: React.FC = () => {
   }, [quizStats]);
 
   return (
-    <div className="p-8">
       <div className="max-w-8xl mx-auto">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -351,6 +350,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+
   );
 };

@@ -5,6 +5,7 @@ import {
   ParseIntPipe,
   Res,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PdfService } from './pdf.service';
@@ -20,9 +21,20 @@ export class PdfController {
   async generateExercise(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('sub') userId: number,
+    @Query('font') font: string,
+    @Query('showHeader') showHeaderRaw: string,
     @Res() res: Response,
   ) {
-    const buffer = await this.pdfService.generateExercisePdf(id, userId);
+    const showHeader =
+      showHeaderRaw === undefined
+        ? true
+        : ['true', '1', 'yes', 'on'].includes(showHeaderRaw.toLowerCase());
+    const buffer = await this.pdfService.generateExercisePdf(
+      id,
+      userId,
+      font,
+      showHeader,
+    );
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',

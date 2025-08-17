@@ -511,10 +511,18 @@
       "incorrect": "Incorrect",
       "question": "Question",
       "studentAnswer": "Student Answer",
+      "yourAnswer": "Your Answer",
       "correctAnswer": "Correct Answer",
       "explanation": "Explanation",
       "noAnswer": "No Answer",
-      "points": "Points"
+      "noAnswersFound": "No answers found for this submission.",
+      "points": "Points",
+      "pointsTotal": "points total"
+    },
+    "review": {
+      "title": "Quiz Review",
+      "answersVisible": "Correct answers are visible for this quiz.",
+      "answersNotVisible": "Correct answers are not visible for this quiz."
     }
   },
   "writing": {
@@ -598,7 +606,7 @@
     "teacher": {
       "manageTitle": "Manage IELTS Tests",
       "manageDescription": "Create and manage IELTS tests for the four skills: Listening, Speaking, Reading, Writing.",
-      "createNewTest": "Create New Test",
+      "createNewTest": "Create Reading Test ",
       "totalTests": "Total Tests",
       "readingTests": "Reading Tests",
       "listeningTests": "Listening Tests",
@@ -713,7 +721,7 @@
       "submit": "Submit",
       "gradeWithAI": "Grade with AI",
       "manageDescription": "Manage created writing tests",
-      "createTask": "Create writing test",
+      "createTask": "Create Writing Test",
       "statsLabel": "Writing Tests"
     }
   },
@@ -831,8 +839,8 @@
     "quickLinks": "Quick Links"
   },
   "landing": {
-    "heroTitle": "Master Your Exams with AI",
-    "heroSubtitle": "The ultimate platform for online learning and teaching",
+    "heroTitle": "Boost your learning with Tutorize",
+    "heroSubtitle": "The ultimate platform for online learning",
     "getStarted": "Get Started",
     "learnMore": "Learn More",
     "features": "Features",
@@ -851,10 +859,10 @@
     "featuresTitle": "Features",
     "allYouNeed": "Everything you need to succeed",
     "featuresDescription": "From learning materials to AI grading, we provide comprehensive tools for your learning journey.",
-    "docLibraryTitle": "Document Library",
-    "docLibraryDescription": "Thousands of learning materials categorized by subject and grade from 6-12, continuously updated with the latest curriculum.",
+    "docLibraryTitle": "Exercise Submissions",
+    "docLibraryDescription": "Submit your exercises for review and feedback.",
     "interactiveQuizzesTitle": "Interactive Quizzes",
-    "interactiveQuizzesDescription": "Smart multiple-choice quizzes with varying difficulty levels, detailed results, and personalized improvement suggestions.",
+    "interactiveQuizzesDescription": "Smart quizzes with varying difficulty levels, detailed results, and personalized improvement suggestions.",
     "ieltsPrepTitle": "IELTS Preparation",
     "ieltsPrepDescription": "A professional IELTS center with materials for all 4 skills: Reading, Writing, Listening, Speaking. Realistic mock tests.",
     "aiGraderTitle": "AI Writing Grader",
@@ -864,9 +872,9 @@
     "students": "Students",
     "documents": "Documents",
     "avgIeltsScore": "Average IELTS Score",
-    "testimonial": "\"Tutorize has changed the way I study. The AI writing grader is incredibly accurate, and the extensive document library helped me prepare well for the IELTS exam.\"",
+    "testimonial": "\"Tutorize has changed the way I study. The quiz system is incredibly effective and engaging. The IELTS center completely transformed all my skills.\"",
     "testimonialAuthor": "An Nguyen",
-    "testimonialAuthorInfo": "12th Grade Student, IELTS 8.0",
+    "testimonialAuthorInfo": "12th Grade Student, IELTS 7.5",
     "ctaTitle": "Ready to get started?",
     "ctaSubtitle": "Sign up for free today.",
     "startNow": "Start Now"
@@ -931,7 +939,26 @@
     "statusClosed": "Closed",
     "preview": "Preview",
     "edit": "Edit",
-    "deleteTitle": "Delete Exercise"
+    "deleteTitle": "Delete Exercise",
+    "saveChanges": "Save Changes",
+    "closeExercise": "Close Exercise",
+    "openExercise": "Open Exercise",
+    "back": "Back",
+    "editExercise":"Edit exercise",
+    "viewExercise": "View Exercise",
+    "exerciseInfo": "Exercise Information",
+    "exerciseContent": "Exercise Content",
+    "exerciseName": "Name",
+    "exerciseGrade": "Grade",
+    "exerciseSubject": "Subject",
+    "exerciseDeadline": "Deadline",
+    "exerciseNote": "Note",
+    "placeholderContent": "Enter exercise content here...",
+    "downloadPDF": "Download PDF",
+    "exerciseTeacher": "Teacher",
+    "exerciseCreatedAt": "Created At",
+    "exerciseSubmissions": "Submissions Count"
+
   },
   "exercisePublicView": {
     "subject": "Subject",
@@ -984,6 +1011,50 @@
     "viewYourSubmission": "You can view your submission in the exercise details.",
     "errorSubmitting": "An error occurred while submitting. Please try again.",
     "validationMessage": "Please enter content or attach a file."
+  },
+  "submissions": {
+    "title": "Submission Management",
+    "mySubmissions": "My Submissions",
+    "all": "All",
+    "submitted": "Waiting for grade",
+    "graded": "Graded",
+    "searchPlaceholder": "Search exercises...",
+    "noSubmissions": "No submissions found",
+    "noSubmissionsDescription": "No submissions have been found",
+    "statusSubmitted": "Waiting for grade",
+    "statusGraded": "Graded",
+    "notGraded": "Not graded",
+    "submittedAt": "Submitted at",
+    "gradedAt": "Graded at",
+    "feedback": "Feedback",
+    "totalSubmissions": "Total Submissions",
+    "waitingGrade": "Waiting for grade",
+    "completed": "Graded",
+    "score": "Score",
+    "teacher": "Teacher",
+    "student": "Student",
+    "submissionView": {
+      "title": "Submission Details",
+      "back": "Back",
+      "submittedAt": "Submitted at",
+      "gradedAt": "Graded at",
+      "noImages": "No images found",
+      "currentScore": "Current Score",
+      "score": "Score",
+      "enterScore": "Enter score",
+      "feedback": "Feedback",
+      "enterFeedback": "Enter feedback for student...",
+      "quickScore": "Quick score",
+      "saveGrade": "Save Grade",
+      "saving": "Saving...",
+      "gradingSuccess": "Grading successful!",
+      "gradingError": "An error occurred while grading. Please try again.",
+      "image": "Image",
+      "notFound": "Submission not found",
+      "statusLate": "Late",
+      "statusSubmitted": "Waiting for grade",
+      "statusGraded": "Graded"
+    }
   },
   "teacherSubmissionsView": {
     "back": "Back",

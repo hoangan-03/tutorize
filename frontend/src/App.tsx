@@ -39,6 +39,7 @@ import { ExerciseDetailView } from "./components/pages/ExerciseDetailView";
 import { SubmissionsList } from "./components/pages/SubmissionsList";
 import { StudentSubmissionDetail } from "./components/pages/StudentSubmissionDetail";
 import { TeacherSubmissionView } from "./components/pages/TeacherSubmissionView";
+import { QuizStudentReview } from "./components/pages/QuizStudentReview";
 import { IeltsTestPlayer } from "./components/pages/IeltsTestPlayer";
 import { IeltsResultPage } from "./components/pages/IeltsResultPage";
 import { IeltsWritingResultPage } from "./components/pages/IeltsWritingResultPage";
@@ -308,6 +309,22 @@ function AppContent() {
               />
               <main>
                 <QuizSubmissionView />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student Quiz Review Route */}
+        <Route
+          path="/quiz/submission/review/:quizId/:submissionId"
+          element={
+            <ProtectedRoute>
+              <Header
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+              <main>
+                <QuizStudentReview />
               </main>
             </ProtectedRoute>
           }

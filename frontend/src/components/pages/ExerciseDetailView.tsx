@@ -20,7 +20,6 @@ import {
   Star,
   MessageSquare,
 } from "lucide-react";
-import { InlineMath } from "react-katex";
 import { useExercise, useModal } from "../../hooks";
 import {
   ExerciseStatus,
@@ -37,6 +36,7 @@ import { generateExercisePDF } from "../../utils/pdfGenerator";
 
 import "katex/dist/katex.min.css";
 import { formatDate, formatDateTime } from "../utils";
+import { FontList } from "../constant";
 
 export const ExerciseDetailView: React.FC = () => {
   const { exerciseId } = useParams<{ exerciseId: string }>();
@@ -47,10 +47,9 @@ export const ExerciseDetailView: React.FC = () => {
   const { exercise, isLoading } = useExercise(
     exerciseId ? parseInt(exerciseId) : null
   );
-  const [previewMode, setPreviewMode] = useState<
-    "content" | "latex" | "reading"
-  >("reading");
-  const [selectedFont, setSelectedFont] = useState<string>("Cambria Math");
+  const [selectedFont, setSelectedFont] = useState<string>(
+   FontList[0].name
+  );
   const contentRef = useRef<HTMLDivElement>(null);
 
   enum UploadStatus {
@@ -333,18 +332,6 @@ export const ExerciseDetailView: React.FC = () => {
     }
   };
 
-  const popularFonts = [
-    { name: "Cambria Math", value: '"Cambria Math", Cambria, serif' },
-    { name: "Times New Roman", value: '"Times New Roman", Times, serif' },
-    { name: "Georgia", value: 'Georgia, "Times New Roman", serif' },
-    { name: "Arial", value: "Arial, Helvetica, sans-serif" },
-    { name: "Calibri", value: 'Calibri, "Segoe UI", sans-serif' },
-    { name: "Verdana", value: "Verdana, Geneva, sans-serif" },
-    { name: "Helvetica", value: "Helvetica, Arial, sans-serif" },
-    { name: "Palatino", value: '"Palatino Linotype", Palatino, serif' },
-    { name: "Book Antiqua", value: '"Book Antiqua", Palatino, serif' },
-    { name: "Garamond", value: 'Garamond, "Times New Roman", serif' },
-  ];
 
   const downloadAsPDF = async (exerciseData: Exercise) => {
     if (!exerciseData) return;
@@ -352,18 +339,7 @@ export const ExerciseDetailView: React.FC = () => {
     try {
       await generateExercisePDF(exerciseData, {
         selectedFont,
-        popularFonts,
         showHeader: false,
-        // headerInfo: {
-        //   subject: exerciseData.subject,
-        //   grade: exerciseData.grade?.toString(),
-        //   deadline: exerciseData.deadline,
-        //   teacher:
-        //     exerciseData.creator?.profile?.firstName ||
-        //     t("exercisePublicView.defaultTeacher"),
-        //   note: exerciseData.note || "",
-        // },
-        formatDate,
       });
     } catch (error) {
       console.error("PDF Error:", error);
@@ -378,7 +354,7 @@ export const ExerciseDetailView: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
-        <div className="mx-auto p-6 lg:px-16 xl:px-20">
+        <div className="mx-auto p-2 lg:p-6 lg:px-16 xl:px-20">
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
@@ -390,7 +366,7 @@ export const ExerciseDetailView: React.FC = () => {
   if (!exercise) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
-        <div className="mx-auto p-6 lg:px-16 xl:px-20">
+        <div className="mx-auto p-2 lg:p-6 lg:px-16 xl:px-20">
           <div className="text-center py-12">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -589,7 +565,6 @@ export const ExerciseDetailView: React.FC = () => {
 
           {/* Exercise Content */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 md:p-8">
-            {/* Content Header with Controls */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 space-y-4 lg:space-y-0">
               <div className="flex items-center">
                 <div className="p-3 bg-blue-100 rounded-xl mr-4">
@@ -601,157 +576,105 @@ export const ExerciseDetailView: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                {/* Preview Mode Buttons */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setPreviewMode("reading")}
-                    className={`flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all ${
-                      previewMode === "reading"
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    {t("exercisePublicView.readingMode")}
-                  </button>
-                  <button
-                    onClick={() => setPreviewMode("content")}
-                    className={`px-3 py-2 text-sm rounded-lg font-medium transition-all ${
-                      previewMode === "content"
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {t("exercisePublicView.richText")}
-                  </button>
-                  {exercise.latexContent && (
-                    <button
-                      onClick={() => setPreviewMode("latex")}
-                      className={`px-3 py-2 text-sm rounded-lg font-medium transition-all ${
-                        previewMode === "latex"
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {t("exercisePublicView.latex")}
-                    </button>
-                  )}
-                </div>
-
                 {/* Font Selector - Only in reading mode */}
-                {previewMode === "reading" && (
-                  <div className="flex items-center space-x-2">
-                    <Type className="h-4 w-4 text-gray-500" />
-                    <select
-                      aria-label="Chọn font"
-                      value={selectedFont}
-                      onChange={(e) => setSelectedFont(e.target.value)}
-                      className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      {popularFonts.map((font) => (
-                        <option key={font.name} value={font.name}>
-                          {font.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+
+                <div className="flex items-center space-x-2">
+                  <Type className="h-4 w-4 text-gray-500" />
+                  <select
+                    aria-label="Chọn font"
+                    value={selectedFont}
+                    onChange={(e) => setSelectedFont(e.target.value)}
+                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {FontList.map((font) => (
+                      <option key={font.name} value={font.value}>
+                        {font.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* Content Display */}
             <div ref={contentRef}>
-              {previewMode === "reading" ? (
-                // Reading Mode - Optimized for easy reading
-                <div className="max-w-none">
-                  <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 md:p-8 border border-blue-100">
-                    <div className="bg-white rounded-lg p-4 md:p-8 shadow-sm">
-                      <div
-                        className="prose prose-lg max-w-none text-start prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900 content-text text-lg leading-loose"
-                        style={{
-                          fontFamily:
-                            popularFonts.find(
-                              (font) => font.name === selectedFont
-                            )?.value ||
-                            '"Cambria Math", Cambria, "Times New Roman", serif',
-                          lineHeight: "1.8",
-                          fontSize: "18px",
-                          color: "#374151",
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: exercise.content
-                            .replace(
-                              /<h1/g,
-                              '<h1 class="text-base md:text-xl lg:text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-4"'
-                            )
-                            .replace(
-                              /<h2/g,
-                              '<h2 class="text-2xl font-semibold mb-4 mt-8 text-gray-800"'
-                            )
-                            .replace(
-                              /<h3/g,
-                              '<h3 class="text-xl font-medium mb-3 mt-6 text-gray-800"'
-                            )
-                            .replace(
-                              /<p/g,
-                              '<p class="mb-4 text-gray-700 leading-relaxed"'
-                            )
-                            .replace(/<ul/g, '<ul class="mb-4 pl-6 space-y-2"')
-                            .replace(/<ol/g, '<ol class="mb-4 pl-6 space-y-2"')
-                            .replace(/<li/g, '<li class="text-gray-700"')
-                            .replace(
-                              /<strong/g,
-                              '<strong class="font-semibold text-gray-900"'
-                            )
-                            .replace(/<em/g, '<em class="italic text-gray-800"')
-                            .replace(
-                              /<blockquote/g,
-                              '<blockquote class="border-l-4 border-blue-300 pl-4 py-2 mb-4 bg-blue-50 italic text-gray-700"'
-                            )
-                            .replace(
-                              /<code/g,
-                              '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800"'
-                            )
-                            .replace(
-                              /<pre/g,
-                              '<pre class="bg-gray-100 p-8 rounded-lg mb-4 overflow-x-auto"'
-                            ),
-                        }}
-                      />
-                    </div>
+              <div className="max-w-none">
+                <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 md:p-8 border border-blue-100">
+                  <div className="bg-white rounded-lg p-4 md:p-8 shadow-sm">
+                    <style>
+                      {`
+                          .font-override-container * {
+                            font-family: ${selectedFont} !important;
+                          }
+                          .font-override-container code,
+                          .font-override-container pre {
+                            font-family: 'Courier New', Consolas, monospace !important;
+                          }
+                        `}
+                    </style>
+                    <div
+                      className="prose prose-lg max-w-none text-start prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900 content-text text-lg leading-loose font-override-container"
+                      style={{
+                        fontFamily: `${selectedFont} !important`,
+                        lineHeight: "1.8",
+                        fontSize: "18px",
+                        color: "#374151",
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: exercise.content
+                          .replace(
+                            /<h1/g,
+                            `<h1 style="font-family: ${selectedFont} !important;" class="text-base md:text-xl lg:text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-4"`
+                          )
+                          .replace(
+                            /<h2/g,
+                            `<h2 style="font-family: ${selectedFont} !important;" class="text-2xl font-semibold mb-4 mt-8 text-gray-800"`
+                          )
+                          .replace(
+                            /<h3/g,
+                            `<h3 style="font-family: ${selectedFont} !important;" class="text-xl font-medium mb-3 mt-6 text-gray-800"`
+                          )
+                          .replace(
+                            /<p/g,
+                            `<p style="font-family: ${selectedFont} !important;" class="mb-4 text-gray-700 leading-relaxed"`
+                          )
+                          .replace(
+                            /<ul/g,
+                            `<ul style="font-family: ${selectedFont} !important;" class="mb-4 pl-6 space-y-2"`
+                          )
+                          .replace(
+                            /<ol/g,
+                            `<ol style="font-family: ${selectedFont} !important;" class="mb-4 pl-6 space-y-2"`
+                          )
+                          .replace(
+                            /<li/g,
+                            `<li style="font-family: ${selectedFont} !important;" class="text-gray-700"`
+                          )
+                          .replace(
+                            /<strong/g,
+                            `<strong style="font-family: ${selectedFont} !important;" class="font-semibold text-gray-900"`
+                          )
+                          .replace(
+                            /<em/g,
+                            `<em style="font-family: ${selectedFont} !important;" class="italic text-gray-800"`
+                          )
+                          .replace(
+                            /<blockquote/g,
+                            `<blockquote style="font-family: ${selectedFont} !important;" class="border-l-4 border-blue-300 pl-4 py-2 mb-4 bg-blue-50 italic text-gray-700"`
+                          )
+                          .replace(
+                            /<code/g,
+                            '<code class="bg-gray-100 px-2 py-1 rounded-lg text-sm font-mono text-gray-800"'
+                          )
+                          .replace(
+                            /<pre/g,
+                            '<pre class="bg-gray-100 p-8  mb-4 overflow-x-auto"'
+                          ),
+                      }}
+                    />
                   </div>
                 </div>
-              ) : previewMode === "content" ? (
-                <div
-                  className="prose prose-lg max-w-none text-start"
-                  dangerouslySetInnerHTML={{
-                    __html: exercise.content,
-                  }}
-                />
-              ) : (
-                <div className="prose prose-lg max-w-none text-start">
-                  <div className="space-y-4">
-                    {exercise.latexContent &&
-                      exercise.latexContent.split("\n").map((line, i) => {
-                        if (line.includes("$") && !line.includes("$$")) {
-                          const parts = line.split("$");
-                          return (
-                            <p key={i}>
-                              {parts.map((part, idx) =>
-                                idx % 2 === 0 ? (
-                                  part
-                                ) : (
-                                  <InlineMath key={idx} math={part} />
-                                )
-                              )}
-                            </p>
-                          );
-                        }
-                        return <p key={i}>{line}</p>;
-                      })}
-                  </div>
-                </div>
-              )}
+              </div>
 
               {!exercise.content && !exercise.latexContent && (
                 <div className="text-center py-12 text-gray-500">
@@ -828,7 +751,7 @@ export const ExerciseDetailView: React.FC = () => {
 
               {/* Score and Feedback */}
               {existingSubmission.score !== null && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 ">
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="w-5 h-5 text-green-600 flex-shrink-0" />
                     <h4 className="font-semibold text-green-800 text-sm sm:text-base">

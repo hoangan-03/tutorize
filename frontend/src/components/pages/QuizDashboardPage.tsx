@@ -17,15 +17,13 @@ export const QuizDashboardPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Đang tải thống kê quiz
-            </h2>
-            <p className="text-gray-600">Vui lòng đợi...</p>
-          </div>
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Đang tải thống kê quiz
+          </h2>
+          <p className="text-gray-600">Vui lòng đợi...</p>
         </div>
       </div>
     );
@@ -33,7 +31,6 @@ export const QuizDashboardPage: React.FC = () => {
 
   if (error || !quiz) {
     return (
-      <div className="p-8">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -51,7 +48,6 @@ export const QuizDashboardPage: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
     );
   }
 

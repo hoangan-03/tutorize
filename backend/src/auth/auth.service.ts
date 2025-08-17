@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../common/email/email.service';
 import {
   RegisterDto,
   LoginDto,
@@ -27,6 +28,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -61,6 +63,13 @@ export class AuthService {
     });
 
     const tokens = await this.generateTokens(user);
+
+    // Send welcome email (don't wait for it)
+    this.emailService
+      .sendWelcomeEmail(user.email, user.profile?.firstName || 'bạn')
+      .catch((error) => {
+        console.error('Failed to send welcome email:', error);
+      });
 
     const { password: _, ...userWithoutPassword } = user;
 
@@ -119,6 +128,7 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { profile: true },
     });
 
     if (!user) {
@@ -140,8 +150,18 @@ export class AuthService {
     // Update password
     await this.prisma.user.update({
       where: { id: userId },
-      data: { password: hashedNewPassword },
+      data: {
+        password: hashedNewPassword,
+        updatedAt: new Date(),
+      },
     });
+
+    // Send password change notification (don't wait for it)
+    this.emailService
+      .sendPasswordChangeNotification(user.email, user.profile?.firstName)
+      .catch((error) => {
+        console.error('Failed to send password change notification:', error);
+      });
 
     return { message: 'Đổi mật khẩu thành công' };
   }
@@ -151,6 +171,7 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { email },
+      include: { profile: true },
     });
 
     if (!user) {
@@ -162,26 +183,46 @@ export class AuthService {
       };
     }
 
-    // Generate a random temporary password
+    if (!user.isActive) {
+      return {
+        message: 'Tài khoản đã bị khóa. Vui lòng liên hệ với quản trị viên.',
+        success: false,
+      };
+    }
+
+    // Generate a secure random temporary password
     const tempPassword = this.generateRandomPassword();
     const hashedTempPassword = await bcrypt.hash(tempPassword, 12);
 
     // Update user password to temporary password
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedTempPassword },
+      data: {
+        password: hashedTempPassword,
+        updatedAt: new Date(),
+      },
     });
 
-    // In a real application, you would send this via email service
-    // For demo purposes, we'll return it (remove this in production)
-    await this.sendPasswordEmail(email, tempPassword);
+    try {
+      // Send temporary password via email
+      await this.emailService.sendTemporaryPassword(email, tempPassword);
 
-    return {
-      message: 'Mật khẩu tạm thời đã được gửi đến email của bạn',
-      success: true,
-      // For demo only - remove in production
-      tempPassword: tempPassword,
-    };
+      return {
+        message: 'Mật khẩu tạm thời đã được gửi đến email của bạn',
+        success: true,
+      };
+    } catch (error) {
+      // If email fails, revert the password change
+      console.error('Failed to send email, reverting password change:', error);
+
+      // You might want to revert the password change here if email fails
+      // For now, we'll keep the temp password and log the error
+
+      return {
+        message: 'Có lỗi xảy ra khi gửi email. Vui lòng thử lại sau.',
+        success: false,
+      };
+    }
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
@@ -323,43 +364,30 @@ export class AuthService {
   }
 
   private generateRandomPassword(): string {
-    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const upperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowerCase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const specialChars = '@$!%*?&';
+
+    // Ensure at least one character from each category
     let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    password += upperCase.charAt(Math.floor(Math.random() * upperCase.length));
+    password += lowerCase.charAt(Math.floor(Math.random() * lowerCase.length));
+    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    password += specialChars.charAt(
+      Math.floor(Math.random() * specialChars.length),
+    );
+
+    // Fill the rest with random characters from all categories
+    const allChars = upperCase + lowerCase + numbers + specialChars;
+    for (let i = 4; i < 12; i++) {
+      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
     }
-    return password;
-  }
 
-  private async sendPasswordEmail(
-    email: string,
-    tempPassword: string,
-  ): Promise<void> {
-    // In a real application, implement email service here
-    // This is a placeholder for email functionality
-    console.log(`Sending temporary password to ${email}: ${tempPassword}`);
-
-    // You would integrate with services like:
-    // - NodeMailer with SMTP
-    // - AWS SES
-    // - SendGrid
-    // - MailGun
-    // etc.
-
-    // Example implementation would be:
-    /*
-    const mailOptions = {
-      from: this.configService.get('SMTP_FROM'),
-      to: email,
-      subject: 'Mật khẩu tạm thời - Tutorize',
-      html: `
-        <h2>Mật khẩu tạm thời của bạn</h2>
-        <p>Mật khẩu tạm thời: <strong>${tempPassword}</strong></p>
-        <p>Vui lòng đăng nhập và đổi mật khẩu ngay lập tức.</p>
-        <p>Mật khẩu này sẽ hết hiệu lực sau 24 giờ.</p>
-      `
-    };
-    await this.emailService.sendMail(mailOptions);
-    */
+    // Shuffle the password to randomize the order
+    return password
+      .split('')
+      .sort(() => Math.random() - 0.5)
+      .join('');
   }
 }

@@ -464,7 +464,7 @@ export const QuizManagement: React.FC = () => {
         {/* Content Container with Enhanced Styling */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {currentView === "create" && (
-            <div className="p-8">
+            <div >
               <div className="mb-6">
                 <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   Tạo Quiz mới
@@ -484,7 +484,7 @@ export const QuizManagement: React.FC = () => {
             </div>
           )}
           {currentView === "edit" && selectedQuiz && (
-            <div className="p-8">
+            <div >
               <div className="mb-6">
                 <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   Chỉnh sửa Quiz
@@ -502,7 +502,7 @@ export const QuizManagement: React.FC = () => {
             </div>
           )}
           {currentView === "preview" && selectedQuiz && (
-            <div className="p-8">
+            <div >
               <div className="mb-6">
                 <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   Xem trước Quiz

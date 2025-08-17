@@ -652,7 +652,7 @@ export const IeltsTestPlayer: React.FC = () => {
       </div>
 
       {/* Footer Navigation */}
-      <div className="mt-8 pt-5 border-t border-gray-200 flex justify-between items-center">
+      <div className="mx-2 py-4 border-t border-gray-200 flex justify-between items-center">
         <div>
           <button
             onClick={() =>

@@ -327,6 +327,31 @@ export const useQuizSubmissionHistory = (quizId: number | null) => {
   };
 };
 
+// Get submission for student review
+export const useQuizSubmissionForReview = (
+  quizId: number | null, 
+  submissionId: number | null
+) => {
+  const {
+    data: submission,
+    error,
+    isLoading,
+  } = useSWR(
+    quizId && submissionId ? `/quizzes/${quizId}/review/${submissionId}` : null,
+    () => quizService.getSubmissionForReview(quizId!, submissionId!),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    submission,
+    isLoading,
+    error,
+    mutate: () => mutate(`/quizzes/${quizId}/review/${submissionId}`),
+  };
+};
+
 // Get teacher statistics
 export const useTeacherStats = () => {
   const {

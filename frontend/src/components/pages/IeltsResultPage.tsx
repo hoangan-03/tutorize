@@ -167,9 +167,9 @@ export const IeltsResultPage: React.FC = () => {
     <div>
       <Header mobileMenuOpen={false} setMobileMenuOpen={() => {}} />
       <div className="bg-gray-50 min-h-screen">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-20">
+        <div className="container px-4 lg:px-18">
           {/* Header */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <div className="bg-white p-3 lg:p-6 rounded-lg shadow-md mb-8">
             <div className="flex justify-between items-start">
               <div className="flex flex-col text-start">
                 <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
@@ -213,7 +213,7 @@ export const IeltsResultPage: React.FC = () => {
             {test.sections.map((section, sectionIndex) => (
               <div
                 key={section.id}
-                className="bg-white p-6 rounded-lg shadow-md"
+                className="bg-white p-3 lg:p-6 rounded-lg shadow-md"
               >
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                   {t("ielts.result.section")} {sectionIndex + 1}:{" "}

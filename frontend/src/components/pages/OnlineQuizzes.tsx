@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   RotateCw,
   CalendarClock,
+  Eye,
 } from "lucide-react";
 import { quizService } from "../../services/quizService";
 
@@ -619,9 +620,9 @@ const StudentQuizView: React.FC = () => {
     const questions = currentQuiz.questions || [];
 
     return (
-      <div className="p-8">
-        <div className="mx-auto p-6 lg:px-16 xl:px-20">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <div className="p-3 lg:p-8">
+        <div className="mx-auto p-2 lg:p-6 lg:px-16 xl:px-20">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-8">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -802,9 +803,9 @@ const StudentQuizView: React.FC = () => {
     const questions = currentQuiz.questions || [];
     if (questions.length === 0) {
       return (
-        <div className="p-8">
+        <div className="p-3 lg:p-8">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-8 text-center">
               <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
                 Quiz không có câu hỏi
@@ -827,9 +828,9 @@ const StudentQuizView: React.FC = () => {
     const question = questions[currentQuestionIndex];
 
     return (
-      <div className="p-2 md:p-8">
+      <div className="p-2 md:p-3 lg:p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-3 lg:p-8">
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                 {currentQuiz.title}
@@ -963,7 +964,7 @@ const StudentQuizView: React.FC = () => {
                     <button
                       key={index}
                       onClick={() => selectAnswer(index)}
-                      className={`w-full text-left p-4 md:p-8 border-2 rounded-lg transition-colors ${
+                      className={`w-full text-left p-4 md:p-3 lg:p-8 border-2 rounded-lg transition-colors ${
                         selectedAnswers[currentQuestionIndex] === index
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -994,7 +995,7 @@ const StudentQuizView: React.FC = () => {
                   <div className="space-y-4">
                     <button
                       onClick={() => selectAnswer("true")}
-                      className={`w-full text-left p-4 md:p-8 border-2 rounded-lg transition-colors ${
+                      className={`w-full text-left p-4 md:p-3 lg:p-8 border-2 rounded-lg transition-colors ${
                         selectedAnswers[currentQuestionIndex] === "true"
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -1019,7 +1020,7 @@ const StudentQuizView: React.FC = () => {
                     </button>
                     <button
                       onClick={() => selectAnswer("false")}
-                      className={`w-full text-left p-4 md:p-8 border-2 rounded-lg transition-colors ${
+                      className={`w-full text-left p-4 md:p-3 lg:p-8 border-2 rounded-lg transition-colors ${
                         selectedAnswers[currentQuestionIndex] === "false"
                           ? "border-blue-500 bg-blue-50 text-blue-900"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -1166,10 +1167,10 @@ const StudentQuizView: React.FC = () => {
     // Check if this is submission history view
     if (quizResults.isSubmissionHistory) {
       return (
-        <div className="p-8">
-          <div className="mx-auto p-6 lg:px-16 xl:px-20">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <div className="mb-8">
+        <div className="p-3 lg:p-8">
+          <div className="mx-auto p-2 lg:p-6 lg:px-16 xl:px-20">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-8">
+              <div className="mb-2">
                 <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900 mb-2">
                   {currentQuiz?.title}
                 </h1>
@@ -1185,7 +1186,7 @@ const StudentQuizView: React.FC = () => {
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex flex-col text-start">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-base lg:text-lg font-semibold text-gray-900">
                             {t("quizzes.attempt")} #{index + 1}
                           </h3>
                           <p className="text-sm text-gray-600">
@@ -1193,7 +1194,7 @@ const StudentQuizView: React.FC = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-blue-600">
+                          <div className="text-lg lg:text-2xl font-bold text-blue-600">
                             {(
                               ((submission.score || 0) /
                                 (submission.totalPoints || 1)) *
@@ -1207,7 +1208,7 @@ const StudentQuizView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-1 lg:mb-4">
                         <div className="text-center p-3 bg-white rounded">
                           <div className="text-lg font-semibold text-green-600">
                             {submission.answers?.filter((a) => a.isCorrect)
@@ -1239,13 +1240,29 @@ const StudentQuizView: React.FC = () => {
                       </div>
 
                       {submission.feedback && (
-                        <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
                           <h4 className="font-medium text-blue-900 mb-1">
                             {t("quizzes.feedback")}:
                           </h4>
                           <p className="text-blue-800">{submission.feedback}</p>
                         </div>
                       )}
+
+                      {/* Review Button */}
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => {
+                            const quizIdForReview = currentQuiz?.id || Number(quizId);
+                            if (quizIdForReview) {
+                              navigate(`/quiz/submission/review/${quizIdForReview}/${submission.id}`);
+                            }
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                          {t("ielts.review")}
+                        </button>
+                      </div>
                     </div>
                   )
                 )}
@@ -1254,8 +1271,8 @@ const StudentQuizView: React.FC = () => {
               {/* Final Score Section */}
               {quizResults.maxScore !== undefined &&
                 quizResults.maxScore !== null && (
-                  <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xl font-semibold text-blue-900 text-center">
+                  <div className="mt-2 lg:mt-8 p-2 lg:p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-base lg:text-xl font-semibold text-blue-900 text-center">
                       {t("quizzes.finalScore")}{" "}
                       {(quizResults.maxScore || 0).toFixed(1)}
                     </p>
@@ -1263,7 +1280,7 @@ const StudentQuizView: React.FC = () => {
                 )}
 
               {/* Action buttons */}
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-10 pt-6 border-t border-gray-200">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-2 lg:mt-10 border-t border-gray-200">
                 <button
                   onClick={clearAttemptAndNavigate}
                   className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -1314,9 +1331,9 @@ const StudentQuizView: React.FC = () => {
     }
 
     return (
-      <div className="p-8">
+      <div className="p-3 lg:p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-8 text-center">
             <div className="mb-8">
               {quizResults.passed ? (
                 <div className="text-green-600">
@@ -1439,9 +1456,9 @@ const StudentQuizView: React.FC = () => {
 
   if (quizId && !currentQuiz && currentView === "list") {
     return (
-      <div className="p-8">
+      <div className="p-3 lg:p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t("common.loading")}
@@ -1654,7 +1671,7 @@ const StudentQuizView: React.FC = () => {
                     </div>
                     <div className="flex items-start justify-between">
                       <div className="flex-1 flex-col mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2 text-start mr-2 h-14">
+                        <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2 text-start mr-2 h-14">
                           {quiz.title}
                         </h3>
                         {quiz.description && (

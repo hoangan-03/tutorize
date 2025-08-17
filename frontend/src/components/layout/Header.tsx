@@ -216,7 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
   );
 
   return (
-    <div className="bg-gray-50 py-4">
+    <div className="bg-gray-50 pb-4">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-18">
         <header className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="px-6">

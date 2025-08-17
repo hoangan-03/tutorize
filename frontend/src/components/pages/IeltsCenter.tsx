@@ -178,7 +178,7 @@ const StudentIeltsView: React.FC<{
                 description={t("ielts.noTestsForSkill")}
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2">
                 {filteredTests.map((resource) => {
                   const highestSubmission = getHighestScoreSubmission(
                     resource.id
@@ -277,8 +277,8 @@ const StudentIeltsView: React.FC<{
         )}
 
         {/* Submission History */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-start">
+        <div className="mt-6 lg:mt-16 mx-2">
+          <h2 className="text-lg lg:text-2xl font-semibold text-gray-800 mb-2 lg:mb-6 text-start">
             {t("ielts.submissionHistory")}
           </h2>
           {(() => {
@@ -316,11 +316,11 @@ const StudentIeltsView: React.FC<{
                         className="px-6 py-4 hover:bg-gray-50 flex items-center justify-between"
                       >
                         <div className="text-start">
-                          <h3 className="text-md font-semibold text-gray-800">
+                          <h3 className="text-base lg:text-md font-semibold text-gray-800">
                             {submission.test?.title ||
                               `Test ID: ${submission.testId}`}
                           </h3>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-xs lg:text-sm text-gray-500">
                             {t("ielts.submittedAt")}:{" "}
                             {formatDateTime(submission.submittedAt)}
                           </p>
@@ -329,7 +329,7 @@ const StudentIeltsView: React.FC<{
                           <p className="text-sm text-gray-500">
                             {t("ielts.score")}
                           </p>
-                          <p className="text-xl font-bold text-indigo-600">
+                          <p className="text-lg lg:text-xl font-bold text-indigo-600">
                             {activeSkill === IeltsSkill.WRITING
                               ? (submission as IeltsWritingSubmission)
                                   .aiScore ||
@@ -348,7 +348,7 @@ const StudentIeltsView: React.FC<{
                               ? onViewWritingResult(submission.id)
                               : onViewResult(submission.id)
                           }
-                          className="ml-4 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700"
+                          className="ml-4 inline-flex items-center px-3 py-1 lg:px-5 lg:py-2 border border-transparent text-xs lg:text-base font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700"
                         >
                           {t("ielts.review")}
                         </button>

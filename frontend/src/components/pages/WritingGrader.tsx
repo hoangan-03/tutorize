@@ -59,7 +59,6 @@ export const WritingGrader: React.FC = () => {
   };
 
   return (
-    <div className="p-8">
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
           <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
@@ -280,6 +279,5 @@ export const WritingGrader: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };

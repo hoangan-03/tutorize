@@ -1,7 +1,8 @@
 import React from "react";
-import { Play, Pause, FileText, Plus, Save } from "lucide-react";
+import { Play, Pause, Plus, Save, ArrowLeft } from "lucide-react";
 import { RichTextEditor } from "../ui/RichTextEditor";
-import { EditMode, Exercise, ExerciseStatus, Subject } from "../../types/api";
+import { Exercise, ExerciseStatus, Subject } from "../../types/api";
+import { useTranslation } from "react-i18next";
 
 interface ExerciseFormProps {
   formData: Exercise;
@@ -10,8 +11,6 @@ interface ExerciseFormProps {
   onSave?: () => void;
   onCancel: () => void;
   isEdit: boolean;
-  editMode: EditMode;
-  onEditModeChange: (mode: EditMode) => void;
 }
 
 export const ExerciseForm: React.FC<ExerciseFormProps> = ({
@@ -21,11 +20,10 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
   onSave,
   onCancel,
   isEdit,
-  editMode,
-  onEditModeChange,
 }) => {
   const subjects = Object.values(Subject);
   const grades = [6, 7, 8, 9, 10, 11, 12];
+  const { t } = useTranslation();
 
   // Rich text editor modules
   // const quillModules = {
@@ -45,16 +43,19 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
   return (
     <div className="max-w-8xl mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {isEdit ? "Chỉnh sửa bài tập" : "Tạo bài tập mới"}
-        </h2>
-        <div className="flex space-x-3">
+        <div className="flex items-center flex-row gap-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-gray-50 text-red-700 shadow-md"
           >
-            Hủy
+               <ArrowLeft className="h-5 w-5 mr-1" />
+            {t("exerciseEditorUI.back")}
           </button>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {isEdit ? "Chỉnh sửa bài tập" : "Tạo bài tập mới"}
+          </h2>
+        </div>
+        <div className="flex space-x-3">
           {!isEdit ? (
             <button
               onClick={onSave}
@@ -67,28 +68,28 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
             <>
               <button
                 onClick={onSave}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-blue-600 text-white shadow-md"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Lưu thay đổi
+                {t("exerciseEditorUI.saveChanges")}
               </button>
               <button
                 onClick={onToggleStatus}
-                className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-                  formData.status === "ACTIVE"
-                    ? "bg-orange-600 hover:bg-orange-700 text-white"
-                    : "bg-green-600 hover:bg-green-700 text-white"
+                className={`flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all text-white shadow-md ${
+                  formData.status === ExerciseStatus.ACTIVE
+                    ? "bg-orange-600 hover:bg-orange-700 "
+                    : "bg-green-600 hover:bg-green-700 "
                 }`}
               >
                 {formData.status === ExerciseStatus.ACTIVE ? (
                   <>
                     <Pause className="h-4 w-4 mr-2" />
-                    Đóng bài tập
+                    {t("exerciseEditorUI.closeExercise")}
                   </>
                 ) : (
                   <>
                     <Play className="h-4 w-4 mr-2" />
-                    Mở bài tập
+                    {t("exerciseEditorUI.openExercise")}
                   </>
                 )}
               </button>
@@ -102,13 +103,13 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Thông tin bài tập
+              {t("exerciseEditorUI.exerciseInfo")}
             </h3>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên bài tập *
+                  {t("exerciseEditorUI.exerciseName")} *
                 </label>
                 <input
                   type="text"
@@ -121,7 +122,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Môn học *
+                  {t("exerciseEditorUI.exerciseSubject")} *
                 </label>
                 <select
                   aria-label="Môn học"
@@ -139,7 +140,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lớp *
+                  {t("exerciseEditorUI.exerciseGrade")} *
                 </label>
                 <select
                   aria-label="Lớp"
@@ -151,7 +152,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                 >
                   {grades.map((grade) => (
                     <option key={grade} value={grade}>
-                      Lớp {grade}
+                      {grade}
                     </option>
                   ))}
                 </select>
@@ -159,10 +160,10 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hạn nộp *
+                  {t("exerciseEditorUI.deadline")} *
                 </label>
                 <input
-                  aria-label="Hạn nộp"
+                  aria-label={t("exerciseEditorUI.deadline")}
                   type="datetime-local"
                   value={formData.deadline}
                   onChange={(e) => onInputChange("deadline", e.target.value)}
@@ -172,7 +173,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ghi chú
+                  {t("exerciseEditorUI.exerciseNote")}
                 </label>
                 <textarea
                   value={formData.note}
@@ -192,73 +193,20 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
             <div className="border-b border-gray-200 p-8">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Nội dung bài tập
+                  {t("exerciseEditorUI.exerciseContent")}
                 </h3>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => onEditModeChange(EditMode.RICH)}
-                    className={`px-3 py-1 text-sm rounded ${
-                      editMode === EditMode.RICH
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    <FileText className="h-4 w-4 inline mr-1" />
-                    Rich Text
-                  </button>
-                  {formData.subject === Subject.MATH && (
-                    <button
-                      onClick={() => onEditModeChange(EditMode.LATEX)}
-                      className={`px-3 py-1 text-sm rounded ${
-                        editMode === EditMode.LATEX
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      LaTeX
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
 
             <div className="p-8">
-              {editMode === "rich" ? (
-                <div>
-                  <RichTextEditor
-                    value={formData.content}
-                    onChange={(content: string) =>
-                      onInputChange("content", content)
-                    }
-                    placeholder="Nhập nội dung bài tập..."
-                    className="min-h-[400px]"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      LaTeX Content (for Mathematics)
-                    </label>
-                    <div className="text-xs text-gray-500 mb-2">
-                      Sử dụng $...$ cho inline math, $$...$$ cho block math
-                    </div>
-                    <div className="text-xs text-gray-500 mb-2">
-                      Ví dụ: $x^2 + y^2 = r^2$ hoặc $$\int_0^1 x^2 dx = \frac{1}
-                      {3}$$
-                    </div>
-                  </div>
-                  <textarea
-                    value={formData.latexContent}
-                    onChange={(e) =>
-                      onInputChange("latexContent", e.target.value)
-                    }
-                    rows={20}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                    placeholder="Nhập LaTeX content..."
-                  />
-                </div>
-              )}
+              <RichTextEditor
+                value={formData.content}
+                onChange={(content: string) =>
+                  onInputChange("content", content)
+                }
+                placeholder={t("exerciseEditorUI.placeholderContent")}
+                className="min-h-[400px]"
+              />
             </div>
           </div>
         </div>

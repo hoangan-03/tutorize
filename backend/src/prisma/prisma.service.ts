@@ -14,13 +14,11 @@ export class PrismaService
     await this.$disconnect();
   }
 
-  // Helper method to clean up test data
   async cleanDatabase() {
     const models = Reflect.ownKeys(this).filter((key) => key[0] !== '_');
     return Promise.all(models.map((modelKey) => this[modelKey].deleteMany?.()));
   }
 
-  // Health check method
   async healthCheck() {
     try {
       await this.$queryRaw`SELECT 1`;
