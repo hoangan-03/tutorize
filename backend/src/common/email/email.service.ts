@@ -1,37 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as sgMail from '@sendgrid/mail';
+import { MailService } from '@sendgrid/mail';
 
 @Injectable()
 export class EmailService {
+  private sgMail: MailService;
+  private apiKey: string;
+  private fromEmail: string;
+  private fromName: string;
+  private frontendUrl: string;
+
   constructor(private configService: ConfigService) {
-    const apiKey = this.configService.get('SENDGRID_API_KEY');
-    if (!apiKey) {
-      throw new Error('SENDGRID_API_KEY is required but not configured');
-    }
-    sgMail.setApiKey(apiKey);
-    console.log('✅ SendGrid configured successfully');
+    this.apiKey = this.configService.getOrThrow('SENDGRID_API_KEY');
+    this.fromEmail = this.configService.getOrThrow('SENDGRID_FROM_EMAIL');
+    this.fromName = this.configService.getOrThrow('SENDGRID_FROM_NAME');
+    this.frontendUrl = this.configService.getOrThrow('FRONTEND_URL');
+    this.sgMail = new MailService();
+    this.sgMail.setApiKey(this.apiKey);
   }
 
   async sendTemporaryPassword(
     email: string,
     tempPassword: string,
   ): Promise<void> {
-    const fromEmail = this.configService.get(
-      'SENDGRID_FROM_EMAIL',
-      'noreply@tutorize.com',
-    );
-    const fromName = this.configService.get('SENDGRID_FROM_NAME', 'Tutorize');
-    const frontendUrl = this.configService.get(
-      'FRONTEND_URL',
-      'http://localhost:5173',
-    );
-
     const msg = {
       to: email,
       from: {
-        email: fromEmail,
-        name: fromName,
+        email: this.fromEmail,
+        name: this.fromName,
       },
       subject: 'Mật khẩu tạm thời - Tutorize',
       html: `
@@ -66,7 +62,7 @@ export class EmailService {
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${frontendUrl}/login" 
+              <a href="${this.frontendUrl}/login" 
                  style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
                 Đăng nhập ngay
               </a>
@@ -84,7 +80,7 @@ export class EmailService {
     };
 
     try {
-      await sgMail.send(msg);
+      await this.sgMail.send(msg);
       console.log(`✅ Temporary password sent successfully to ${email}`);
     } catch (error) {
       console.error('❌ SendGrid Error:', error);
@@ -96,17 +92,11 @@ export class EmailService {
     email: string,
     firstName?: string,
   ): Promise<void> {
-    const fromEmail = this.configService.get(
-      'SENDGRID_FROM_EMAIL',
-      'noreply@tutorize.com',
-    );
-    const fromName = this.configService.get('SENDGRID_FROM_NAME', 'Tutorize');
-
     const msg = {
       to: email,
       from: {
-        email: fromEmail,
-        name: fromName,
+        email: this.fromEmail,
+        name: this.fromName,
       },
       subject: 'Mật khẩu đã được thay đổi - Tutorize',
       html: `
@@ -123,7 +113,13 @@ export class EmailService {
             </p>
             
             <p style="color: #6c757d; font-size: 16px; line-height: 1.6;">
-              Mật khẩu cho tài khoản của bạn đã được thay đổi thành công vào lúc ${new Date().toLocaleString('vi-VN')}.
+              Mật khẩu cho tài khoản của bạn đã được thay đổi thành công vào lúc ${new Date().toLocaleString(
+                'vi-VN',
+                {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                  hour12: false,
+                },
+              )}.
             </p>
             
             <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 15px; margin: 20px 0;">
@@ -142,7 +138,7 @@ export class EmailService {
             
             <p style="color: #6c757d; font-size: 12px; text-align: center; margin: 0;">
               Email này được gửi tự động, vui lòng không trả lời.<br>
-              © 2024 Tutorize. Tất cả quyền được bảo lưu.
+              © 2025 Tutorize. Tất cả quyền được bảo lưu.
             </p>
           </div>
         </div>
@@ -150,32 +146,21 @@ export class EmailService {
     };
 
     try {
-      await sgMail.send(msg);
+      await this.sgMail.send(msg);
       console.log(
         `✅ Password change notification sent successfully to ${email}`,
       );
     } catch (error) {
       console.error('❌ SendGrid Error (Password Change Notification):', error);
-      // Don't throw error for notification emails, just log it
     }
   }
 
   async sendWelcomeEmail(email: string, firstName: string): Promise<void> {
-    const fromEmail = this.configService.get(
-      'SENDGRID_FROM_EMAIL',
-      'noreply@tutorize.com',
-    );
-    const fromName = this.configService.get('SENDGRID_FROM_NAME', 'Tutorize');
-    const frontendUrl = this.configService.get(
-      'FRONTEND_URL',
-      'http://localhost:5173',
-    );
-
     const msg = {
       to: email,
       from: {
-        email: fromEmail,
-        name: fromName,
+        email: this.fromEmail,
+        name: this.fromName,
       },
       subject: 'Chào mừng bạn đến với Tutorize! 🎉',
       html: `
@@ -198,7 +183,7 @@ export class EmailService {
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${frontendUrl}/dashboard" 
+              <a href="${this.frontendUrl}/dashboard" 
                  style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
                 Bắt đầu học ngay
               </a>
@@ -208,7 +193,7 @@ export class EmailService {
             
             <p style="color: #6c757d; font-size: 12px; text-align: center; margin: 0;">
               Email này được gửi tự động, vui lòng không trả lời.<br>
-              © 2024 Tutorize. Tất cả quyền được bảo lưu.
+              © 2025 Tutorize. Tất cả quyền được bảo lưu.
             </p>
           </div>
         </div>
@@ -216,11 +201,10 @@ export class EmailService {
     };
 
     try {
-      await sgMail.send(msg);
+      await this.sgMail.send(msg);
       console.log(`✅ Welcome email sent successfully to ${email}`);
     } catch (error) {
       console.error('❌ SendGrid Error (Welcome Email):', error);
-      // Don't throw error for welcome emails, just log it
     }
   }
 }

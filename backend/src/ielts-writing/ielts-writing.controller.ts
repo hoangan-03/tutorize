@@ -45,7 +45,6 @@ export class IeltsWritingController {
     description: 'Lấy danh sách nộp bài test thành công',
   })
   async getUserSubmissions(@CurrentUser('id') userId: number) {
-    console.log('Getting IELTS Writing submissions for user:', userId);
     return await this.ieltsWritingService.getMySubmissions(userId);
   }
 
@@ -60,7 +59,6 @@ export class IeltsWritingController {
     @CurrentUser('id') userId: number,
     @Param('submissionId', ParseIntPipe) submissionId: number,
   ) {
-    console.log('Getting IELTS Writing submission for user:', userId);
     return await this.ieltsWritingService.getMySubmission(userId, submissionId);
   }
 
@@ -72,7 +70,6 @@ export class IeltsWritingController {
     @CurrentUser('id') userId: number,
     @Body() createDto: CreateIeltsWritingTestDto,
   ) {
-    console.log('Creating IELTS Writing test by user:', userId);
     return await this.ieltsWritingService.createTest(userId, createDto);
   }
 
@@ -83,7 +80,6 @@ export class IeltsWritingController {
     description: 'Lấy danh sách bài test thành công',
   })
   async getTests(@Query() query: IeltsWritingTestQueryDto) {
-    console.log('Getting IELTS Writing tests with query:', query);
     return await this.ieltsWritingService.getTests(query);
   }
 
@@ -125,7 +121,6 @@ export class IeltsWritingController {
     @Param('testId', ParseIntPipe) testId: number,
     @CurrentUser('id') userId: number,
   ) {
-    console.log('Deleting IELTS Writing test:', testId, 'by user:', userId);
     return await this.ieltsWritingService.deleteTest(testId, userId);
   }
 
@@ -141,7 +136,6 @@ export class IeltsWritingController {
     @CurrentUser('id') userId: number,
     @Body() submitDto: SubmitIeltsWritingTestDto,
   ) {
-    console.log('Submitting IELTS Writing test:', testId, 'by user:', userId);
     return await this.ieltsWritingService.submitTest(testId, userId, submitDto);
   }
 
@@ -178,7 +172,6 @@ export class IeltsWritingController {
     description: 'Lấy danh sách nộp bài test thành công',
   })
   async getTestSubmissions(@Param('testId', ParseIntPipe) testId: number) {
-    console.log('Getting submissions for IELTS Writing test:', testId);
     return await this.ieltsWritingService.getTestSubmissions(testId);
   }
 

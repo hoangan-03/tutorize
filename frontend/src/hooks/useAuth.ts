@@ -27,10 +27,6 @@ interface UseAuthReturn {
   forgotPassword: (
     email: string
   ) => Promise<{ message: string; tempPassword?: string }>;
-  resetPassword: (data: {
-    token: string;
-    password: string;
-  }) => Promise<{ message: string }>;
   refreshUser: () => Promise<void>;
   clearError: () => void;
   isTeacher: boolean;
@@ -141,19 +137,6 @@ export const useAuth = (): UseAuthReturn => {
     return response;
   };
 
-  const resetPassword = async (data: {
-    token: string;
-    password: string;
-  }): Promise<{ message: string }> => {
-    setIsLoading(true);
-    setError(null);
-
-    const response = await authService.resetPassword(data);
-
-    setIsLoading(false);
-    return response;
-  };
-
   const refreshUser = async (): Promise<void> => {
     const currentUser = await authService.getProfile();
     setUser(currentUser);
@@ -176,7 +159,6 @@ export const useAuth = (): UseAuthReturn => {
     updateProfile,
     changePassword,
     forgotPassword,
-    resetPassword,
     refreshUser,
     clearError,
     isTeacher: user?.role === Role.TEACHER,

@@ -20,7 +20,6 @@ import {
   LoginDto,
   ChangePasswordDto,
   ForgotPasswordDto,
-  ResetPasswordDto,
   UpdateProfileDto,
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -92,17 +91,5 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Email reset đã được gửi' })
   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto);
-  }
-
-  @Public()
-  @Post('reset-password')
-  @ApiOperation({ summary: 'Reset mật khẩu' })
-  @ApiResponse({ status: 200, description: 'Reset mật khẩu thành công' })
-  @ApiResponse({
-    status: 400,
-    description: 'Token không hợp lệ hoặc đã hết hạn',
-  })
-  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.authService.resetPassword(resetPasswordDto);
   }
 }

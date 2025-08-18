@@ -16,7 +16,6 @@ import {
   LoginDto,
   ChangePasswordDto,
   ForgotPasswordDto,
-  ResetPasswordDto,
   UpdateProfileDto,
 } from './dto/auth.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
@@ -64,9 +63,8 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user);
 
-    // Send welcome email (don't wait for it)
     this.emailService
-      .sendWelcomeEmail(user.email, user.profile?.firstName || 'bạn')
+      .sendWelcomeEmail(user.email, user.profile?.firstName)
       .catch((error) => {
         console.error('Failed to send welcome email:', error);
       });
@@ -82,7 +80,6 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    // Find user
     const user = await this.prisma.user.findUnique({
       where: { email },
       include: {
@@ -94,27 +91,22 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
 
-    // Check if user is active
     if (!user.isActive) {
       throw new UnauthorizedException('Tài khoản đã bị khóa');
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
 
-    // Update last login
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
 
-    // Generate tokens
     const tokens = await this.generateTokens(user);
 
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
     return {
@@ -135,7 +127,6 @@ export class AuthService {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
 
-    // Verify current password
     const isCurrentPasswordValid = await bcrypt.compare(
       currentPassword,
       user.password,
@@ -144,10 +135,8 @@ export class AuthService {
       throw new BadRequestException('Mật khẩu hiện tại không đúng');
     }
 
-    // Hash new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
-    // Update password
     await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -156,7 +145,6 @@ export class AuthService {
       },
     });
 
-    // Send password change notification (don't wait for it)
     this.emailService
       .sendPasswordChangeNotification(user.email, user.profile?.firstName)
       .catch((error) => {
@@ -171,11 +159,9 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { email },
-      include: { profile: true },
     });
 
     if (!user) {
-      // Don't reveal if email exists or not for security
       return {
         message:
           'Nếu email tồn tại, mật khẩu tạm thời đã được gửi đến email của bạn',
@@ -190,11 +176,11 @@ export class AuthService {
       };
     }
 
-    // Generate a secure random temporary password
+    const oldPassword = user.password;
+
     const tempPassword = this.generateRandomPassword();
     const hashedTempPassword = await bcrypt.hash(tempPassword, 12);
 
-    // Update user password to temporary password
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
@@ -204,7 +190,6 @@ export class AuthService {
     });
 
     try {
-      // Send temporary password via email
       await this.emailService.sendTemporaryPassword(email, tempPassword);
 
       return {
@@ -212,42 +197,17 @@ export class AuthService {
         success: true,
       };
     } catch (error) {
-      // If email fails, revert the password change
       console.error('Failed to send email, reverting password change:', error);
 
-      // You might want to revert the password change here if email fails
-      // For now, we'll keep the temp password and log the error
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { password: oldPassword },
+      });
 
       return {
         message: 'Có lỗi xảy ra khi gửi email. Vui lòng thử lại sau.',
         success: false,
       };
-    }
-  }
-
-  async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    const { token, password } = resetPasswordDto;
-
-    try {
-      // Verify reset token
-      const payload = this.jwtService.verify(token) as any;
-
-      if (payload.type !== 'reset') {
-        throw new BadRequestException('Token không hợp lệ');
-      }
-
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(password, 12);
-
-      // Update password
-      await this.prisma.user.update({
-        where: { id: payload.sub },
-        data: { password: hashedPassword },
-      });
-
-      return { message: 'Reset mật khẩu thành công' };
-    } catch (error) {
-      throw new BadRequestException('Token không hợp lệ hoặc đã hết hạn');
     }
   }
 
@@ -265,7 +225,6 @@ export class AuthService {
 
     const { password: _, ...userWithoutPassword } = user;
 
-    // Format dateOfBirth in profile if it exists
     if (userWithoutPassword.profile?.dateOfBirth) {
       (userWithoutPassword.profile as any).dateOfBirth =
         userWithoutPassword.profile.dateOfBirth.toISOString().split('T')[0];
@@ -284,13 +243,12 @@ export class AuthService {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
 
-    // Parse dateOfBirth from DD-MM-YYYY string to Date
     let parsedDateOfBirth: Date | undefined;
     if (updateProfileDto.dateOfBirth) {
       const [day, month, year] = updateProfileDto.dateOfBirth
         .split('-')
         .map(Number);
-      parsedDateOfBirth = new Date(Date.UTC(year, month - 1, day)); // month is 0-indexed
+      parsedDateOfBirth = new Date(Date.UTC(year, month - 1, day));
     }
 
     const updatedProfile = await this.prisma.userProfile.upsert({
@@ -314,7 +272,6 @@ export class AuthService {
       },
     });
 
-    // Format dateOfBirth for response
     const formattedProfile = {
       ...updatedProfile,
       dateOfBirth: updatedProfile.dateOfBirth
@@ -369,7 +326,6 @@ export class AuthService {
     const numbers = '0123456789';
     const specialChars = '@$!%*?&';
 
-    // Ensure at least one character from each category
     let password = '';
     password += upperCase.charAt(Math.floor(Math.random() * upperCase.length));
     password += lowerCase.charAt(Math.floor(Math.random() * lowerCase.length));
@@ -378,13 +334,11 @@ export class AuthService {
       Math.floor(Math.random() * specialChars.length),
     );
 
-    // Fill the rest with random characters from all categories
     const allChars = upperCase + lowerCase + numbers + specialChars;
     for (let i = 4; i < 12; i++) {
       password += allChars.charAt(Math.floor(Math.random() * allChars.length));
     }
 
-    // Shuffle the password to randomize the order
     return password
       .split('')
       .sort(() => Math.random() - 0.5)

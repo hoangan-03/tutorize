@@ -107,17 +107,6 @@ class AuthService {
     return response.data;
   }
 
-  async resetPassword(data: {
-    token: string;
-    password: string;
-  }): Promise<{ message: string }> {
-    const response = await api.post<{ message: string }>(
-      "/auth/reset-password",
-      data
-    );
-    return response.data;
-  }
-
   // Utility methods
   isTeacher(): boolean {
     const user = this.getUser();

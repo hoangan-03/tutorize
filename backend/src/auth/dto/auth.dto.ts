@@ -155,17 +155,6 @@ export class ForgotPasswordDto {
   email: string;
 }
 
-export class ResetPasswordDto {
-  @ApiProperty({ description: 'Token reset mật khẩu' })
-  @IsString()
-  token: string;
-
-  @ApiProperty({ description: 'Mật khẩu mới' })
-  @IsString({ message: 'Mật khẩu phải là chuỗi ký tự' })
-  @Validate(PasswordStrengthValidator)
-  password: string;
-}
-
 export class UpdateProfileDto {
   @ApiPropertyOptional({ description: 'Họ', example: 'Nguyễn' })
   @IsOptional()

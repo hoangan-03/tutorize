@@ -31,10 +31,6 @@ interface AuthContextType {
   forgotPassword: (
     email: string
   ) => Promise<{ message: string; tempPassword?: string }>;
-  resetPassword: (data: {
-    token: string;
-    password: string;
-  }) => Promise<{ message: string }>;
   refreshUser: () => Promise<void>;
   clearError: () => void;
 
@@ -78,7 +74,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateProfile: auth.updateProfile,
     changePassword: auth.changePassword,
     forgotPassword: auth.forgotPassword,
-    resetPassword: auth.resetPassword,
     refreshUser: auth.refreshUser,
     clearError: auth.clearError,
 
