@@ -1,0 +1,48 @@
+# Workflow name
+name: Deploy NestJS App to EC2
+
+# Define the trigger event for the workflow
+on:
+  push:
+    branches:
+      - master  # Only run on push to the master branch
+
+# Define the jobs to be executed
+jobs:
+  deploy:
+    # Use the latest Ubuntu virtual machine provided by GitHub
+    runs-on: ubuntu-latest
+
+    # Steps to be executed
+    steps:
+      - name: Deploy to EC2 instance
+        # Use a pre-existing Action to perform SSH
+        uses: appleboy/ssh-action@master
+        with:
+          # Get information from the GitHub Secrets
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          
+          # The script that will be executed on the EC2 server
+          script: |
+            # Go to the project directory on EC2
+            cd /home/ubuntu/tutorize-backend  # <-- CHANGE THIS PATH
+            
+            # Pull the latest code from the master branch
+            echo "Pulling latest code..."
+            git pull origin master
+            
+            # Install dependencies
+            echo "Installing dependencies..."
+            npm install
+            
+            # Rebuild the application
+            echo "Building the application..."
+            npm run build
+            
+            # Restart the application with PM2
+            echo "Restarting application with PM2..."
+            pm2 restart tutorize-backend   # <-- CHANGE YOUR PM2 APP NAME
+            
+            echo "Deployment successful!"
