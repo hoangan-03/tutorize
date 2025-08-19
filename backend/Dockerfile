@@ -20,6 +20,9 @@ FROM node:22-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Install dependencies for Prisma
+RUN apk add --no-cache openssl
+
 # Install only production deps
 COPY package*.json ./
 RUN npm ci --only=production
