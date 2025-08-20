@@ -15,11 +15,9 @@ async function bootstrap() {
   app.use(compression());
 
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN')?.split(',') || [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:4173',
-    ],
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',')
+      : ['http://localhost:5173'],
     credentials: true,
   });
 
