@@ -24,22 +24,7 @@ export class PdfService {
     try {
       const puppeteerConfig = {
         headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-        ],
-        ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
-          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-        }),
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
       };
 
       this.logger.log('Launching Puppeteer with config:', puppeteerConfig);
