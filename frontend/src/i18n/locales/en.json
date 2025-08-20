@@ -501,7 +501,7 @@
       "quizTitle": "Quiz",
       "loading": "Loading submission details",
       "notFound": "Submission not found",
-      "notFoundDesc": "This submission does not exist or you don't have permission to access it.",
+      "notFoundDesc": "This quiz does not allow viewing submissions.",
       "student": "Student",
       "score": "Score",
       "timeSpent": "Time Spent",
@@ -944,7 +944,7 @@
     "closeExercise": "Close Exercise",
     "openExercise": "Open Exercise",
     "back": "Back",
-    "editExercise":"Edit exercise",
+    "editExercise": "Edit exercise",
     "viewExercise": "View Exercise",
     "exerciseInfo": "Exercise Information",
     "exerciseContent": "Exercise Content",
@@ -958,7 +958,6 @@
     "exerciseTeacher": "Teacher",
     "exerciseCreatedAt": "Created At",
     "exerciseSubmissions": "Submissions Count"
-
   },
   "exercisePublicView": {
     "subject": "Subject",

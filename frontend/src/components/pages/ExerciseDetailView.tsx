@@ -47,9 +47,7 @@ export const ExerciseDetailView: React.FC = () => {
   const { exercise, isLoading } = useExercise(
     exerciseId ? parseInt(exerciseId) : null
   );
-  const [selectedFont, setSelectedFont] = useState<string>(
-   FontList[0].name
-  );
+  const [selectedFont, setSelectedFont] = useState<string>(FontList[0].name);
   const contentRef = useRef<HTMLDivElement>(null);
 
   enum UploadStatus {
@@ -331,7 +329,6 @@ export const ExerciseDetailView: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
 
   const downloadAsPDF = async (exerciseData: Exercise) => {
     if (!exerciseData) return;
@@ -732,16 +729,16 @@ export const ExerciseDetailView: React.FC = () => {
                     <div className="flex gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => setEditing(!editing)}
-                        className="flex-1 sm:flex-initial px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1 text-sm sm:text-base"
+                        className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 text-white shadow-md"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-4 h-4 mr-2" />
                         {editing ? t("common.cancel") : t("common.edit")}
                       </button>
                       <button
                         onClick={handleDeleteSubmission}
-                        className="flex-1 sm:flex-initial px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-1 text-sm sm:text-base"
+                        className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-red-600 hover:bg-red-700 text-white shadow-md"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 mr-2" />
                         {t("common.delete")}
                       </button>
                     </div>

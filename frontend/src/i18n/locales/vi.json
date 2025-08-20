@@ -480,7 +480,7 @@
       "quizTitle": "Quiz",
       "loading": "Đang tải chi tiết bài làm",
       "notFound": "Không tìm thấy bài làm",
-      "notFoundDesc": "Bài làm này không tồn tại hoặc bạn không có quyền truy cập.",
+      "notFoundDesc": "Quiz này không cho phép xem bài làm.",
       "student": "Học sinh",
       "score": "Điểm số",
       "timeSpent": "Thời gian làm bài",
