@@ -26,7 +26,7 @@ import { ExerciseDashboard } from "./ExerciseDashboard";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExercises, useExerciseManagement } from "../../hooks";
-import { Exercise, Subject, ExerciseStatus, EditMode } from "../../types/api";
+import { Exercise, Subject, ExerciseStatus } from "../../types/api";
 import { Badge } from "../ui/Badge";
 import { formatDate, getDefaultDeadline } from "../utils";
 
@@ -50,7 +50,6 @@ export const ExerciseEditor: React.FC = () => {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null
   );
-  const [editMode, setEditMode] = useState<EditMode>(EditMode.RICH);
 
   // Form state with correct types
   const [formData, setFormData] = useState<Exercise>({
@@ -261,8 +260,6 @@ export const ExerciseEditor: React.FC = () => {
           }
           onCancel={() => setCurrentView("list")}
           isEdit={currentView === "edit"}
-          editMode={editMode}
-          onEditModeChange={setEditMode}
         />
       </div>
     );
