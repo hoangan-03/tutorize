@@ -1,0 +1,66 @@
+# ---- Stage 1: Builder ----
+FROM node:22-slim AS builder
+WORKDIR /app
+
+# Install dependencies for building
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy config and source
+COPY nest-cli.json tsconfig*.json ./
+COPY prisma ./prisma
+COPY src ./src
+
+# Generate Prisma Client and build app
+RUN npx prisma generate
+RUN npm run build
+
+# ---- Stage 2: Production ----
+FROM node:22-slim AS production
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Install dependencies for Puppeteer
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    ca-certificates \
+    procps \
+    libxss1 \
+    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add user so we don't need --no-sandbox
+RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
+    && mkdir -p /home/pptruser/Downloads \
+    && chown -R pptruser:pptruser /home/pptruser
+
+# Tell Puppeteer to skip installing Chrome. We'll be using the installed version.
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+
+# Install only production deps
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy build output and prisma artifacts
+COPY --from=builder /app/dist ./dist
+COPY prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
+
+# Run everything after as non-privileged user
+USER pptruser
+
+EXPOSE 3000
+CMD ["node", "dist/main.js"]

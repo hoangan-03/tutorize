@@ -22,10 +22,29 @@ export class PdfService {
     const html = this.buildHtml(exercise, font, showHeader);
     let browser: Browser | null = null;
     try {
-      browser = await puppeteer.launch({
+      const puppeteerConfig = {
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+        ],
+        ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+        }),
+      };
+
+      this.logger.log('Launching Puppeteer with config:', puppeteerConfig);
+      browser = await puppeteer.launch(puppeteerConfig);
+
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
