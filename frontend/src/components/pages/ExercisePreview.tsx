@@ -14,6 +14,7 @@ import { formatDate } from "../utils";
 import { generateExercisePDF } from "../../utils/pdfGenerator";
 import { FontList } from "../constant";
 import { useTranslation } from "react-i18next";
+import { ActionButton } from "../ui/ActionButton";
 
 interface ExercisePreviewProps {
   exercise: Exercise;
@@ -30,15 +31,21 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const [selectedFont, setSelectedFont] =
-    React.useState<string>(FontList[0].name);
+  const [selectedFont, setSelectedFont] = React.useState<string>(
+    FontList[0].name
+  );
 
-     const { t } = useTranslation();
+  const { t } = useTranslation();
 
   const downloadAsPDF = async () => {
     try {
       const fontValue = getCurrentFontFamily();
-      console.log('Generating PDF with font:', selectedFont, 'CSS value:', fontValue);
+      console.log(
+        "Generating PDF with font:",
+        selectedFont,
+        "CSS value:",
+        fontValue
+      );
       await generateExercisePDF(exercise, {
         selectedFont: fontValue, // Use CSS font family value instead of display name
         showHeader: false,
@@ -59,34 +66,38 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
     <div className="max-w-8xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center flex-row gap-4">
-          <button
+          <ActionButton
             onClick={onBack}
-            className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-gray-50 text-red-700 shadow-md"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            {t("exerciseEditorUI.back")}
-          </button>
+            colorTheme="gray"
+            textColor="text-red-700"
+            hasIcon={true}
+            icon={ArrowLeft}
+            text={t("exerciseEditorUI.back")}
+            size="sm"
+          />
           <h1 className="text-base md:text-xl lg:text-3xl font-bold text-gray-900">
             {t("exerciseEditorUI.viewExercise")}
           </h1>
         </div>
 
         <div className="flex space-x-3">
-          <button
+          <ActionButton
             onClick={downloadAsPDF}
-            className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-green-600 text-white shadow-md"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {t("exerciseEditorUI.downloadPDF")}
-          </button>
+            colorTheme="green"
+            hasIcon={true}
+            icon={Download}
+            text={t("exerciseEditorUI.downloadPDF")}
+            size="sm"
+          />
           {!isReadOnly && onEdit && (
-            <button
+            <ActionButton
               onClick={onEdit}
-              className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-blue-600 text-white shadow-md"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-         {t("exerciseEditorUI.editExercise")}
-            </button>
+              colorTheme="blue"
+              hasIcon={true}
+              icon={Edit}
+              text={t("exerciseEditorUI.editExercise")}
+              size="sm"
+            />
           )}
         </div>
       </div>
@@ -95,7 +106,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sticky top-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-100">
-             {t("exerciseEditorUI.exerciseInfo")}
+              {t("exerciseEditorUI.exerciseInfo")}
             </h2>
 
             <div className="space-y-5">
@@ -210,7 +221,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
               <div className="max-w-none">
                 <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 border border-blue-100">
                   <div className="bg-white rounded-lg p-8 shadow-sm">
-                    <div 
+                    <div
                       className="prose prose-lg max-w-none text-start prose-headings:text-gray-800 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700 prose-strong:text-gray-900"
                       style={{ fontFamily: getCurrentFontFamily() }}
                     >
@@ -248,7 +259,10 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                               /<ol/g,
                               `<ol style="font-family: ${getCurrentFontFamily()};" class="mb-4 pl-6 space-y-2"`
                             )
-                            .replace(/<li/g, `<li style="font-family: ${getCurrentFontFamily()};" class="text-gray-700"`)
+                            .replace(
+                              /<li/g,
+                              `<li style="font-family: ${getCurrentFontFamily()};" class="text-gray-700"`
+                            )
                             .replace(
                               /<strong/g,
                               `<strong style="font-family: ${getCurrentFontFamily()};" class="font-semibold text-gray-900"`

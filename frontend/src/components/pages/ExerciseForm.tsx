@@ -3,6 +3,7 @@ import { Play, Pause, Plus, Save, ArrowLeft } from "lucide-react";
 import { RichTextEditor } from "../ui/RichTextEditor";
 import { Exercise, ExerciseStatus, Subject } from "../../types/api";
 import { useTranslation } from "react-i18next";
+import { ActionButton } from "../ui/ActionButton";
 
 interface ExerciseFormProps {
   formData: Exercise;
@@ -44,55 +45,53 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
     <div className="max-w-8xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center flex-row gap-4">
-          <button
+          <ActionButton
             onClick={onCancel}
-            className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-gray-50 text-red-700 shadow-md"
-          >
-               <ArrowLeft className="h-5 w-5 mr-1" />
-            {t("exerciseEditorUI.back")}
-          </button>
+            colorTheme="gray"
+            textColor="text-red-700"
+            hasIcon={true}
+            icon={ArrowLeft}
+            text={t("exerciseEditorUI.back")}
+            size="sm"
+          />
           <h2 className="text-2xl font-bold text-gray-900">
             {isEdit ? "Chỉnh sửa bài tập" : "Tạo bài tập mới"}
           </h2>
         </div>
         <div className="flex space-x-3">
           {!isEdit ? (
-            <button
-              onClick={onSave}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo bài tập
-            </button>
+            <ActionButton
+              onClick={onSave || (() => {})}
+              colorTheme="blue"
+              hasIcon={true}
+              icon={Plus}
+              text="Tạo bài tập"
+              size="md"
+            />
           ) : (
             <>
-              <button
-                onClick={onSave}
-                className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-blue-600 text-white shadow-md"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {t("exerciseEditorUI.saveChanges")}
-              </button>
-              <button
+              <ActionButton
+                onClick={onSave || (() => {})}
+                colorTheme="blue"
+                hasIcon={true}
+                icon={Save}
+                text={t("exerciseEditorUI.saveChanges")}
+                size="sm"
+              />
+              <ActionButton
                 onClick={onToggleStatus}
-                className={`flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all text-white shadow-md ${
+                colorTheme={
+                  formData.status === ExerciseStatus.ACTIVE ? "yellow" : "green"
+                }
+                hasIcon={true}
+                icon={formData.status === ExerciseStatus.ACTIVE ? Pause : Play}
+                text={
                   formData.status === ExerciseStatus.ACTIVE
-                    ? "bg-orange-600 hover:bg-orange-700 "
-                    : "bg-green-600 hover:bg-green-700 "
-                }`}
-              >
-                {formData.status === ExerciseStatus.ACTIVE ? (
-                  <>
-                    <Pause className="h-4 w-4 mr-2" />
-                    {t("exerciseEditorUI.closeExercise")}
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    {t("exerciseEditorUI.openExercise")}
-                  </>
-                )}
-              </button>
+                    ? t("exerciseEditorUI.pauseExercise")
+                    : t("exerciseEditorUI.activateExercise")
+                }
+                size="sm"
+              />
             </>
           )}
         </div>

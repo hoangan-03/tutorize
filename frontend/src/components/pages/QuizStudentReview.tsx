@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuizSubmissionForReview } from "../../hooks/useQuiz";
+import { ActionButton } from "../ui/ActionButton";
 
 interface ApiError extends Error {
   response?: {
@@ -119,13 +120,14 @@ export const QuizStudentReview: React.FC = () => {
           <p className="text-gray-600 mb-6">
             {t("quizzes.submission.notFoundDesc")}
           </p>
-          <button
+          <ActionButton
             onClick={handleBack}
-            className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2 mt-1" />
-            {t("common.goBack")}
-          </button>
+            colorTheme="blue"
+            hasIcon={true}
+            icon={ArrowLeft}
+            text={t("common.goBack")}
+            size="sm"
+          />
         </div>
       </div>
     );
@@ -196,13 +198,17 @@ export const QuizStudentReview: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center">
-          <button
+          <ActionButton
             onClick={handleBack}
-            className="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            colorTheme="transparent"
+            textColor="text-gray-600 hover:text-gray-900"
+            hasIcon={true}
+            icon={ArrowLeft}
+            iconOnly={true}
+            size="md"
             title={t("common.goBack")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+            className="mr-4 hover:bg-gray-100"
+          />
           <div className="flex flex-col text-start">
             <h1 className="text-2xl font-bold text-gray-900">
               {t("quizzes.review.title")}

@@ -12,6 +12,7 @@ import {
   useIeltsTestManagement,
   useModal,
 } from "../../hooks";
+import { ActionButton } from "../ui";
 
 export type Answer = string;
 export type AnswerState = Record<number, Answer>;
@@ -578,13 +579,13 @@ export const IeltsTestPlayer: React.FC = () => {
               {formatTime(timeLeft)}
             </p>
           </div>
-          <button
+          <ActionButton
             onClick={handleExit}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm"
-            aria-label={t("ielts.player.exit")}
-          >
-            {t("ielts.player.exit")}
-          </button>
+            text={t("ielts.player.exit")}
+            colorTheme="red"
+            hasIcon={false}
+            size="md"
+          />
         </div>
       </div>
 
@@ -653,17 +654,20 @@ export const IeltsTestPlayer: React.FC = () => {
 
       {/* Footer Navigation */}
       <div className="mx-2 py-4 border-t border-gray-200 flex justify-between items-center">
-        <div>
-          <button
+        <div className="flex flex-row gap-1">
+          <ActionButton
             onClick={() =>
               setCurrentSectionIndex((prev) => Math.max(0, prev - 1))
             }
             disabled={currentSectionIndex === 0}
-            className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
-            {t("ielts.player.previousSection")}
-          </button>
-          <button
+            text={t("ielts.player.previousSection")}
+            size="sm"
+            className="mr-2"
+            colorTheme="white"
+            hasIcon={false}
+            textColor="black"
+          />
+          <ActionButton
             onClick={() =>
               setCurrentSectionIndex((prev) =>
                 Math.min((currentTest.sections?.length || 1) - 1, prev + 1)
@@ -672,17 +676,20 @@ export const IeltsTestPlayer: React.FC = () => {
             disabled={
               currentSectionIndex === (currentTest.sections?.length || 1) - 1
             }
-            className="ml-3 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
-            {t("ielts.player.nextSection")}
-          </button>
+            text={t("ielts.player.nextSection")}
+            colorTheme="white"
+            hasIcon={false}
+            textColor="black"
+            size="sm"
+          />
         </div>
-        <button
+
+        <ActionButton
           onClick={() => handleSubmit(false)}
-          className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          {t("ielts.player.submit")}
-        </button>
+          text={t("ielts.player.submit")}
+          hasIcon={false}
+          size="md"
+        />
       </div>
     </div>
   );

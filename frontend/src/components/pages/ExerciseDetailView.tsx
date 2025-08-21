@@ -30,6 +30,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/Badge";
+import { ActionButton } from "../ui/ActionButton";
 import { exerciseService } from "../../services/exerciseService";
 import { UploadService } from "../../services/uploadService";
 import { generateExercisePDF } from "../../utils/pdfGenerator";
@@ -372,12 +373,14 @@ export const ExerciseDetailView: React.FC = () => {
             <p className="text-gray-600 mb-4">
               {t("exercisePublicView.notFoundDescription")}
             </p>
-            <button
+            <ActionButton
               onClick={handleBackToList}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              {t("common.back")}
-            </button>
+              colorTheme="blue"
+              hasIcon={false}
+              text={t("common.back")}
+              size="md"
+              className="px-6 py-2"
+            />
           </div>
         </div>
       </div>
@@ -443,39 +446,51 @@ export const ExerciseDetailView: React.FC = () => {
 
             {/* Action Buttons - Hidden on small screens, shown on md+ in column */}
             <div className="hidden md:flex flex-col space-y-3">
-              <button
+              <ActionButton
                 onClick={() => downloadAsPDF(exercise)}
-                className="flex items-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all duration-200 backdrop-blur-sm border border-white/20"
-              >
-                <Download className="h-5 w-5 mr-2" />
-                {t("exercises.downloadPDF")}
-              </button>
-              <button
+                colorTheme="white"
+                textColor="text-white"
+                hasIcon={true}
+                icon={Download}
+                text={t("exercises.downloadPDF")}
+                className="border border-white/20 backdrop-blur-sm"
+                size="md"
+              />
+              <ActionButton
                 onClick={handleBackToList}
-                className="flex items-center px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-white/20"
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                {t("common.back")}
-              </button>
+                colorTheme="transparent"
+                textColor="text-white"
+                hasIcon={true}
+                icon={ArrowLeft}
+                text={t("common.back")}
+                className="border border-white/20 backdrop-blur-sm"
+                size="md"
+              />
             </div>
           </div>
 
           {/* Action Buttons Row - Shown on small screens only */}
           <div className="flex md:hidden flex-row gap-3">
-            <button
+            <ActionButton
               onClick={() => downloadAsPDF(exercise)}
-              className="flex-1 flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all duration-200 backdrop-blur-sm border border-white/20"
-            >
-              <Download className="h-5 w-5 mr-2" />
-              {t("exercises.downloadPDF")}
-            </button>
-            <button
+              colorTheme="white"
+              textColor="text-white"
+              hasIcon={true}
+              icon={Download}
+              text={t("exercises.downloadPDF")}
+              className="flex-1 justify-center border border-white/20 backdrop-blur-sm"
+              size="md"
+            />
+            <ActionButton
               onClick={handleBackToList}
-              className="flex-1 flex items-center justify-center px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-white/20"
-            >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              {t("common.back")}
-            </button>
+              colorTheme="transparent"
+              textColor="text-white"
+              hasIcon={true}
+              icon={ArrowLeft}
+              text={t("common.back")}
+              className="flex-1 justify-center border border-white/20 backdrop-blur-sm"
+              size="md"
+            />
           </div>
 
           {/* Info Cards */}
@@ -727,20 +742,20 @@ export const ExerciseDetailView: React.FC = () => {
                   {/* Edit/Delete buttons only if not graded */}
                   {existingSubmission.status === SubmissionStatus.SUBMITTED && (
                     <div className="flex gap-2 w-full sm:w-auto">
-                      <button
+                      <ActionButton
                         onClick={() => setEditing(!editing)}
-                        className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        {editing ? t("common.cancel") : t("common.edit")}
-                      </button>
-                      <button
+                        colorTheme="blue"
+                        hasIcon={true}
+                        icon={Edit}
+                        text={editing ? t("common.cancel") : t("common.edit")}
+                      />
+                      <ActionButton
                         onClick={handleDeleteSubmission}
-                        className="flex items-center px-3 py-2 text-sm rounded-lg font-medium transition-all bg-red-600 hover:bg-red-700 text-white shadow-md"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {t("common.delete")}
-                      </button>
+                        colorTheme="red"
+                        hasIcon={true}
+                        icon={Trash2}
+                        text={t("common.delete")}
+                      />
                     </div>
                   )}
                 </div>
@@ -795,13 +810,16 @@ export const ExerciseDetailView: React.FC = () => {
                           onClick={() => window.open(imageUrl, "_blank")}
                         />
                         {editing && (
-                          <button
+                          <ActionButton
                             onClick={() => removeExistingImage(index)}
-                            className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            colorTheme="red"
+                            hasIcon={true}
+                            icon={X}
+                            iconOnly={true}
                             title={t("exercises.removeImage")}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                            className="absolute top-2 right-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            size="sm"
+                          />
                         )}
                         <div className="absolute bottom-2 left-2">
                           <Badge
@@ -826,24 +844,30 @@ export const ExerciseDetailView: React.FC = () => {
                 {/* Save/Cancel buttons when editing */}
                 {editing && (
                   <div className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-gray-200">
-                    <button
+                    <ActionButton
                       onClick={handleUpdateSubmission}
                       disabled={isSubmitting}
-                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm sm:text-base"
-                    >
-                      {isSubmitting
-                        ? t("exercises.saving")
-                        : t("exercises.saveChanges")}
-                    </button>
-                    <button
+                      colorTheme="green"
+                      hasIcon={false}
+                      text={
+                        isSubmitting
+                          ? t("exercises.saving")
+                          : t("exercises.saveChanges")
+                      }
+                      className="w-full sm:w-auto"
+                      size="md"
+                    />
+                    <ActionButton
                       onClick={() => {
                         setEditing(false);
                         setUploadedImages([]);
                       }}
-                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm sm:text-base"
-                    >
-                      {t("common.cancel")}
-                    </button>
+                      colorTheme="gray"
+                      hasIcon={false}
+                      text={t("common.cancel")}
+                      className="w-full sm:w-auto"
+                      size="md"
+                    />
                   </div>
                 )}
               </div>
@@ -870,7 +894,7 @@ export const ExerciseDetailView: React.FC = () => {
 
                 {/* File Upload Area */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-4 sm:p-6 md:p-8 text-center transition-colors ${
+                  className={`border-2 border-dashed rounded-xl p-4 sm:p-6 md:p-8 flex flex-col items-center transition-colors ${
                     isDragOver
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-300 bg-gray-50"
@@ -886,12 +910,13 @@ export const ExerciseDetailView: React.FC = () => {
                   <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base px-2">
                     {t("exercises.dragDropOrClick")}
                   </p>
-                  <button
+                  <ActionButton
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
-                  >
-                    {t("exercises.selectFiles")}
-                  </button>
+                    colorTheme="blue"
+                    hasIcon={false}
+                    text={t("exercises.selectFiles")}
+                    size="md"
+                  />
                   <input
                     aria-label="Chọn file"
                     ref={fileInputRef}
@@ -934,20 +959,23 @@ export const ExerciseDetailView: React.FC = () => {
                           </div>
 
                           {/* Remove Button */}
-                          <button
+                          <ActionButton
                             onClick={() => removeImage(index)}
-                            aria-label={t("exercises.removeImage")}
-                            className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                          >
-                            <X className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </button>
+                            colorTheme="red"
+                            hasIcon={true}
+                            icon={X}
+                            iconOnly={true}
+                            title={t("exercises.removeImage")}
+                            className="absolute top-1 right-1 sm:top-2 sm:right-2 rounded-full"
+                            size="sm"
+                          />
                         </div>
                       ))}
                     </div>
 
                     {/* Submit Button */}
                     <div className="mt-4 sm:mt-6 flex justify-center">
-                      <button
+                      <ActionButton
                         onClick={submitExercise}
                         disabled={
                           isSubmitting ||
@@ -955,28 +983,40 @@ export const ExerciseDetailView: React.FC = () => {
                             (img) => img.uploadStatus === "uploading"
                           )
                         }
-                        className={`w-full sm:w-auto px-6 sm:px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base ${
+                        colorTheme={
                           isSubmitting ||
                           uploadedImages.some(
                             (img) => img.uploadStatus === "uploading"
                           )
-                            ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                            : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
-                        }`}
-                      >
-                        {isSubmitting ? (
-                          <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
-                            {existingSubmission && editing
-                              ? t("exercises.updating")
-                              : t("exercises.submitting")}
-                          </div>
-                        ) : existingSubmission && editing ? (
-                          t("exercises.updateSubmission")
-                        ) : (
-                          t("exercises.submitExercise")
-                        )}
-                      </button>
+                            ? "gray"
+                            : "gradient"
+                        }
+                        textColor={
+                          isSubmitting ||
+                          uploadedImages.some(
+                            (img) => img.uploadStatus === "uploading"
+                          )
+                            ? "text-gray-700"
+                            : "text-white"
+                        }
+                        hasIcon={false}
+                        text={
+                          isSubmitting ? (
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
+                              {existingSubmission && editing
+                                ? t("exercises.updating")
+                                : t("exercises.submitting")}
+                            </div>
+                          ) : existingSubmission && editing ? (
+                            t("exercises.updateSubmission")
+                          ) : (
+                            t("exercises.submitExercise")
+                          )
+                        }
+                        className="w-full sm:w-auto shadow-lg hover:shadow-xl"
+                        size="lg"
+                      />
                     </div>
                   </div>
                 )}

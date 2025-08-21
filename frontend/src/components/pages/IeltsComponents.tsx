@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { StatCard } from "../ui";
+import { ActionButton } from "../ui/ActionButton";
 import {
   IeltsReadingTest,
   IeltsWritingTest,
@@ -102,26 +103,25 @@ export const IeltsTestCard: React.FC<IeltsTestCardProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col justify-between hover:shadow-xl transition-shadow">
-      <div>
-        <div className="flex items-center space-x-2 mb-2">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800`}
-          >
-            {getSkillInfo(IeltsSkill.READING, t).label}
-          </span>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800`}
-          >
-            {getLevelInfo(test.level, t).label}
-          </span>
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2 text-start">
-          {test.title}
-        </h3>
-        <p className="text-sm text-gray-600 line-clamp-3 mb-4 text-start">
-          {test.description}
-        </p>
+      <div className="flex items-center space-x-2 mb-2">
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800`}
+        >
+          {getSkillInfo(IeltsSkill.READING, t).label}
+        </span>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800`}
+        >
+          {getLevelInfo(test.level, t).label}
+        </span>
       </div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2 text-start">
+        {test.title}
+      </h3>
+      <p className="text-sm text-gray-600 line-clamp-3 mb-4 text-start">
+        {test.description}
+      </p>
+
       <div>
         {highestSubmission ? (
           <div className="mb-4">
@@ -137,19 +137,24 @@ export const IeltsTestCard: React.FC<IeltsTestCardProps> = ({
           </div>
         )}
         <div className="flex items-center space-x-2">
-          <button
+          <ActionButton
             onClick={() => onStartTest(test.id)}
-            className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            {highestSubmission ? t("ielts.retake") : t("ielts.start")}
-          </button>
+            colorTheme="blue"
+            hasIcon={false}
+            text={highestSubmission ? t("ielts.retake") : t("ielts.start")}
+            size="sm"
+            className="w-full"
+          />
           {highestSubmission && (
-            <button
+            <ActionButton
               onClick={() => onViewResult(highestSubmission.id)}
-              className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-            >
-              {t("ielts.viewResult")}
-            </button>
+              colorTheme="transparent"
+              textColor="text-gray-700"
+              hasIcon={false}
+              text={t("ielts.viewResult")}
+              size="sm"
+              className="w-full border border-gray-300 bg-white hover:bg-gray-50"
+            />
           )}
         </div>
       </div>
@@ -171,54 +176,55 @@ export const WritingTaskCard: React.FC<WritingTaskCardProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col justify-between hover:shadow-xl transition-shadow">
-      <div>
-        <div className="flex items-center space-x-2 mb-2">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              task.type === IeltsWritingType.IELTS_TASK1
-                ? "bg-orange-100 text-orange-800"
-                : "bg-orange-100 text-orange-800"
-            }`}
-          >
-            {getSkillInfo(IeltsSkill.WRITING, t).label}
-          </span>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-              task.type === IeltsWritingType.IELTS_TASK1
-                ? "bg-blue-100 text-blue-800"
-                : "bg-purple-100 text-purple-800"
-            }`}
-          >
-            {task.type === IeltsWritingType.IELTS_TASK1 ? "Task 1" : "Task 2"}
-          </span>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-              getLevelInfo(task.level, t).color
-            }`}
-          >
-            {getLevelInfo(task.level, t).label}
-          </span>
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2 text-start">
-          {task.title}
-        </h3>
-        <div
-          className="text-sm text-gray-600 line-clamp-3 mb-4 text-start prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: task.prompt ?? "" }}
-        />
+      <div className="flex items-center space-x-2 mb-2">
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            task.type === IeltsWritingType.IELTS_TASK1
+              ? "bg-orange-100 text-orange-800"
+              : "bg-orange-100 text-orange-800"
+          }`}
+        >
+          {getSkillInfo(IeltsSkill.WRITING, t).label}
+        </span>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+            task.type === IeltsWritingType.IELTS_TASK1
+              ? "bg-blue-100 text-blue-800"
+              : "bg-purple-100 text-purple-800"
+          }`}
+        >
+          {task.type === IeltsWritingType.IELTS_TASK1 ? "Task 1" : "Task 2"}
+        </span>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+            getLevelInfo(task.level, t).color
+          }`}
+        >
+          {getLevelInfo(task.level, t).label}
+        </span>
       </div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2 text-start">
+        {task.title}
+      </h3>
+      <div
+        className="text-sm text-gray-600 line-clamp-3 mb-4 text-start prose max-w-none"
+        dangerouslySetInnerHTML={{ __html: task.prompt ?? "" }}
+      />
+
       <div>
         <div className="mb-4">
           <p className="text-sm text-gray-500">{t("ielts.notTaken")}</p>
           <p className="text-2xl font-bold text-gray-400">-</p>
         </div>
         <div className="flex items-center space-x-2">
-          <button
+          <ActionButton
             onClick={() => onStartTask(task)}
-            className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            {t("ielts.writingTasks.startTask")}
-          </button>
+            colorTheme="blue"
+            hasIcon={false}
+            text={t("ielts.writingTasks.startTask")}
+            size="sm"
+            className="w-full"
+          />
         </div>
       </div>
     </div>
@@ -350,31 +356,43 @@ export const IeltsItemRow: React.FC<IeltsItemRowProps> = ({
 
         <div className="flex items-center space-x-1">
           {onViewSubmissions && (
-            <button
+            <ActionButton
               onClick={() => onViewSubmissions(type)}
-              className="p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
+              colorTheme="transparent"
+              textColor="text-purple-600"
+              hasIcon={true}
+              icon={BarChart3}
+              iconOnly={true}
               title={t("ielts.teacher.viewSubmissions")}
-            >
-              <BarChart3 className="h-5 w-5" />
-            </button>
+              className="hover:bg-purple-50"
+              size="md"
+            />
           )}
           {onEdit && (
-            <button
+            <ActionButton
               onClick={() => onEdit(item.id)}
-              className="p-3 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
+              colorTheme="transparent"
+              textColor="text-gray-600"
+              hasIcon={true}
+              icon={Edit}
+              iconOnly={true}
               title={t("ielts.teacher.edit")}
-            >
-              <Edit className="h-5 w-5" />
-            </button>
+              className="hover:bg-gray-50"
+              size="md"
+            />
           )}
           {onDelete && (
-            <button
+            <ActionButton
               onClick={() => onDelete(item.id)}
-              className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+              colorTheme="transparent"
+              textColor="text-red-600"
+              hasIcon={true}
+              icon={Trash2}
+              iconOnly={true}
               title={t("ielts.teacher.delete")}
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
+              className="hover:bg-red-50"
+              size="md"
+            />
           )}
         </div>
       </div>
@@ -405,12 +423,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
       <p className="text-gray-500 mb-6">{description}</p>
       {action && (
-        <button
+        <ActionButton
           onClick={action.onClick}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-semibold"
-        >
-          {action.label}
-        </button>
+          colorTheme="blue"
+          hasIcon={false}
+          text={action.label}
+          size="md"
+          className="font-semibold"
+        />
       )}
     </div>
   );

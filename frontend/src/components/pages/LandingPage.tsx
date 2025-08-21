@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BookOpen, FileText, Award, ChevronRight } from "lucide-react";
+import { ActionButton } from "../ui";
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,20 +36,25 @@ export const LandingPage: React.FC = () => {
                 </p>
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">
-                    <button
+                    <ActionButton
                       onClick={() => navigate("/signup")}
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
-                    >
-                      {t("landing.getStarted")}
-                    </button>
+                      colorTheme="blue"
+                      hasIcon={false}
+                      text={t("landing.getStarted")}
+                      size="lg"
+                      className="w-full"
+                    />
                   </div>
                   <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <button
+                    <ActionButton
                       onClick={() => navigate("/login")}
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10"
-                    >
-                      {t("navigation.login")}
-                    </button>
+                      colorTheme="transparent"
+                      textColor="text-blue-700"
+                      hasIcon={false}
+                      text={t("navigation.login")}
+                      size="lg"
+                      className="w-full bg-blue-100 hover:bg-blue-200"
+                    />
                   </div>
                 </div>
               </div>
@@ -224,13 +230,14 @@ export const LandingPage: React.FC = () => {
           </h2>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
-              <button
+              <ActionButton
                 onClick={() => navigate("/signup")}
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                {t("landing.startNow")}
-                <ChevronRight className="ml-2 h-5 w-5" />
-              </button>
+                colorTheme="blue"
+                hasIcon={true}
+                icon={ChevronRight}
+                text={t("landing.startNow")}
+                size="md"
+              />
             </div>
             {/* <div className="ml-3 inline-flex rounded-md shadow">
               <button

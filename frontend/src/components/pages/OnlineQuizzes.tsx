@@ -8,7 +8,6 @@ import {
   Trophy,
   CheckCircle,
   XCircle,
-  ChevronRight,
   Users,
   BarChart3,
   BookOpen,
@@ -28,7 +27,6 @@ import {
   Role,
 } from "../../types/api";
 import { useAuth } from "../../contexts/AuthContext";
-import { Badge } from "../ui/Badge";
 
 import {
   useModal,
@@ -40,7 +38,7 @@ import {
 } from "../../hooks";
 import { mutate } from "swr";
 import { formatDate, formatDateTime } from "../utils";
-import { StatCard } from "../ui";
+import { ActionButton, Badge, StatCard } from "../ui";
 
 const StudentQuizView: React.FC = () => {
   const { user } = useAuth();
@@ -71,19 +69,12 @@ const StudentQuizView: React.FC = () => {
       ? parsedQuizId
       : null
   );
+
   const { submissionHistory, mutate: mutateSubmissionHistory } =
     useQuizSubmissionHistory(
       currentView === "result" || (quizId && !isPlayRoute) ? parsedQuizId : null
     );
 
-  console.log("useQuizSubmissionHistory called with:", {
-    condition: currentView === "result" || (quizId && !isPlayRoute),
-    currentView,
-    quizId,
-    isPlayRoute,
-    parsedQuizId,
-    submissionHistoryData: submissionHistory,
-  });
   const [quizResults, setQuizResults] = useState<{
     score?: number;
     totalQuestions?: number;
@@ -776,21 +767,33 @@ const StudentQuizView: React.FC = () => {
             </div>
 
             <div className="flex justify-between mt-8">
-              <button
+              <ActionButton
                 onClick={clearAttemptAndNavigate}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              >
-                {t("quizzes.backToList")}
-              </button>
+                colorTheme="white"
+                hasIcon={false}
+                text={t("quizzes.backToList")}
+                size="md"
+                className="px-6 py-2 border border-gray-300 text-gray-700"
+              />
               <div className="flex space-x-4">
-                <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  {t("quizzes.viewStatistics")}
-                </button>
-                <button className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
-                  <Users className="h-4 w-4 mr-2" />
-                  {t("quizzes.viewSubmissions")}
-                </button>
+                <ActionButton
+                  colorTheme="blue"
+                  hasIcon={true}
+                  icon={BarChart3}
+                  text={t("quizzes.viewStatistics")}
+                  size="md"
+                  className="px-6 py-2"
+                  onClick={() => {}}
+                />
+                <ActionButton
+                  colorTheme="green"
+                  hasIcon={true}
+                  icon={Users}
+                  text={t("quizzes.viewSubmissions")}
+                  size="md"
+                  className="px-6 py-2"
+                  onClick={() => {}}
+                />
               </div>
             </div>
           </div>
@@ -813,12 +816,14 @@ const StudentQuizView: React.FC = () => {
               <p className="text-gray-600 mb-6">
                 Quiz này chưa được thiết lập câu hỏi.
               </p>
-              <button
+              <ActionButton
                 onClick={clearAttemptAndNavigate}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                {t("quizzes.back")}
-              </button>
+                colorTheme="blue"
+                hasIcon={false}
+                text={t("quizzes.back")}
+                size="md"
+                className="px-6 py-2"
+              />
             </div>
           </div>
         </div>
@@ -927,10 +932,10 @@ const StudentQuizView: React.FC = () => {
               </div>
 
               {/* Question Navigation */}
-              <div className="flex flex-wrap gap-2 mb-6 p-4 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700 mr-2 items-center justify-center">
+              <div className="flex flex-wrap gap-2 mb-6 p-4 bg-gray-50 rounded-lg items-center">
+                {/* <span className="text-sm font-medium text-gray-700 mr-2 items-center justify-center">
                   {t("quizzes.questions")}:
-                </span>
+                </span> */}
                 {questions.map((_, index) => (
                   <button
                     key={index}
@@ -1098,7 +1103,7 @@ const StudentQuizView: React.FC = () => {
               {/* Hide Exit button for first attempt */}
               {submissionHistory?.submissions &&
                 submissionHistory.submissions.length > 0 && (
-                  <button
+                  <ActionButton
                     onClick={() => {
                       console.log(
                         "Exit button clicked, current view:",
@@ -1120,24 +1125,28 @@ const StudentQuizView: React.FC = () => {
                         clearAttemptAndNavigate();
                       }
                     }}
-                    className="px-4 py-2 md:px-6 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm md:text-base"
-                  >
-                    {t("quizzes.exit")}
-                  </button>
+                    colorTheme="white"
+                    hasIcon={false}
+                    text={t("quizzes.exit")}
+                    size="md"
+                    className="px-4 py-2 md:px-6 text-sm md:text-base border border-gray-300 text-gray-700"
+                  />
                 )}
               {/* Spacer for first attempt to maintain layout */}
               {(!submissionHistory?.submissions ||
                 submissionHistory.submissions.length === 0) && <div></div>}
               <div className="flex space-x-2 md:space-x-4">
-                <button
+                <ActionButton
                   onClick={prevQuestion}
                   disabled={currentQuestionIndex === 0}
-                  className="px-4 py-2 md:px-6 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm md:text-base"
-                >
-                  <ChevronRight className="h-4 w-4 mr-1 md:mr-2 rotate-180" />
-                  {t("quizzes.previousQuestion")}
-                </button>
-                <button
+                  colorTheme="white"
+                  hasIcon={false}
+                  text={t("quizzes.previousQuestion")}
+                  size="md"
+                  className="px-4 py-2 md:px-6 text-sm md:text-base border border-gray-300 text-gray-700 [&>svg]:rotate-180"
+                  textColor="gray"
+                />
+                <ActionButton
                   onClick={nextQuestion}
                   disabled={
                     selectedAnswers[currentQuestionIndex] === undefined ||
@@ -1148,13 +1157,16 @@ const StudentQuizView: React.FC = () => {
                         selectedAnswers[currentQuestionIndex] as string
                       ).trim() === "")
                   }
-                  className="px-4 py-2 md:px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm md:text-base"
-                >
-                  {currentQuestionIndex < questions.length - 1
-                    ? t("quizzes.nextQuestion")
-                    : t("quizzes.finish")}
-                  <ChevronRight className="h-4 w-4 ml-1 md:ml-2" />
-                </button>
+                  colorTheme="blue"
+                  hasIcon={false}
+                  text={
+                    currentQuestionIndex < questions.length - 1
+                      ? t("quizzes.nextQuestion")
+                      : t("quizzes.finish")
+                  }
+                  size="md"
+                  className="px-4 py-2 md:px-6 text-sm md:text-base [&>svg]:ml-2"
+                />
               </div>
             </div>
           </div>
@@ -1250,18 +1262,24 @@ const StudentQuizView: React.FC = () => {
 
                       {/* Review Button */}
                       <div className="flex justify-end">
-                        <button
+                        <ActionButton
                           onClick={() => {
-                            const quizIdForReview = currentQuiz?.id || Number(quizId);
+                            const quizIdForReview =
+                              currentQuiz?.id || Number(quizId);
                             if (quizIdForReview) {
-                              navigate(`/quiz/submission/review/${quizIdForReview}/${submission.id}`);
+                              navigate(
+                                `/quiz/submission/review/${quizIdForReview}/${submission.id}`
+                              );
                             }
                           }}
-                          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                        >
-                          <Eye className="h-4 w-4" />
-                          {t("ielts.review")}
-                        </button>
+                          colorTheme="white"
+                          hasIcon={true}
+                          icon={Eye}
+                          text={t("ielts.review")}
+                          size="md"
+                          className="text-blue-600 bg-blue-50 hover:bg-blue-100"
+                          textColor="blue"
+                        />
                       </div>
                     </div>
                   )
@@ -1281,17 +1299,20 @@ const StudentQuizView: React.FC = () => {
 
               {/* Action buttons */}
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-2 lg:mt-10 border-t border-gray-200">
-                <button
+                <ActionButton
                   onClick={clearAttemptAndNavigate}
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>{t("quizzes.back")}</span>
-                </button>
+                  colorTheme="white"
+                  hasIcon={true}
+                  icon={ArrowLeft}
+                  text={t("quizzes.back")}
+                  size="md"
+                  className="w-full md:w-auto border border-gray-300"
+                  textColor="gray"
+                />
                 <div className="flex items-center space-x-4 w-full md:w-auto">
                   {quizResults.canRetake &&
                   (quizResults.remainingAttempts ?? 0) > 0 ? (
-                    <button
+                    <ActionButton
                       onClick={() => {
                         const quizIdToRetake =
                           currentQuiz?.id ||
@@ -1309,14 +1330,15 @@ const StudentQuizView: React.FC = () => {
                           );
                         }
                       }}
-                      className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                    >
-                      <RotateCw className="h-4 w-4" />
-                      <span>
-                        {t("quizzes.retake")} ({quizResults.remainingAttempts}{" "}
-                        {t("quizzes.attemptsLeft")})
-                      </span>
-                    </button>
+                      colorTheme="blue"
+                      hasIcon={true}
+                      icon={RotateCw}
+                      text={`${t("quizzes.retake")} (${
+                        quizResults.remainingAttempts
+                      } ${t("quizzes.attemptsLeft")})`}
+                      size="md"
+                      className="w-full md:w-auto font-bold"
+                    />
                   ) : (
                     <div className="w-full md:w-auto text-center px-4 py-2 bg-gray-100 text-gray-600 rounded-lg italic text-sm font-medium">
                       {t("quizzes.outOfAttempts")}
@@ -1416,13 +1438,15 @@ const StudentQuizView: React.FC = () => {
               )}
 
             <div className="flex justify-center space-x-4">
-              <button
+              <ActionButton
                 onClick={clearAttemptAndNavigate}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              >
-                {t("quizzes.backToList")}
-              </button>
-              <button
+                colorTheme="white"
+                hasIcon={false}
+                text={t("quizzes.backToList")}
+                size="md"
+                className="px-6 py-2 border border-gray-300 text-gray-700"
+              />
+              <ActionButton
                 onClick={() => {
                   console.log(
                     "Retake clicked (single result), currentQuiz:",
@@ -1443,10 +1467,12 @@ const StudentQuizView: React.FC = () => {
                     showError("Không thể làm lại quiz. Vui lòng thử lại.");
                   }
                 }}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                {t("quizzes.retake")}
-              </button>
+                colorTheme="blue"
+                hasIcon={false}
+                text={t("quizzes.retake")}
+                size="md"
+                className="px-6 py-2"
+              />
             </div>
           </div>
         </div>
@@ -1736,23 +1762,25 @@ const StudentQuizView: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
+                    <ActionButton
                       onClick={() => startQuiz(quiz)}
                       disabled={quiz.status !== QuizStatus.ACTIVE && !isTeacher}
-                      className={`w-full flex text-sm items-center font-bold justify-center px-4 py-2 rounded-md transition-colors ${
+                      colorTheme={
                         quiz.status !== QuizStatus.ACTIVE && !isTeacher
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          ? "gray"
                           : isTeacher
-                          ? "bg-green-700 text-white hover:bg-green-800"
-                          : "bg-blue-700 text-white hover:bg-blue-800"
-                      }`}
-                    >
-                      {isTeacher ? (
-                        <>{t("quizzes.viewWithAnswersButton")}</>
-                      ) : (
-                        <>{t("quizzes.startQuiz")}</>
-                      )}
-                    </button>
+                          ? "green"
+                          : "blue"
+                      }
+                      hasIcon={false}
+                      text={
+                        isTeacher
+                          ? t("quizzes.viewWithAnswersButton")
+                          : t("quizzes.startQuiz")
+                      }
+                      size="md"
+                      className="w-full text-sm font-bold px-4 py-2"
+                    />
                   </div>
                 ))}
               </div>

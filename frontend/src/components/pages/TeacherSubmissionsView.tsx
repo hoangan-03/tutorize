@@ -10,6 +10,7 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  ArrowLeft,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,6 +22,7 @@ import {
   useExerciseSubmissionsList,
   useExerciseSubmissions,
 } from "../../hooks";
+import { ActionButton } from "../ui/ActionButton";
 
 interface TeacherSubmissionsViewProps {
   exercise: Exercise;
@@ -127,12 +129,16 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 mb-8 shadow-xl">
           <div className="flex justify-between items-start">
             <div>
-              <button
+              <ActionButton
                 onClick={onBack}
-                className="mb-4 text-white/80 hover:text-white flex items-center"
-              >
-                ← {t("teacherSubmissionsView.back")}
-              </button>
+                colorTheme="transparent"
+                textColor="text-white/80 hover:text-white"
+                hasIcon={true}
+                icon={ArrowLeft}
+                text={t("teacherSubmissionsView.back")}
+                size="md"
+                className="mb-4"
+              />
               <h1 className="text-base md:text-xl lg:text-3xl font-bold text-white mb-2">
                 {t("teacherSubmissionsView.submissionsFor")} {exercise.name}
               </h1>
@@ -341,16 +347,18 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center space-x-2">
-                            <button
-                              className="flex items-center text-blue-600 hover:text-blue-800"
+                            <ActionButton
                               onClick={() => {
                                 /* TODO: Implement view details modal */
                               }}
+                              colorTheme="transparent"
+                              textColor="text-blue-600 hover:text-blue-800"
+                              hasIcon={true}
+                              icon={Eye}
+                              text={t("teacherSubmissionsView.viewSubmission")}
+                              size="sm"
                               title={t("teacherSubmissionsView.viewSubmission")}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              {t("teacherSubmissionsView.viewSubmission")}
-                            </button>
+                            />
                             {gradingSubmission === submission.id ? (
                               <div className="flex items-center space-x-2">
                                 <div className="flex items-center">
@@ -363,41 +371,51 @@ export const TeacherSubmissionsView: React.FC<TeacherSubmissionsViewProps> = ({
                                     }
                                     className="w-20 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                   />
-                                  <button
+                                  <ActionButton
                                     onClick={() =>
                                       handleGradeSubmission(submission.id)
                                     }
-                                    className="p-2 text-green-600 hover:text-green-800"
+                                    colorTheme="transparent"
+                                    textColor="text-green-600 hover:text-green-800"
+                                    hasIcon={true}
+                                    icon={Save}
+                                    iconOnly={true}
+                                    size="sm"
                                     title={t(
                                       "teacherSubmissionsView.saveGrade"
                                     )}
-                                  >
-                                    <Save className="h-4 w-4" />
-                                  </button>
-                                  <button
+                                  />
+                                  <ActionButton
                                     onClick={cancelGrading}
-                                    className="p-2 text-red-600 hover:text-red-800"
+                                    colorTheme="transparent"
+                                    textColor="text-red-600 hover:text-red-800"
+                                    hasIcon={true}
+                                    icon={X}
+                                    iconOnly={true}
+                                    size="sm"
                                     title={t("teacherSubmissionsView.cancel")}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
+                                  />
                                 </div>
                               </div>
                             ) : (
-                              <button
-                                className="flex items-center text-green-600 hover:text-green-800"
+                              <ActionButton
                                 onClick={() => startGrading(submission)}
+                                colorTheme="transparent"
+                                textColor="text-green-600 hover:text-green-800"
+                                hasIcon={true}
+                                icon={Edit3}
+                                text={
+                                  submission.score === null
+                                    ? t("teacherSubmissionsView.grade")
+                                    : t("teacherSubmissionsView.editGrade")
+                                }
+                                size="sm"
                                 title={
                                   submission.score === null
                                     ? t("teacherSubmissionsView.grade")
                                     : t("teacherSubmissionsView.editGrade")
                                 }
-                              >
-                                <Edit3 className="h-4 w-4 mr-1" />
-                                {submission.score === null
-                                  ? t("teacherSubmissionsView.grade")
-                                  : t("teacherSubmissionsView.editGrade")}
-                              </button>
+                              />
                             )}
                           </div>
                         </td>

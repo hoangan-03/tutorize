@@ -39,10 +39,10 @@ async function main() {
 
   // Create sample teacher
   console.log('👨‍🏫 Creating sample teacher...');
-  const teacherPassword = await bcrypt.hash('Teacher123!', 12);
+  const teacherPassword = await bcrypt.hash('Hoangan123456789', 12);
   const teacher = await prisma.user.create({
     data: {
-      email: 'teacher@gmail.com',
+      email: 'john12052003@gmail.com',
       password: teacherPassword,
       role: Role.TEACHER,
 
@@ -60,9 +60,8 @@ async function main() {
 
   // Create sample students
   console.log('👨‍🎓 Creating sample students...');
-  const studentPassword = await bcrypt.hash('Student123!', 12);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const student1 = await prisma.user.create({
+  const studentPassword = await bcrypt.hash('Student123', 12);
+  await prisma.user.create({
     data: {
       email: 'student1@gmail.com',
       password: studentPassword,
@@ -81,8 +80,7 @@ async function main() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const student2 = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: 'student2@gmail.com',
       password: studentPassword,
@@ -109,11 +107,12 @@ async function main() {
       subject: Subject.MATH,
       grade: 9,
       timeLimit: 1,
-      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
       tags: ['math', 'equation', 'algebra'],
       instructions: 'Làm bài cẩn thận',
+      isAllowedReviewed: true,
       questions: {
         create: [
           {
@@ -162,11 +161,15 @@ async function main() {
       subject: Subject.MATH,
       grade: 8,
       timeLimit: 2,
-      deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
       status: QuizStatus.ACTIVE,
       createdBy: teacher.id,
       tags: ['math', 'function', 'algebra'],
-      instructions: 'Đọc kỹ đề trước khi trả lời.',
+      instructions: 'Đọc kỹ câu hỏi trước khi trả lời.',
+      isAllowedViewAnswerAfterSubmit: true,
+      shuffleAnswers: true,
+      shuffleQuestions: true,
+      maxAttempts: 300,
       questions: {
         create: [
           {
@@ -179,7 +182,6 @@ async function main() {
               'Đỉnh của hàm số bậc hai y = ax² + bx + c là (x, y) = (-b/2a, -Δ/4a)',
             order: 1,
           },
-          // True/False Question
           {
             question: 'Hàm số bậc nhất y = ax + b có đồ thị là một đường thẳng',
             type: QuestionType.TRUE_FALSE,
@@ -188,7 +190,6 @@ async function main() {
             explanation: 'Hàm số bậc nhất có đồ thị là một đường thẳng',
             order: 2,
           },
-          // Fill in the blank
           {
             question:
               'Hàm số bậc nhất y = 3x + 2 cắt trục tung tại điểm có tung độ bằng',
@@ -239,23 +240,6 @@ async function main() {
           <li>Nghiệm kép</li>
           <li>Vô nghiệm</li>
         </ol>
-      `,
-      createdBy: teacher.id,
-      status: ExerciseStatus.ACTIVE,
-      maxScore: 100,
-      allowLateSubmission: true,
-    },
-  });
-
-  await prisma.exercise.create({
-    data: {
-      name: 'Bài tập về Hàm số bậc hai',
-      description: 'Giải các bài tập về đồ thị và tính chất hàm số bậc hai',
-      subject: Subject.MATH,
-      grade: 12,
-      deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-      content: `
-        <h2>Bài tập về Hàm số bậc hai</h2>
       `,
       createdBy: teacher.id,
       status: ExerciseStatus.ACTIVE,
@@ -535,7 +519,7 @@ async function main() {
     - 1 Teacher (teacher@gmail.com / Teacher123!)
     - 2 Students (student1@gmail.com, student2@gmail.com / Student123!)
     - 2 Sample quiz with each 3 questions
-    - 2 Sample exercise
+    - 1 Sample exercise
     - 1 Sample document
     - 1 Comprehensive IELTS Reading Test
   `);

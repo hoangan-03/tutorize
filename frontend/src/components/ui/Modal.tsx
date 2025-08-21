@@ -7,6 +7,7 @@ import {
   X,
   HelpCircle,
 } from "lucide-react";
+import { t } from "i18next";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -150,8 +151,8 @@ const Modal: React.FC<ModalProps> = ({
     switch (type) {
       case "confirm":
         return {
-          confirm: confirmText || "Xác nhận",
-          cancel: cancelText || "Hủy",
+          confirm: confirmText || t("common.confirm"),
+          cancel: cancelText || t("common.cancel"),
         };
       default:
         return {
@@ -219,11 +220,14 @@ const Modal: React.FC<ModalProps> = ({
 
               <div className="flex-1 pt-1 text-start">
                 <h3 className={`text-2xl font-bold ${theme.headerColor} mb-1`}>
-                  {title || (type === "confirm" ? "Xác nhận" : "Thông báo")}
+                  {title ||
+                    (type === "confirm"
+                      ? t("common.confirm")
+                      : t("common.notification"))}
                 </h3>
 
                 <div
-                  className={`h-0.5 w-16 ${theme.accent} rounded-full opacity-60`}
+                  className={`h-0.5 w-32 ${theme.accent} rounded-full opacity-60`}
                 ></div>
               </div>
             </div>

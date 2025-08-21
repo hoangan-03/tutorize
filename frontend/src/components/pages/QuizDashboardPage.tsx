@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { QuizDashboard } from "./QuizDashboard";
 import { useQuiz } from "../../hooks";
+import { ActionButton } from "../ui";
 
 export const QuizDashboardPage: React.FC = () => {
   const { quizId } = useParams<{ quizId: string }>();
@@ -31,23 +32,26 @@ export const QuizDashboardPage: React.FC = () => {
 
   if (error || !quiz) {
     return (
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Không tìm thấy quiz
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Quiz này không tồn tại hoặc bạn không có quyền truy cập.
-            </p>
-            <button
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Không tìm thấy quiz
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Quiz này không tồn tại hoặc bạn không có quyền truy cập.
+          </p>
+          <div className="flex justify-center">
+            <ActionButton
               onClick={handleBack}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center mx-auto"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Quay lại danh sách
-            </button>
+              colorTheme="blue"
+              hasIcon={true}
+              icon={ArrowLeft}
+              text="Quay lại danh sách"
+              size="md"
+            />
           </div>
         </div>
+      </div>
     );
   }
 

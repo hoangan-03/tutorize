@@ -7,6 +7,8 @@ import {
   XCircleIcon,
   BookOpenIcon,
 } from "@heroicons/react/24/solid";
+import { ActionButton } from "../ui/ActionButton";
+import { ArrowLeft } from "lucide-react";
 
 interface IeltsTestResultProps {
   submissionId: number;
@@ -53,12 +55,15 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
       <div className="text-center p-8">
         <h2 className="text-xl text-red-600">{t("ielts.result.errorTitle")}</h2>
         <p>{error}</p>
-        <button
+        <ActionButton
           onClick={onBack}
-          className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
-        >
-          {t("ielts.result.back")}
-        </button>
+          colorTheme="gray"
+          hasIcon={true}
+          icon={ArrowLeft}
+          text={t("ielts.result.back")}
+          size="md"
+          className="mt-4"
+        />
       </div>
     );
   }
@@ -67,12 +72,15 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
     return (
       <div className="text-center p-8">
         <p>{t("ielts.result.noSubmission")}</p>
-        <button
+        <ActionButton
           onClick={onBack}
-          className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
-        >
-          {t("ielts.result.back")}
-        </button>
+          colorTheme="gray"
+          hasIcon={true}
+          icon={ArrowLeft}
+          text={t("ielts.result.back")}
+          size="md"
+          className="mt-4"
+        />
       </div>
     );
   }
@@ -169,13 +177,14 @@ export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
                 })}
               </p>
             </div>
-            <button
-              type="button"
+            <ActionButton
               onClick={onBack}
-              className="block rounded-md bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-            >
-              {t("ielts.result.back")}
-            </button>
+              colorTheme="blue"
+              hasIcon={true}
+              icon={ArrowLeft}
+              text={t("ielts.result.back")}
+              size="md"
+            />
           </div>
           <div className="mt-6 flex flex-row gap-4 text-center">
             <div className="bg-blue-100 p-4 rounded-lg flex-shrink-0">

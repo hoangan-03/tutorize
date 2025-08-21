@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { useIeltsReadingSubmissionDetails } from "../../hooks/useIeltsReading";
 import { IeltsTestResult } from "./IeltsTestResult";
+import { ActionButton } from "../ui/ActionButton";
+import { ArrowLeft } from "lucide-react";
 
 export const IeltsSubmissionDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -29,12 +31,14 @@ export const IeltsSubmissionDetail: React.FC = () => {
       <div className="text-center p-8">
         <h2 className="text-xl text-red-600 mb-4">{t("common.error")}</h2>
         <p className="text-gray-600 mb-4">{error}</p>
-        <button
+        <ActionButton
           onClick={() => navigate("/ielts/submissions")}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-        >
-          {t("common.back")}
-        </button>
+          colorTheme="gray"
+          hasIcon={true}
+          icon={ArrowLeft}
+          text={t("common.back")}
+          size="md"
+        />
       </div>
     );
   }
@@ -43,12 +47,14 @@ export const IeltsSubmissionDetail: React.FC = () => {
     return (
       <div className="text-center p-8">
         <p className="text-gray-600 mb-4">{t("ielts.submissions.notFound")}</p>
-        <button
+        <ActionButton
           onClick={() => navigate("/ielts/submissions")}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-        >
-          {t("common.back")}
-        </button>
+          colorTheme="gray"
+          hasIcon={true}
+          icon={ArrowLeft}
+          text={t("common.back")}
+          size="md"
+        />
       </div>
     );
   }

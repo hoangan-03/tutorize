@@ -11,6 +11,7 @@ import {
   useIeltsWritingTestById,
 } from "../../hooks/useIeltsWriting";
 import { RichTextEditor } from "../ui/RichTextEditor";
+import { ActionButton } from "../ui/ActionButton";
 
 interface WritingTestManageProps {
   onBack: () => void;
@@ -102,13 +103,17 @@ export const WritingTestManage: React.FC<WritingTestManageProps> = ({
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <button
+                <ActionButton
                   onClick={onBack}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  colorTheme="transparent"
+                  textColor="text-gray-600"
+                  hasIcon={true}
+                  icon={ArrowLeft}
+                  iconOnly={true}
                   title={t("common.back")}
-                >
-                  <ArrowLeft className="h-5 w-5 text-gray-600" />
-                </button>
+                  className="hover:bg-gray-100"
+                  size="md"
+                />
                 <div className="flex flex-col text-start">
                   <h1 className="text-2xl font-bold text-gray-900">
                     {testId ? "Chỉnh sửa Writing Test" : "Tạo Writing Test mới"}
@@ -120,21 +125,28 @@ export const WritingTestManage: React.FC<WritingTestManageProps> = ({
                   </p>
                 </div>
               </div>
-              <button
-                form="writing-task-form"
-                type="submit"
+              <ActionButton
+                onClick={() => {}} // Will be handled by form submission
                 disabled={
                   isSubmitting || !task.title?.trim() || !task.prompt?.trim()
                 }
-                className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isSubmitting
-                  ? "Đang lưu..."
-                  : testId
-                  ? "Cập nhật"
-                  : "Tạo Task"}
-              </button>
+                colorTheme={
+                  isSubmitting || !task.title?.trim() || !task.prompt?.trim()
+                    ? "gray"
+                    : "blue"
+                }
+                hasIcon={true}
+                icon={Save}
+                text={
+                  isSubmitting
+                    ? "Đang lưu..."
+                    : testId
+                    ? "Cập nhật"
+                    : "Tạo Task"
+                }
+                size="md"
+                className="form-submit-btn"
+              />
             </div>
           </div>
         </div>

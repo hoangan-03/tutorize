@@ -10,7 +10,6 @@ import {
 } from "../types/api";
 
 export const quizService = {
-  // Quiz Management
   async getQuizzes(
     url: string,
     params?: PaginationParams
@@ -18,7 +17,6 @@ export const quizService = {
     const response = await api.get<PaginatedResult<Quiz>>(url, {
       params,
     });
-    console.log("response.data", response.data);
     return response.data;
   },
 
@@ -239,7 +237,7 @@ export const quizService = {
 
   // Get submission for student review
   async getSubmissionForReview(
-    quizId: number, 
+    quizId: number,
     submissionId: number
   ): Promise<QuizSubmission> {
     const response = await api.get(`/quizzes/${quizId}/review/${submissionId}`);
