@@ -12,6 +12,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -24,6 +27,14 @@ jobs:
           context: ./backend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
+          no-cache: true # Force rebuild without cache
+          platforms: linux/amd64 # Ensure compatibility with EC2
+
+      - name: Verify image was pushed
+        run: |
+          echo "Verifying image was pushed to Docker Hub..."
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
+          docker images ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
 
       - name: Deploy to EC2 instance
         uses: appleboy/ssh-action@master
@@ -32,14 +43,32 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Pull the latest image from Docker Hub
+            echo "Starting deployment..."
+
+            # Force remove old image and pull fresh
+            echo "Removing old image..."
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest || true
+
+            echo "Pulling latest image..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
-            
+
+            echo "Checking new image date:"
+            docker images ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
+
             # Stop and remove the old container
+            echo "Stopping old container..."
             docker stop tutorize-backend-container || true
             docker rm tutorize-backend-container || true
-            
-            # Run the new container with the environment file
+
+            # Run database migrations
+            echo "Running database migrations..."
+            docker run --rm \
+              --env-file /home/ec2-user/.env \
+              ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest \
+              sh -c "npx prisma db push"
+
+            # Run the new container
+            echo "Starting new container..."
             docker run \
               -d \
               --name tutorize-backend-container \
@@ -49,3 +78,5 @@ jobs:
               ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
 
             echo "Deployment successful!"
+            echo "Container status:"
+            docker ps | grep tutorize-backend-container
