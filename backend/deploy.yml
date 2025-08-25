@@ -58,6 +58,13 @@ jobs:
             docker stop tutorize-backend || true
             docker rm tutorize-backend || true
             
+            # Run database migrations using the new image
+            echo "Running database migrations..."
+            docker run --rm \
+              --env-file /home/ubuntu/.env \
+              ${{ secrets.DOCKER_USERNAME }}/tutorize-backend:latest \
+              sh -c "npx prisma db push --force-reset"
+            
             # Run new container with updated image
             echo "Starting new container..."
             docker run -d \
