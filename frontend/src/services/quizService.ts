@@ -243,4 +243,36 @@ export const quizService = {
     const response = await api.get(`/quizzes/${quizId}/review/${submissionId}`);
     return response.data;
   },
+
+  async uploadQuestionImage(
+    questionId: number,
+    file: File,
+    imageIndex?: number
+  ): Promise<{ imageUrls: string[] }> {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    let url = `/quizzes/questions/${questionId}/upload-image`;
+    if (imageIndex !== undefined) {
+      url += `?imageIndex=${imageIndex}`;
+    }
+
+    const response = await api.post<{ imageUrls: string[] }>(url, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  // Remove image from quiz question
+  async removeQuestionImage(
+    questionId: number,
+    imageIndex: number
+  ): Promise<{ imageUrls: string[] }> {
+    const response = await api.delete<{ imageUrls: string[] }>(
+      `/quizzes/questions/${questionId}/images/${imageIndex}`
+    );
+    return response.data;
+  },
 };

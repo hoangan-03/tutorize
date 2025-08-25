@@ -226,7 +226,7 @@ export interface Question {
   points: number;
   explanation?: string;
   order: number;
-  imageUrl?: string;
+  imageUrls?: string[];
   audioUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -276,8 +276,11 @@ export interface Exercise {
   grade: number;
   deadline: string;
   note?: string;
-  content: string;
+  content?: string;
   latexContent?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileKey?: string;
   createdBy: number;
   submissions: number;
   status: ExerciseStatus;
@@ -294,6 +297,7 @@ export interface Exercise {
   _count?: {
     exerciseSubmissions: number;
   };
+  _selectedFile?: File; // Temporary field for file upload in create mode
 }
 
 export enum EditMode {

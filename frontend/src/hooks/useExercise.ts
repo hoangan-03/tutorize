@@ -165,6 +165,21 @@ export const useExerciseManagement = () => {
     }
   };
 
+  const uploadFile = async (id: number, file: File) => {
+    try {
+      const exercise = await exerciseService.uploadFile(id, file);
+      // Update specific exercise cache
+      mutate(`/exercises/${id}`, exercise, false);
+      // Invalidate all exercise lists
+      mutate((key) => Array.isArray(key) && key[0] === "/exercises");
+      toast.success("Tải file thành công!");
+      return exercise;
+    } catch (error) {
+      toast.error("Tải file thất bại!");
+      throw error;
+    }
+  };
+
   return {
     createExercise,
     updateExercise,
@@ -172,6 +187,7 @@ export const useExerciseManagement = () => {
     publishExercise,
     archiveExercise,
     closeExercise,
+    uploadFile,
   };
 };
 

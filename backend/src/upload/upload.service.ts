@@ -82,6 +82,59 @@ export class UploadService {
     }
   }
 
+  async uploadQuizQuestionImage(
+    file: Express.Multer.File,
+    questionId: number,
+  ): Promise<string> {
+    try {
+      const fileName = `quiz_question_${questionId}_${Date.now()}_${file.originalname}`;
+
+      return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            public_id: fileName,
+            resource_type: 'image',
+            folder: 'tutorize/quiz-questions',
+            transformation: [
+              { width: 800, height: 600, crop: 'limit' },
+              { quality: 'auto:good' },
+              { format: 'auto' },
+            ],
+          },
+          (error, result) => {
+            if (error) {
+              this.logger.error(
+                `Failed to upload quiz question image: ${error.message}`,
+              );
+              reject(
+                new BadRequestException('Failed to upload quiz question image'),
+              );
+            } else if (result) {
+              this.logger.log(
+                `Quiz question image uploaded successfully: ${fileName}`,
+              );
+              resolve(result.secure_url);
+            } else {
+              reject(
+                new BadRequestException('Upload failed: No result returned'),
+              );
+            }
+          },
+        );
+
+        // Create a readable stream from the buffer
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(file.buffer);
+        bufferStream.pipe(uploadStream);
+      });
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to upload quiz question image: ${error.message}`,
+      );
+      throw new BadRequestException('Failed to upload quiz question image');
+    }
+  }
+
   async deleteFile(fileUrl: string): Promise<boolean> {
     try {
       const publicId = this.extractPublicIdFromUrl(fileUrl);

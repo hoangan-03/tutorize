@@ -9,13 +9,18 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { QuizService } from './quiz.service';
 import {
@@ -249,6 +254,84 @@ export class QuizController {
     @CurrentUser('sub') userId: number,
   ) {
     return this.quizService.getQuizDetailedStats(id, userId);
+  }
+
+  @Post('questions/:questionId/upload-image')
+  @Roles(Role.TEACHER)
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiOperation({ summary: 'Tải lên hình ảnh cho câu hỏi quiz' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 201,
+    description: 'Tải lên hình ảnh thành công',
+    schema: {
+      type: 'object',
+      properties: {
+        imageUrls: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'File không hợp lệ' })
+  @ApiResponse({ status: 403, description: 'Không có quyền tải lên' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy câu hỏi' })
+  uploadQuestionImage(
+    @Param('questionId', ParseIntPipe) questionId: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Query('imageIndex') imageIndex: string | undefined,
+    @CurrentUser('sub') userId: number,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No image file provided');
+    }
+
+    // Parse imageIndex if provided
+    const parsedImageIndex = imageIndex ? parseInt(imageIndex, 10) : undefined;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Only image files are allowed (JPEG, PNG, GIF, WebP)',
+      );
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new BadRequestException('File size must be less than 5MB');
+    }
+
+    return this.quizService.uploadQuestionImage(
+      questionId,
+      file,
+      userId,
+      parsedImageIndex,
+    );
+  }
+
+  @Delete('questions/:questionId/images/:imageIndex')
+  @Roles(Role.TEACHER)
+  @ApiOperation({ summary: 'Xóa hình ảnh khỏi câu hỏi quiz' })
+  @ApiResponse({
+    status: 200,
+    description: 'Xóa hình ảnh thành công',
+    schema: {
+      type: 'object',
+      properties: {
+        imageUrls: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Không có quyền xóa' })
+  @ApiResponse({
+    status: 404,
+    description: 'Không tìm thấy câu hỏi hoặc hình ảnh',
+  })
+  removeQuestionImage(
+    @Param('questionId', ParseIntPipe) questionId: number,
+    @Param('imageIndex', ParseIntPipe) imageIndex: number,
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.quizService.removeQuestionImage(questionId, imageIndex, userId);
   }
 }
 

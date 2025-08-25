@@ -49,10 +49,25 @@ export class CreateExerciseDto {
   @IsString()
   note?: string;
 
-  @ApiProperty({ description: 'Nội dung bài tập' })
+  @ApiPropertyOptional({ description: 'Nội dung bài tập (text)' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  content: string;
+  content?: string;
+
+  @ApiPropertyOptional({ description: 'URL file PDF' })
+  @IsOptional()
+  @IsString()
+  fileUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Tên file gốc' })
+  @IsOptional()
+  @IsString()
+  fileName?: string;
+
+  @ApiPropertyOptional({ description: 'S3 key của file' })
+  @IsOptional()
+  @IsString()
+  fileKey?: string;
 
   @ApiPropertyOptional({ description: 'Nội dung LaTeX' })
   @IsOptional()
@@ -99,10 +114,25 @@ export class UpdateExerciseDto {
   @IsString()
   note?: string;
 
-  @ApiPropertyOptional({ description: 'Nội dung bài tập' })
+  @ApiPropertyOptional({ description: 'Nội dung bài tập (text)' })
   @IsOptional()
   @IsString()
   content?: string;
+
+  @ApiPropertyOptional({ description: 'URL file PDF' })
+  @IsOptional()
+  @IsString()
+  fileUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Tên file gốc' })
+  @IsOptional()
+  @IsString()
+  fileName?: string;
+
+  @ApiPropertyOptional({ description: 'S3 key của file' })
+  @IsOptional()
+  @IsString()
+  fileKey?: string;
 
   @ApiPropertyOptional({ description: 'Nội dung LaTeX' })
   @IsOptional()

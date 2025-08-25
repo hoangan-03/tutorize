@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
 import {
   CreateQuizDto,
   UpdateQuizDto,
@@ -18,7 +19,10 @@ import { QuestionType, Role } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadService: UploadService,
+  ) {}
 
   async create(createQuizDto: CreateQuizDto, createdBy: number) {
     const { questions, ...quizData } = createQuizDto as any;
@@ -313,7 +317,7 @@ export class QuizService {
             explanation: canSeeAnswers,
             points: true,
             order: true,
-            imageUrl: true,
+            imageUrls: true,
             audioUrl: true,
           },
         },
@@ -1035,7 +1039,7 @@ export class QuizService {
                 explanation: true,
                 points: true,
                 order: true,
-                imageUrl: true,
+                imageUrls: true,
                 audioUrl: true,
               },
             },
@@ -1184,7 +1188,7 @@ export class QuizService {
                 explanation: quiz.isAllowedViewAnswerAfterSubmit, // Only include explanation if allowed
                 points: true,
                 order: true,
-                imageUrl: true,
+                imageUrls: true,
                 audioUrl: true,
               },
             },
@@ -1510,6 +1514,127 @@ export class QuizService {
         submittedAt: s.submittedAt,
         status: s.status,
       })),
+    };
+  }
+
+  async uploadQuestionImage(
+    questionId: number,
+    file: Express.Multer.File,
+    userId: number,
+    imageIndex?: number,
+  ): Promise<{ imageUrls: string[] }> {
+    // Verify the question exists and user has permission
+    const question = await this.prisma.question.findUnique({
+      where: { id: questionId },
+      include: {
+        quiz: {
+          select: { createdBy: true },
+        },
+      },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    if (question.quiz.createdBy !== userId) {
+      throw new ForbiddenException(
+        'You can only upload images to your own quiz questions',
+      );
+    }
+
+    // Upload image to Cloudinary
+    const imageUrl = await this.uploadService.uploadQuizQuestionImage(
+      file,
+      questionId,
+    );
+
+    // Update question with new image
+    const updatedImageUrls: string[] = [...(question.imageUrls || [])];
+
+    if (imageIndex !== undefined && imageIndex >= 0) {
+      // Replace existing image at specific index
+      if (imageIndex < updatedImageUrls.length) {
+        // Delete old image from Cloudinary if it exists
+        const oldImageUrl = updatedImageUrls[imageIndex];
+        if (oldImageUrl) {
+          await this.uploadService.deleteFile(oldImageUrl);
+        }
+        updatedImageUrls[imageIndex] = imageUrl;
+      } else {
+        // Add to end if index is beyond current array
+        updatedImageUrls.push(imageUrl);
+      }
+    } else {
+      // Add new image to the end
+      updatedImageUrls.push(imageUrl);
+    }
+
+    // Update question in database
+    const updatedQuestion = await this.prisma.question.update({
+      where: { id: questionId },
+      data: {
+        imageUrls: updatedImageUrls,
+      },
+    });
+
+    return {
+      imageUrls: updatedQuestion.imageUrls,
+    };
+  }
+
+  async removeQuestionImage(
+    questionId: number,
+    imageIndex: number,
+    userId: number,
+  ): Promise<{ imageUrls: string[] }> {
+    // Verify the question exists and user has permission
+    const question = await this.prisma.question.findUnique({
+      where: { id: questionId },
+      include: {
+        quiz: {
+          select: { createdBy: true },
+        },
+      },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    if (question.quiz.createdBy !== userId) {
+      throw new ForbiddenException(
+        'You can only remove images from your own quiz questions',
+      );
+    }
+
+    const currentImages = question.imageUrls || [];
+
+    if (imageIndex < 0 || imageIndex >= currentImages.length) {
+      throw new BadRequestException('Invalid image index');
+    }
+
+    // Delete image from Cloudinary
+    const imageToDelete = currentImages[imageIndex];
+    if (imageToDelete) {
+      await this.uploadService.deleteFile(imageToDelete);
+    }
+
+    // Remove image from array
+    const updatedImageUrls = currentImages.filter(
+      (_, index) => index !== imageIndex,
+    );
+
+    // Update question in database
+    const updatedQuestion = await this.prisma.question.update({
+      where: { id: questionId },
+      data: {
+        imageUrls: updatedImageUrls,
+      },
+    });
+
+    return {
+      imageUrls: updatedQuestion.imageUrls,
     };
   }
 }

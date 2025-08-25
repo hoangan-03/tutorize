@@ -5,9 +5,10 @@ import {
   ExerciseSubmissionController,
 } from './exercise.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { FilesModule } from '../file/file.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, FilesModule],
   controllers: [ExerciseController, ExerciseSubmissionController],
   providers: [ExerciseService],
   exports: [ExerciseService],

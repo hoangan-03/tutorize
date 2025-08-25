@@ -51,7 +51,7 @@ async function main() {
         create: {
           firstName: 'An',
           lastName: 'Nguyen',
-          phone: '0932669566',
+          phone: '0932669595',
           school: 'PTNK',
         },
       },
@@ -60,10 +60,10 @@ async function main() {
 
   // Create sample students
   console.log('👨‍🎓 Creating sample students...');
-  const studentPassword = await bcrypt.hash('Student123', 12);
+  const studentPassword = await bcrypt.hash('Thukhanh011110', 12);
   await prisma.user.create({
     data: {
-      email: 'student1@gmail.com',
+      email: 'student251427@ptnk.edu.vn',
       password: studentPassword,
       role: Role.STUDENT,
       isActive: true,
@@ -71,7 +71,7 @@ async function main() {
         create: {
           firstName: 'Thu Khanh',
           lastName: 'Nguyen Thuy',
-          phone: '0987654321',
+          // phone: '0987654321',
 
           grade: 10,
           school: 'PTNK',
@@ -80,23 +80,23 @@ async function main() {
     },
   });
 
-  await prisma.user.create({
-    data: {
-      email: 'student2@gmail.com',
-      password: studentPassword,
-      role: Role.STUDENT,
-      isActive: true,
-      profile: {
-        create: {
-          firstName: 'Khanh',
-          lastName: 'Nguyen Thu Bao',
-          phone: '0912345678',
-          grade: 8,
-          school: 'THCS Le Anh Xuan',
-        },
-      },
-    },
-  });
+  // await prisma.user.create({
+  //   data: {
+  //     email: 'student2@gmail.com',
+  //     password: studentPassword,
+  //     role: Role.STUDENT,
+  //     isActive: true,
+  //     profile: {
+  //       create: {
+  //         firstName: 'Khanh',
+  //         lastName: 'Nguyen Thu Bao',
+  //         phone: '0912345678',
+  //         grade: 8,
+  //         school: 'THCS Le Anh Xuan',
+  //       },
+  //     },
+  //   },
+  // });
 
   // Create sample quiz
   console.log('📝 Creating sample quiz...');
@@ -157,7 +157,7 @@ async function main() {
   const quiz2 = await prisma.quiz.create({
     data: {
       title: 'Hàm số bậc hai',
-      description: 'Bài kiểm tra về hàm số bậc hai và ứng dụng',
+      description: 'Bài kiểm tra về hàm số bậc hai',
       subject: Subject.MATH,
       grade: 8,
       timeLimit: 2,
@@ -516,8 +516,8 @@ async function main() {
   console.log('✅ Database initialization completed successfully!');
   console.log(`
     📊 Created:
-    - 1 Teacher (teacher@gmail.com / Teacher123!)
-    - 2 Students (student1@gmail.com, student2@gmail.com / Student123!)
+    - 1 Teacher 
+    - 2 Students 
     - 2 Sample quiz with each 3 questions
     - 1 Sample exercise
     - 1 Sample document

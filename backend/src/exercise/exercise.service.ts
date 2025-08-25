@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { FilesService } from '../file/file.service';
 import {
   CreateExerciseDto,
   UpdateExerciseDto,
@@ -16,7 +17,10 @@ import { $Enums, ExerciseStatus, SubmissionStatus } from '@prisma/client';
 
 @Injectable()
 export class ExerciseService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private s3Service: FilesService,
+  ) {}
 
   async create(createExerciseDto: CreateExerciseDto, userId: number) {
     const exercise = await this.prisma.exercise.create({
@@ -27,7 +31,10 @@ export class ExerciseService {
         grade: createExerciseDto.grade,
         deadline: new Date(createExerciseDto.deadline),
         note: createExerciseDto.note,
-        content: createExerciseDto.content,
+        content: createExerciseDto.content || null,
+        fileUrl: createExerciseDto.fileUrl || null,
+        fileName: createExerciseDto.fileName || null,
+        fileKey: createExerciseDto.fileKey || null,
         status: 'DRAFT',
         createdBy: userId,
       },
@@ -260,6 +267,47 @@ export class ExerciseService {
     return this.prisma.exercise.update({
       where: { id },
       data: updateData,
+    });
+  }
+
+  async uploadFile(id: number, file: Express.Multer.File, userId: number) {
+    // Check if exercise exists and user has permission
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id },
+    });
+
+    if (!exercise) {
+      throw new NotFoundException('Không tìm thấy bài tập');
+    }
+
+    if (exercise.createdBy !== userId) {
+      throw new ForbiddenException(
+        'Không có quyền upload file cho bài tập này',
+      );
+    }
+
+    // Delete old file if exists
+    if (exercise.fileKey) {
+      try {
+        await this.s3Service.deleteFile(exercise.fileKey);
+      } catch (error) {
+        // Log error but don't fail the upload
+        console.error('Failed to delete old file:', error);
+      }
+    }
+
+    // Upload new file
+    const uploadResult = await this.s3Service.uploadFile(file, 'exercises');
+
+    // Update exercise with file information
+    return this.prisma.exercise.update({
+      where: { id },
+      data: {
+        fileUrl: uploadResult.url,
+        fileName: file.originalname,
+        fileKey: uploadResult.key,
+        content: null, // Clear text content when file is uploaded
+      },
     });
   }
 

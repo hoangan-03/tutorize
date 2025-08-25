@@ -107,6 +107,22 @@ export const exerciseService = {
     return response.data;
   },
 
+  async uploadFile(id: number, file: File): Promise<Exercise> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await api.post<Exercise>(
+      `/exercises/${id}/upload-file`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  },
+
   // Exercise Submissions
   async submitExerciseWithImages(
     exerciseId: number,

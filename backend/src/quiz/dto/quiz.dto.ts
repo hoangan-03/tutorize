@@ -64,11 +64,6 @@ export class CreateQuestionDto {
   @Min(1)
   order: number;
 
-  @ApiPropertyOptional({ description: 'URL hình ảnh' })
-  @IsOptional()
-  @IsString()
-  imageUrl?: string;
-
   @ApiPropertyOptional({ description: 'URL âm thanh' })
   @IsOptional()
   @IsString()

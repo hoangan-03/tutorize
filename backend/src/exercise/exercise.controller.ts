@@ -10,13 +10,18 @@ import {
   UseGuards,
   ParseIntPipe,
   Put,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { ExerciseService } from './exercise.service';
 import {
@@ -139,6 +144,29 @@ export class ExerciseController {
     @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.updateStatus(id, body.status, userId);
+  }
+
+  @Post(':id/upload-file')
+  @Roles(Role.TEACHER)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload PDF file for exercise' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file format' })
+  async uploadFile(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('sub') userId: number,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    if (file.mimetype !== 'application/pdf') {
+      throw new BadRequestException('Only PDF files are allowed');
+    }
+
+    return this.exerciseService.uploadFile(id, file, userId);
   }
 
   @Delete(':id')

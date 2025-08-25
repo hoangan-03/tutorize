@@ -117,7 +117,7 @@ model Question {
   points        Int          @default(1)
   explanation   String?      @db.Text
   order         Int
-  imageUrl      String?
+  imageUrls     String[]     @default([])
   audioUrl      String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -193,7 +193,10 @@ model Exercise {
   grade               Int
   deadline            DateTime
   note                String?        @db.Text
-  content             String         @db.Text
+  content             String?        @db.Text // Made optional since we'll use file instead
+  fileUrl             String? // URL to PDF file in S3
+  fileName            String? // Original filename
+  fileKey             String? // S3 key for file management
   createdBy           Int
   submissions         Int            @default(0)
   status              ExerciseStatus @default(DRAFT)
