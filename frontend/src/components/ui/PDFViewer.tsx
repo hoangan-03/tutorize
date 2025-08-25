@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import {
   ChevronLeft,
@@ -7,21 +7,49 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import { exerciseService } from "../../services/exerciseService";
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+// Set up PDF.js worker - use local file with correct version
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 interface PDFViewerProps {
   fileUrl: string;
   fileName?: string;
+  exerciseId?: number; // Add exerciseId to fetch fresh signed URL
 }
 
-export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, fileName }) => {
+export const PDFViewer: React.FC<PDFViewerProps> = ({
+  fileUrl: initialFileUrl,
+  fileName,
+  exerciseId,
+}) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentFileUrl, setCurrentFileUrl] = useState<string>(initialFileUrl);
+
+  // Fetch fresh signed URL when component mounts
+  useEffect(() => {
+    const fetchSignedUrl = async () => {
+      if (exerciseId) {
+        try {
+          const result = await exerciseService.getFileUrl(exerciseId);
+          setCurrentFileUrl(result.fileUrl);
+        } catch (error) {
+          console.error("Failed to fetch signed URL:", error);
+          // Fall back to original URL if signed URL fetch fails
+          setCurrentFileUrl(initialFileUrl);
+        }
+      }
+    };
+
+    fetchSignedUrl();
+  }, [exerciseId, initialFileUrl]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -53,7 +81,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, fileName }) => {
 
   const downloadFile = () => {
     const link = document.createElement("a");
-    link.href = fileUrl;
+    link.href = currentFileUrl;
     link.download = fileName || "exercise.pdf";
     link.target = "_blank";
     document.body.appendChild(link);
@@ -161,10 +189,15 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, fileName }) => {
 
         <div className="flex justify-center">
           <Document
-            file={fileUrl}
+            file={currentFileUrl}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading=""
+            options={{
+              cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+              cMapPacked: true,
+              standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+            }}
           >
             <Page
               pageNumber={pageNumber}

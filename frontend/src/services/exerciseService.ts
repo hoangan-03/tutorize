@@ -123,6 +123,13 @@ export const exerciseService = {
     return response.data;
   },
 
+  async getFileUrl(id: number): Promise<{ fileUrl: string; fileName: string }> {
+    const response = await api.get<{ fileUrl: string; fileName: string }>(
+      `/exercises/${id}/file-url`
+    );
+    return response.data;
+  },
+
   // Exercise Submissions
   async submitExerciseWithImages(
     exerciseId: number,

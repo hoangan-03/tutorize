@@ -34,7 +34,7 @@
     "lightweight-charts": "^4.2.3",
     "lucide-react": "^0.507.0",
     "morgan": "^1.10.0",
-    "pdfjs-dist": "^5.4.54",
+    "pdfjs-dist": "^5.3.93",
     "prisma": "^6.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -169,6 +169,20 @@ export class ExerciseController {
     return this.exerciseService.uploadFile(id, file, userId);
   }
 
+  @Get(':id/file-url')
+  @ApiOperation({ summary: 'Get signed URL for exercise file' })
+  @ApiResponse({
+    status: 200,
+    description: 'Signed URL generated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Exercise or file not found' })
+  async getFileUrl(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('sub') userId: number,
+  ) {
+    return this.exerciseService.getFileUrl(id, userId);
+  }
+
   @Delete(':id')
   @Roles(Role.TEACHER)
   @ApiOperation({ summary: 'Xóa bài tập' })

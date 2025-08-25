@@ -184,7 +184,7 @@ export const ExerciseEditor: React.FC = () => {
     }
   };
 
-  const handleCreateExercise = async () => {
+  const handleCreateExercise = async (selectedFile?: File) => {
     try {
       const exerciseData = {
         name: formData.name,
@@ -200,14 +200,11 @@ export const ExerciseEditor: React.FC = () => {
       };
 
       const createdExercise = await createExercise(exerciseData);
-
-      // If there's a selected file, upload it after exercise creation
-      if (formData._selectedFile && createdExercise) {
+      if (selectedFile && createdExercise) {
         try {
-          await uploadFile(createdExercise.id, formData._selectedFile);
+          await uploadFile(createdExercise.id, selectedFile);
         } catch (uploadError) {
           console.error("Error uploading file:", uploadError);
-          // Don't fail the entire creation, just log the error
         }
       }
 
@@ -229,7 +226,7 @@ export const ExerciseEditor: React.FC = () => {
         grade: formData.grade,
         deadline: formData.deadline
           ? new Date(formData.deadline).toISOString()
-          : undefined, // Use undefined instead of empty string
+          : undefined,
         note: formData.note,
         content: formData.content,
         latexContent: formData.latexContent,

@@ -228,6 +228,7 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
                         <PDFViewer
                           fileUrl={exercise.fileUrl}
                           fileName={exercise.fileName || "Exercise File"}
+                          exerciseId={exercise.id}
                         />
                       </div>
                     ) : exercise.content ? (

@@ -5,7 +5,7 @@ import {
   ExerciseSubmissionController,
 } from './exercise.controller';
 import { PrismaModule } from '../prisma/prisma.module';
-import { FilesModule } from '../file/file.module';
+import { FilesModule } from '../files/files.module';
 
 @Module({
   imports: [PrismaModule, FilesModule],

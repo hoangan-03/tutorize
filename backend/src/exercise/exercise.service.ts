@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { FilesService } from '../file/file.service';
+import { FilesService } from '../files/files.service';
 import {
   CreateExerciseDto,
   UpdateExerciseDto,
@@ -309,6 +309,32 @@ export class ExerciseService {
         content: null, // Clear text content when file is uploaded
       },
     });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getFileUrl(id: number, _userId: number) {
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id },
+    });
+
+    if (!exercise) {
+      throw new NotFoundException('Không tìm thấy bài tập');
+    }
+
+    if (!exercise.fileKey) {
+      throw new NotFoundException('Bài tập không có file đính kèm');
+    }
+
+    // Generate a fresh signed URL (valid for 24 hours)
+    const signedUrl = await this.s3Service.getSignedUrlForRead(
+      exercise.fileKey,
+      86400,
+    );
+
+    return {
+      fileUrl: signedUrl,
+      fileName: exercise.fileName,
+    };
   }
 
   async updateStatus(id: number, status: ExerciseStatus, userId: number) {

@@ -4,6 +4,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,15 +17,17 @@ export class FilesService {
   private readonly region: string;
 
   constructor(private configService: ConfigService) {
-    this.region = this.configService.get<string>('AWS_S3_REGION');
+    this.region = this.configService.getOrThrow<string>('AWS_S3_REGION');
     this.bucketName =
-      this.configService.get<string>('AWS_S3_BUCKET_NAME') ||
+      this.configService.getOrThrow<string>('AWS_S3_BUCKET_NAME') ||
       'tutorize-exercises';
     this.s3 = new S3Client({
       region: this.region,
       credentials: {
-        accessKeyId: this.configService.get<string>('AWS_S3_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get<string>(
+        accessKeyId: this.configService.getOrThrow<string>(
+          'AWS_S3_ACCESS_KEY_ID',
+        ),
+        secretAccessKey: this.configService.getOrThrow<string>(
           'AWS_S3_SECRET_ACCESS_KEY',
         ),
       },
@@ -45,7 +48,9 @@ export class FilesService {
       ContentType: file.mimetype,
     };
     await this.s3.send(new PutObjectCommand(params));
-    const url = this.getPublicUrl(key);
+
+    // Return a signed URL for reading instead of public URL
+    const url = await this.getSignedUrlForRead(key, 86400); // 24 hours expiry
     this.logger.log(`File uploaded successfully: ${key}`);
     return { key, url };
   }
@@ -57,6 +62,17 @@ export class FilesService {
     };
     await this.s3.send(new DeleteObjectCommand(params));
     this.logger.log(`File deleted successfully: ${key}`);
+  }
+
+  async getSignedUrlForRead(
+    key: string,
+    expiresIn: number = 3600,
+  ): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    return getSignedUrl(this.s3, command, { expiresIn });
   }
 
   async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
