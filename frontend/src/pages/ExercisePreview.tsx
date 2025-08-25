@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Exercise } from "../types/api";
 import { formatDate } from "../components/utils";
-import { generateExercisePDF } from "../utils/pdfGenerator";
+import { generateExercisePDF } from "../components/utils/pdfGenerator";
 import { FontList } from "../components/constant";
 import { useTranslation } from "react-i18next";
 import { ActionButton } from "../components/ui/ActionButton";

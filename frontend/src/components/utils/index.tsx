@@ -8,3 +8,4 @@ export {
   isValidDMY,
   autoFormatDMY,
 } from "./date";
+export { generateExercisePDF } from "./pdfGenerator";

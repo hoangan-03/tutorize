@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useMemo } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import {
   ChevronLeft,
@@ -7,18 +9,18 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { exerciseService } from "../../services/exerciseService";
 
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { ActionButton } from "./ActionButton";
+import { t } from "i18next";
 
-// Set up PDF.js worker - use local file with correct version
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 interface PDFViewerProps {
   fileUrl: string;
   fileName?: string;
-  exerciseId?: number; // Add exerciseId to fetch fresh signed URL
+  exerciseId?: number;
 }
 
 export const PDFViewer: React.FC<PDFViewerProps> = ({
@@ -31,25 +33,62 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentFileUrl, setCurrentFileUrl] = useState<string>(initialFileUrl);
+  const [fileSource, setFileSource] = useState<any>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  // Fetch fresh signed URL when component mounts
   useEffect(() => {
-    const fetchSignedUrl = async () => {
-      if (exerciseId) {
-        try {
-          const result = await exerciseService.getFileUrl(exerciseId);
-          setCurrentFileUrl(result.fileUrl);
-        } catch (error) {
-          console.error("Failed to fetch signed URL:", error);
-          // Fall back to original URL if signed URL fetch fails
-          setCurrentFileUrl(initialFileUrl);
+    if (!exerciseId) {
+      setLoading(false);
+      return;
+    }
+
+    let revoked = false;
+    const fetchBinary = async () => {
+      try {
+        setLoading(true);
+        const token =
+          localStorage.getItem("auth_token") || localStorage.getItem("token");
+        if (!token) {
+          throw new Error("NO_TOKEN");
         }
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/exercises/${exerciseId}/file`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const arrayBuffer = await res.arrayBuffer();
+        if (revoked) return;
+        const u8 = new Uint8Array(arrayBuffer);
+        setFileSource({ data: u8 });
+        const b = new Blob([u8], { type: "application/pdf" });
+        const url = URL.createObjectURL(b);
+        setBlobUrl(url);
+        setError(null);
+      } catch (e: unknown) {
+        setError("Failed to load PDF");
+
+        console.error("Failed to load PDF", e);
+      } finally {
+        if (!revoked) setLoading(false);
       }
     };
+    fetchBinary();
+    return () => {
+      revoked = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [exerciseId]);
 
-    fetchSignedUrl();
-  }, [exerciseId, initialFileUrl]);
+  const pdfOptions = useMemo(
+    () => ({
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+      cMapPacked: true,
+      standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+    }),
+    []
+  );
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -58,9 +97,9 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   };
 
   const onDocumentLoadError = (error: Error) => {
-    setError("Không thể tải file PDF. Vui lòng thử lại.");
+    setError("Failed to load PDF");
     setLoading(false);
-    console.error("PDF load error:", error);
+    console.error("Failed to load PDF", error);
   };
 
   const goToPrevPage = () => {
@@ -80,8 +119,10 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   };
 
   const downloadFile = () => {
+    const href = blobUrl || initialFileUrl;
+    if (!href) return;
     const link = document.createElement("a");
-    link.href = currentFileUrl;
+    link.href = href;
     link.download = fileName || "exercise.pdf";
     link.target = "_blank";
     document.body.appendChild(link);
@@ -89,41 +130,8 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     document.body.removeChild(link);
   };
 
-  if (error) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <div className="text-center">
-          <div className="text-red-600 mb-4">
-            <svg
-              className="h-12 w-12 mx-auto"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-          </div>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={downloadFile}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            <Download className="h-4 w-4 inline mr-2" />
-            Tải xuống file PDF
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* PDF Controls */}
       <div className="border-b border-gray-200 p-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center space-x-4">
@@ -167,46 +175,46 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
               <ZoomIn className="h-4 w-4" />
             </button>
 
-            <button
+            <ActionButton
               onClick={downloadFile}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              <Download className="h-4 w-4 inline mr-2" />
-              Tải xuống
-            </button>
+              colorTheme="blue"
+              textColor="text-white"
+              hasIcon={true}
+              icon={Download}
+              text={t("exercises.downloadPDF")}
+              className="border border-white/20 backdrop-blur-sm"
+              size="md"
+            />
           </div>
         </div>
       </div>
 
-      {/* PDF Document */}
       <div className="p-4">
         {loading && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-2">Đang tải PDF...</p>
+            <p className="text-gray-600 mt-2">Loading...</p>
           </div>
         )}
 
-        <div className="flex justify-center">
-          <Document
-            file={currentFileUrl}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading=""
-            options={{
-              cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-              cMapPacked: true,
-              standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
-            }}
-          >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
-          </Document>
-        </div>
+        {!loading && !error && (
+          <div className="flex justify-center">
+            <Document
+              file={exerciseId ? fileSource : initialFileUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading=""
+              options={pdfOptions}
+            >
+              <Page
+                pageNumber={pageNumber}
+                scale={scale}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+            </Document>
+          </div>
+        )}
       </div>
     </div>
   );

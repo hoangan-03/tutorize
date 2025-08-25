@@ -379,7 +379,7 @@ export class QuizService {
     // Only handle questions if they are explicitly provided and different from current
     if (questions !== undefined) {
       // Get current questions to compare
-      const currentQuestions = await this.prisma.question.findMany({
+      const currentQuestions = await this.prisma.quizQuestion.findMany({
         where: { quizId: id },
         orderBy: { order: 'asc' },
       });
@@ -402,7 +402,7 @@ export class QuizService {
 
       if (questionsChanged) {
         // Delete existing questions
-        await this.prisma.question.deleteMany({
+        await this.prisma.quizQuestion.deleteMany({
           where: { quizId: id },
         });
 
@@ -1469,7 +1469,7 @@ export class QuizService {
     };
 
     // Question analysis
-    const questions = await this.prisma.question.findMany({
+    const questions = await this.prisma.quizQuestion.findMany({
       where: { quizId },
       orderBy: { order: 'asc' },
     });
@@ -1524,7 +1524,7 @@ export class QuizService {
     imageIndex?: number,
   ): Promise<{ imageUrls: string[] }> {
     // Verify the question exists and user has permission
-    const question = await this.prisma.question.findUnique({
+    const question = await this.prisma.quizQuestion.findUnique({
       where: { id: questionId },
       include: {
         quiz: {
@@ -1571,7 +1571,7 @@ export class QuizService {
     }
 
     // Update question in database
-    const updatedQuestion = await this.prisma.question.update({
+    const updatedQuestion = await this.prisma.quizQuestion.update({
       where: { id: questionId },
       data: {
         imageUrls: updatedImageUrls,
@@ -1589,7 +1589,7 @@ export class QuizService {
     userId: number,
   ): Promise<{ imageUrls: string[] }> {
     // Verify the question exists and user has permission
-    const question = await this.prisma.question.findUnique({
+    const question = await this.prisma.quizQuestion.findUnique({
       where: { id: questionId },
       include: {
         quiz: {
@@ -1626,7 +1626,7 @@ export class QuizService {
     );
 
     // Update question in database
-    const updatedQuestion = await this.prisma.question.update({
+    const updatedQuestion = await this.prisma.quizQuestion.update({
       where: { id: questionId },
       data: {
         imageUrls: updatedImageUrls,

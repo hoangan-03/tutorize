@@ -843,12 +843,6 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                               (Tối đa 5MB, định dạng: JPEG, PNG, GIF, WebP)
                             </span>
                           </div>
-                          {!question.id && (
-                            <p className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-                              💡 Hình ảnh sẽ được tải lên server khi bạn lưu
-                              quiz
-                            </p>
-                          )}
                         </div>
                       </div>
 

@@ -442,6 +442,7 @@
     "lessThan1Minute": "Chỉ còn ít hơn 1 phút!",
     "lessThan3Minutes": "Chỉ còn ít hơn 3 phút!",
     "lessThan5Minutes": "Chỉ còn ít hơn 5 phút!",
+    "numberOfTries": "lần làm bài",
     "dashboard": {
       "action": "Hành động",
       "title": "Bảng điều khiển Quiz",

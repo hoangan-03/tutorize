@@ -169,8 +169,8 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                 icon={formData.status === ExerciseStatus.ACTIVE ? Pause : Play}
                 text={
                   formData.status === ExerciseStatus.ACTIVE
-                    ? t("exerciseEditorUI.pauseExercise")
-                    : t("exerciseEditorUI.activateExercise")
+                    ? t("exerciseEditorUI.closeExercise")
+                    : t("exerciseEditorUI.openExercise")
                 }
                 size="sm"
               />
@@ -183,7 +183,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
         {/* Exercise Information */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-start">
               {t("exerciseEditorUI.exerciseInfo")}
             </h3>
 
@@ -268,7 +268,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
           </div>
         </div>
 
-        {/* Content Editor or File Upload */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="border-b border-gray-200 p-8">
@@ -276,9 +275,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                 <h3 className="text-lg font-semibold text-gray-900">
                   {t("exerciseEditorUI.exerciseContent")}
                 </h3>
-                <div className="text-sm text-gray-500">
-                  Chọn giữa nội dung văn bản hoặc tải file PDF
-                </div>
               </div>
             </div>
 
@@ -293,11 +289,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                         <p className="font-medium text-green-900">
                           {formData.fileName || selectedFile?.name}
                         </p>
-                        <p className="text-sm text-green-600">
-                          {formData.fileUrl
-                            ? "File PDF đã được tải lên"
-                            : "File PDF đã chọn (sẽ được tải lên sau khi tạo bài tập)"}
-                        </p>
                       </div>
                     </div>
                     <div className="flex space-x-2">
@@ -308,7 +299,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                           rel="noopener noreferrer"
                           className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
                         >
-                          Xem
+                          {t("common.view")}
                         </a>
                       )}
                       <button

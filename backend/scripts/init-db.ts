@@ -20,10 +20,9 @@ async function main() {
   await prisma.$transaction([
     prisma.quizAnswer.deleteMany(),
     prisma.quizSubmission.deleteMany(),
-    prisma.question.deleteMany(),
+    prisma.quizQuestion.deleteMany(),
     prisma.quiz.deleteMany(),
     prisma.exerciseSubmission.deleteMany(),
-    prisma.exerciseAttachment.deleteMany(),
     prisma.exercise.deleteMany(),
     prisma.document.deleteMany(),
     prisma.ieltsReadingAnswer.deleteMany(),
@@ -484,7 +483,7 @@ async function main() {
                     'Johannes Gutenberg',
                     'slow, expensive, prone to error',
                     'vernacular',
-                    'teeth', // Note: This question is intentionally flawed to test context switching. A better question would be about the printing press.
+                    'teeth',
                     'national identities',
                   ],
                   points: 5,

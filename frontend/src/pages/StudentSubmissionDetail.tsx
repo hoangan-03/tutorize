@@ -14,7 +14,7 @@ import {
   useExerciseSubmissions,
   useModal,
 } from "../hooks";
-import { UploadService } from "../services/uploadService";
+import { uploadService } from "../services/uploadService";
 import { SubmissionStatus } from "../types/api";
 import { Badge } from "../components/ui/Badge";
 import { formatDateTime } from "../components/utils";
@@ -100,7 +100,7 @@ export const StudentSubmissionDetail: React.FC = () => {
           )
         );
 
-        const uploadUrl = await UploadService.uploadFile(
+        const uploadUrl = await uploadService.uploadFile(
           image.file,
           submission?.exercise?.id
         );

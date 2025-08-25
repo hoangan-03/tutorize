@@ -13,6 +13,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -181,6 +182,19 @@ export class ExerciseController {
     @CurrentUser('sub') userId: number,
   ) {
     return this.exerciseService.getFileUrl(id, userId);
+  }
+
+  @Get(':id/file')
+  @Roles(Role.TEACHER, Role.STUDENT)
+  @ApiOperation({ summary: 'Stream exercise PDF file' })
+  @ApiResponse({ status: 200, description: 'PDF file stream' })
+  @ApiResponse({ status: 404, description: 'Exercise or file not found' })
+  async streamFile(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('sub') userId: number,
+    @Res() res: any,
+  ) {
+    return this.exerciseService.streamFile(id, userId, res);
   }
 
   @Delete(':id')

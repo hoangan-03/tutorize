@@ -1796,8 +1796,7 @@ const StudentQuizView: React.FC = () => {
                         <div className="text-sm text-gray-500 text-start flex items-center">
                           <Users className="h-4 w-4 mr-1" />
                           <span>
-                            {quiz.creator?.profile?.firstName ||
-                              "Không xác định"}
+                            {quiz.maxAttempts || 0} {t("quizzes.numberOfTries")}
                           </span>
                         </div>
                       </div>

@@ -176,8 +176,8 @@ export const SubmissionsList: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <User className="w-4 h-4" />
                         <span>
-                          {submission.user.profile?.firstName}{" "}
-                          {submission.user.profile?.lastName}(
+                          {submission.user.profile?.lastName}{" "}
+                          {submission.user.profile?.firstName} (
                           {submission.user.email})
                         </span>
                       </div>

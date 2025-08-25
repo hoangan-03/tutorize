@@ -463,6 +463,7 @@
     "lessThan1Minute": "Less than 1 minute!",
     "lessThan3Minutes": "Less than 3 minutes!",
     "lessThan5Minutes": "Less than 5 minutes!",
+    "numberOfTries": "tries",
     "dashboard": {
       "action": "Action",
       "title": "Quiz Dashboard",

@@ -29,15 +29,16 @@ import {
 } from "../types/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { Badge } from "../components/ui/Badge";
-import { ActionButton } from "../components/ui/ActionButton";
-import { PDFViewer } from "../components/ui/PDFViewer";
+import { PDFViewer, ActionButton, Badge } from "../components/ui";
 import { exerciseService } from "../services/exerciseService";
-import { UploadService } from "../services/uploadService";
-import { generateExercisePDF } from "../utils/pdfGenerator";
+import { uploadService } from "../services/uploadService";
 
 import "katex/dist/katex.min.css";
-import { formatDate, formatDateTime } from "../components/utils";
+import {
+  formatDate,
+  formatDateTime,
+  generateExercisePDF,
+} from "../components/utils";
 import { FontList } from "../components/constant";
 
 export const ExerciseDetailView: React.FC = () => {
@@ -129,7 +130,7 @@ export const ExerciseDetailView: React.FC = () => {
       // Upload new images
       const uploadPromises = uploadedImages.map(async (imageData) => {
         if (imageData.uploadStatus === "pending") {
-          return await UploadService.uploadFile(imageData.file, exercise?.id);
+          return await uploadService.uploadFile(imageData.file, exercise?.id);
         }
         return imageData.driveLink;
       });
@@ -251,7 +252,7 @@ export const ExerciseDetailView: React.FC = () => {
 
     const uploadPromises = uploadedImages.map(async (imageData, index) => {
       try {
-        const uploadUrl = await UploadService.uploadFile(
+        const uploadUrl = await uploadService.uploadFile(
           imageData.file,
           exercise?.id
         );
@@ -616,6 +617,7 @@ export const ExerciseDetailView: React.FC = () => {
                 <PDFViewer
                   fileUrl={exercise.fileUrl}
                   fileName={exercise.fileName}
+                  exerciseId={exercise.id}
                 />
               ) : exercise.content ? (
                 /* Text Content Display */

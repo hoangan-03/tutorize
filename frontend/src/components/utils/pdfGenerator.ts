@@ -1,12 +1,11 @@
-import { Exercise } from "../types/api";
-import api from "../lib/api";
+import { Exercise } from "../../types/api";
+import api from "../../lib/api";
 
 export interface GeneratePdfOptions {
-  selectedFont?: string; // font family name chosen in UI
-  showHeader?: boolean; // whether to render header info (title, meta)
+  selectedFont?: string;
+  showHeader?: boolean;
 }
 
-// Generate exercise PDF; forwards selected font + header option as query params to backend
 export const generateExercisePDF = async (
   exercise: Exercise,
   options: GeneratePdfOptions = {}
@@ -25,7 +24,10 @@ export const generateExercisePDF = async (
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${(exercise.name || "exercise").replace(/[<>:"/\\|?*]/g, "_")}.pdf`;
+    link.download = `${(exercise.name || "exercise").replace(
+      /[<>:"/\\|?*]/g,
+      "_"
+    )}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

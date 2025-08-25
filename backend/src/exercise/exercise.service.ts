@@ -35,7 +35,7 @@ export class ExerciseService {
         fileUrl: createExerciseDto.fileUrl || null,
         fileName: createExerciseDto.fileName || null,
         fileKey: createExerciseDto.fileKey || null,
-        status: 'DRAFT',
+        status: ExerciseStatus.ACTIVE,
         createdBy: userId,
       },
       include: {
@@ -885,5 +885,47 @@ export class ExerciseService {
     });
 
     return { message: 'Xóa bài nộp thành công' };
+  }
+
+  async streamFile(exerciseId: number, userId: number, response: any) {
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id: exerciseId },
+      select: {
+        id: true,
+        fileKey: true,
+        fileName: true,
+        createdBy: true,
+      },
+    });
+
+    if (!exercise) {
+      throw new NotFoundException('Không tìm thấy bài tập');
+    }
+
+    if (!exercise.fileKey) {
+      throw new NotFoundException('Không tìm thấy file đính kèm');
+    }
+
+    try {
+      const s3Object = await this.s3Service.getObject(exercise.fileKey);
+
+      const nodeStream: any = (s3Object as any).Body;
+      if (!nodeStream || typeof nodeStream.pipe !== 'function') {
+        throw new Error('Invalid S3 stream');
+      }
+
+      response.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="${exercise.fileName || 'exercise.pdf'}"`,
+        'Cache-Control': 'private, max-age=3600',
+        'Content-Length': (s3Object as any).ContentLength || undefined,
+        'Accept-Ranges': 'bytes',
+      });
+
+      return nodeStream.pipe(response);
+    } catch (e) {
+      this.s3Service['logger']?.error?.('Stream error', e as any);
+      throw new NotFoundException('Không thể tải file');
+    }
   }
 }

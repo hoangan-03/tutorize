@@ -1,6 +1,6 @@
 import api from "../lib/api";
 
-export class UploadService {
+export class uploadService {
   static async uploadFile(file: File, exerciseId?: number): Promise<string> {
     try {
       const formData = new FormData();
