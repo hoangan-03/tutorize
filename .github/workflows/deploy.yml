@@ -27,8 +27,8 @@ jobs:
           context: ./backend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
-          no-cache: true # Force rebuild without cache
-          platforms: linux/amd64 # Ensure compatibility with EC2
+          no-cache: true 
+          platforms: linux/amd64 
 
       - name: Verify image was pushed
         run: |
@@ -45,9 +45,13 @@ jobs:
           script: |
             echo "Starting deployment..."
 
-            # Force remove old image and pull fresh
-            echo "Removing old image..."
-            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest || true
+            # Clean up disk space first
+            echo "Cleaning up disk space..."
+            docker system prune -a -f
+
+            # Check available space
+            echo "Available disk space:"
+            df -h
 
             echo "Pulling latest image..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
@@ -80,3 +84,6 @@ jobs:
             echo "Deployment successful!"
             echo "Container status:"
             docker ps | grep tutorize-backend-container
+
+            # Final cleanup
+            docker image prune -f
