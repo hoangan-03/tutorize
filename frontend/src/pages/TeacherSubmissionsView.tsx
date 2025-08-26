@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Exercise, ExerciseSubmission, SubmissionStatus } from "../types/api";
 import { useExerciseSubmissionsList, useExerciseSubmissions } from "../hooks";
-import { ActionButton } from "../components/ui/ActionButton";
+import { ActionButton } from "../components/ui";
 
 interface TeacherSubmissionsViewProps {
   exercise: Exercise;

@@ -10,7 +10,7 @@ import {
   Book,
   Target,
 } from "lucide-react";
-import { ActionButton } from "../components/ui/ActionButton";
+import { ActionButton } from "../components/ui";
 
 export const WritingGrader: React.FC = () => {
   const [essay, setEssay] = useState("");

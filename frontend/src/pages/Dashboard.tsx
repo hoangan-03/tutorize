@@ -13,7 +13,7 @@ import {
   Target,
   Calendar,
 } from "lucide-react";
-import { useStudentStats } from "../hooks/useQuiz";
+import { useStudentStats } from "../hooks";
 import { useNavigate } from "react-router-dom";
 
 export const Dashboard: React.FC = () => {

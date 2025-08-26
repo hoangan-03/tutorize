@@ -1,13 +1,13 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { IeltsSubmissionResult } from "../services/ieltsReadingService";
-import { useIeltsReadingSubmissionDetails } from "../hooks/useIeltsReading";
+import { useIeltsReadingSubmissionDetails } from "../hooks";
 import {
   CheckCircleIcon,
   XCircleIcon,
   BookOpenIcon,
 } from "@heroicons/react/24/solid";
-import { ActionButton } from "../components/ui/ActionButton";
+import { ActionButton } from "../components/ui";
 import { ArrowLeft } from "lucide-react";
 
 interface IeltsTestResultProps {

@@ -4,6 +4,7 @@ export {
   useQuizWithAnswers,
   useQuizSubmission,
   useQuizSubmissionHistory,
+  useQuizSubmissionForReview,
   useQuizTaking,
   useQuizManagement,
   useStudentStats,
@@ -30,10 +31,11 @@ export {
   useIeltsReadingTest as useIeltsTest,
   useIeltsReadingTestWithAnswers as useIeltsTestWithAnswers,
   useIeltsReadingSubmissions as useIeltsSubmissions,
-  useIeltsReadingTestSubmissions as useIeltsTestSubmissions,
-  useIeltsReadingSubmissionDetails as useIeltsSubmissionDetails,
+  useIeltsReadingTestSubmissions,
   useIeltsReadingTestManagement as useIeltsTestManagement,
   useIeltsSectionManagement,
+  useIeltsReadingAllSubmissions,
+  useIeltsReadingSubmissionDetails,
   useIeltsQuestionManagement,
 } from "./useIeltsReading";
 

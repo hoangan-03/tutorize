@@ -1,7 +1,7 @@
 import React from "react";
 import { Plus, Eye, Edit, Trash2, Calendar, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "../components/ui/Badge";
+import { Badge } from "../components/ui";
 import { Exercise, ExerciseStatus } from "../types/api";
 import { formatDate } from "../components/utils";
 

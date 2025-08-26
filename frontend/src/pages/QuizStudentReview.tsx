@@ -12,8 +12,8 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useQuizSubmissionForReview } from "../hooks/useQuiz";
-import { ActionButton } from "../components/ui/ActionButton";
+import { useQuizSubmissionForReview } from "../hooks";
+import { ActionButton } from "../components/ui";
 
 interface ApiError extends Error {
   response?: {

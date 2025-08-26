@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
-import { useIeltsReadingSubmissionDetails } from "../hooks/useIeltsReading";
+import { useIeltsReadingSubmissionDetails } from "../hooks";
 import { IeltsTestResult } from "./IeltsTestResult";
 import { ActionButton } from "../components/ui/ActionButton";
 import { ArrowLeft } from "lucide-react";

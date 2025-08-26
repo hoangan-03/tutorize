@@ -7,7 +7,7 @@ import {
   useModal,
 } from "../hooks";
 import { SubmissionStatus } from "../types/api";
-import { Badge } from "../components/ui/Badge";
+import { Badge } from "../components/ui";
 import { formatDateTime } from "../components/utils";
 import { useTranslation } from "react-i18next";
 

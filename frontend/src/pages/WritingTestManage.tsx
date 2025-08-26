@@ -5,9 +5,8 @@ import { IeltsWritingType, IeltsLevel, IeltsWritingTest } from "../types/api";
 import {
   useIeltsWritingTestManagement,
   useIeltsWritingTestById,
-} from "../hooks/useIeltsWriting";
-import { RichTextEditor } from "../components/ui/RichTextEditor";
-import { ActionButton } from "../components/ui/ActionButton";
+} from "../hooks";
+import { RichTextEditor, ActionButton } from "../components/ui";
 
 interface WritingTestManageProps {
   onBack: () => void;

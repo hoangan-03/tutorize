@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useIeltsReadingAllSubmissions } from "../hooks/useIeltsReading";
+import { useIeltsReadingAllSubmissions } from "../hooks";
 import { IeltsSkill, IeltsLevel } from "../types/api";
 import { BookOpen, Calendar, User, Eye, BarChart3, Search } from "lucide-react";
 import { getBandScoreColor, getLevelInfo } from "../components/utils";

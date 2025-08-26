@@ -2,8 +2,8 @@ import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Clock, Award, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "../components/ui/Badge";
-import { useIeltsWritingMySubmission } from "@/hooks/useIeltsWriting";
+import { Badge } from "../components/ui";
+import { useIeltsWritingMySubmission } from "@/hooks";
 
 export const IeltsWritingResultPage: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();

@@ -24,7 +24,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { convertISOToDMY } from "../components/utils";
 import { Role, Subject } from "../types/api";
-import DateInput from "../components/ui/DateInput";
+import { DateInput } from "../components/ui";
 
 interface AuthFormProps {
   mode: "login" | "signup" | "forgot-password" | "change-password" | "profile";

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useIeltsSubmissionDetails } from "../hooks";
+import { useIeltsReadingSubmissionDetails } from "../hooks";
 import { IeltsSubmissionResult } from "../services/ieltsReadingService";
 import { Header } from "../components/layout/Header";
 import {
@@ -20,7 +20,7 @@ export const IeltsResultPage: React.FC = () => {
     submission,
     isLoading: loading,
     error,
-  } = useIeltsSubmissionDetails(submissionId ? parseInt(submissionId) : null);
+  } = useIeltsReadingSubmissionDetails(submissionId ? parseInt(submissionId) : null);
 
   const questionNumberOffsets = useMemo(() => {
     if (!submission?.test) return [];

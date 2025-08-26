@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import {
   useIeltsWritingTestSubmissions,
   useIeltsWritingTest,
-} from "../hooks/useIeltsWriting";
+} from "../hooks";
 import { IeltsWritingSubmission, IeltsWritingTest } from "@/types/api";
 
 export const IeltsWritingSubmissionsList: React.FC = () => {

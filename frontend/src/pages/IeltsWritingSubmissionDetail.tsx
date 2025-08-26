@@ -14,9 +14,9 @@ import { useAuth } from "../hooks/useAuth";
 import {
   useIeltsWritingTestManagement,
   useIeltsWritingSubmissionForGrading,
-} from "../hooks/useIeltsWriting";
+} from "../hooks";
 import { useModal } from "../hooks";
-import { Badge } from "../components/ui/Badge";
+import { Badge } from "../components/ui";
 
 export const IeltsWritingSubmissionDetail: React.FC = () => {
   const { submissionId } = useParams<{

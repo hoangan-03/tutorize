@@ -10,12 +10,10 @@ import {
   Type,
 } from "lucide-react";
 import { Exercise } from "../types/api";
-import { formatDate } from "../components/utils";
-import { generateExercisePDF } from "../components/utils/pdfGenerator";
+import { generateExercisePDF, formatDate } from "../components/utils";
 import { FontList } from "../components/constant";
 import { useTranslation } from "react-i18next";
-import { ActionButton } from "../components/ui/ActionButton";
-import { PDFViewer } from "../components/ui/PDFViewer";
+import { ActionButton, PDFViewer } from "../components/ui";
 
 interface ExercisePreviewProps {
   exercise: Exercise;

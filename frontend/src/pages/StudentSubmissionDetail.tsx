@@ -16,7 +16,7 @@ import {
 } from "../hooks";
 import { uploadService } from "../services/uploadService";
 import { SubmissionStatus } from "../types/api";
-import { Badge } from "../components/ui/Badge";
+import { Badge } from "../components/ui";
 import {
   formatDateTime,
   validateFiles,
@@ -71,10 +71,7 @@ export const StudentSubmissionDetail: React.FC = () => {
       return;
     }
 
-    const { validFiles, invalidFiles } = validateFiles(
-      files,
-      IMAGE_TYPES
-    );
+    const { validFiles, invalidFiles } = validateFiles(files, IMAGE_TYPES);
 
     if (invalidFiles.length > 0) {
       const errorMessages = invalidFiles

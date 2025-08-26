@@ -7,14 +7,15 @@ import {
   QuizStatus,
   Subject,
 } from "../types/api";
-import { getDefaultDeadline } from "../components/utils";
+import {
+  getDefaultDeadline,
+  IMAGE_TYPES,
+  validateFiles,
+} from "../components/utils";
 import { quizService } from "../services/quizService";
 import { useModal } from "../hooks";
-import {
-  validateFileSize,
-  validateFileType,
-  IMAGE_TYPES,
-} from "../components/utils/fileValidation";
+
+import { t } from "i18next";
 
 type FormQuestion = Omit<
   Question,
@@ -205,40 +206,38 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const files = [file];
 
-    // Validate file type
-    const typeValidation = validateFileType(file, IMAGE_TYPES);
-    if (!typeValidation.isValid) {
+    const { validFiles, invalidFiles } = validateFiles(files, IMAGE_TYPES);
+
+    if (invalidFiles.length > 0) {
+      const errorMessages = invalidFiles
+        .map(({ file, errorMessage }) => `${file.name}: ${errorMessage}`)
+        .join("\n");
+
       showError(
-        typeValidation.errorMessage || "Loại file không được hỗ trợ",
-        "Lỗi tải file"
+        `${t("common.someFilesIsNotValid")}\n${errorMessages}`,
+        `${t("common.invalidFiles")}`
       );
-      return;
     }
 
-    // Validate file size
-    const sizeValidation = validateFileSize(file);
-    if (!sizeValidation.isValid) {
-      showError(
-        sizeValidation.errorMessage || "File quá lớn",
-        "Lỗi kích thước file"
-      );
+    if (validFiles.length === 0) {
       return;
     }
 
     try {
       if (questionId) {
-        // Existing question: Upload to server immediately
-        const result = await quizService.uploadQuestionImage(questionId, file);
+        const result = await quizService.uploadQuestionImage(
+          questionId,
+          validFiles[0]
+        );
 
-        // Update the question with new image URLs
         updateQuestion(questionIndex, {
           imageUrls: result.imageUrls,
         });
 
         showSuccess("Tải lên hình ảnh thành công");
       } else {
-        // New question: Store as base64 for preview
         const reader = new FileReader();
         reader.onload = (e) => {
           const base64Url = e.target?.result as string;
@@ -252,12 +251,11 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
             imageUrls: newImageUrls,
           });
 
-          showSuccess("Hình ảnh đã được thêm (sẽ tải lên khi lưu quiz)");
+          showSuccess("Hình ảnh đã được thêm");
         };
         reader.readAsDataURL(file);
       }
 
-      // Clear the input
       event.target.value = "";
     } catch (error) {
       console.error("Error handling image:", error);

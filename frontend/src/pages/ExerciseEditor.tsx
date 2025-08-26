@@ -27,7 +27,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExercises, useExerciseManagement } from "../hooks";
 import { Exercise, Subject, ExerciseStatus } from "../types/api";
-import { Badge } from "../components/ui/Badge";
+import { Badge } from "../components/ui";
 import { formatDate, getDefaultDeadline } from "../components/utils";
 
 export const ExerciseEditor: React.FC = () => {
