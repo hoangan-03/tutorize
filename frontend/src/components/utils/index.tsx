@@ -9,3 +9,4 @@ export {
   autoFormatDMY,
 } from "./date";
 export { generateExercisePDF } from "./pdfGenerator";
+export { validateFiles, IMAGE_TYPES, PDF_TYPES } from "./fileValidation";

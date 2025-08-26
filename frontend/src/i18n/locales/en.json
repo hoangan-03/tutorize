@@ -32,7 +32,13 @@
     "goBack": "Go Back",
     "unknown": "Unknown",
     "accessDenied": "Access Denied",
-    "backToIelts": "Back to IELTS"
+    "backToIelts": "Back to IELTS",
+    "fileTooLarge": "File is too large.",
+    "maximumSizeIs": "Maximum size is:",
+    "fileTypeIsNotSupported": "File type is not supported.",
+    "onlyAccept": "Only accept:",
+    "invalidFiles": "Invalid files:",
+    "someFilesIsNotValid": "Some files are not valid."
   },
   "errors": {
     "loginFailed": "Login failed. Please check your credentials.",

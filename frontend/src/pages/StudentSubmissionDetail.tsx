@@ -17,7 +17,13 @@ import {
 import { uploadService } from "../services/uploadService";
 import { SubmissionStatus } from "../types/api";
 import { Badge } from "../components/ui/Badge";
-import { formatDateTime } from "../components/utils";
+import {
+  formatDateTime,
+  validateFiles,
+  IMAGE_TYPES,
+} from "../components/utils";
+
+import { t } from "i18next";
 
 export const StudentSubmissionDetail: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
@@ -59,14 +65,33 @@ export const StudentSubmissionDetail: React.FC = () => {
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    console.log("Files selected:", files.length);
 
     if (files.length === 0) {
       console.log("No files selected");
       return;
     }
 
-    const newImages = files.map((file) => {
+    const { validFiles, invalidFiles } = validateFiles(
+      files,
+      IMAGE_TYPES
+    );
+
+    if (invalidFiles.length > 0) {
+      const errorMessages = invalidFiles
+        .map(({ file, errorMessage }) => `${file.name}: ${errorMessage}`)
+        .join("\n");
+
+      showError(
+        `${t("common.someFilesIsNotValid")}\n${errorMessages}`,
+        `${t("common.invalidFiles")}`
+      );
+    }
+
+    if (validFiles.length === 0) {
+      return;
+    }
+
+    const newImages = validFiles.map((file) => {
       console.log("Processing file:", file.name, file.type, file.size);
       return {
         file,
@@ -77,11 +102,9 @@ export const StudentSubmissionDetail: React.FC = () => {
 
     setUploadedImages((prev) => {
       const updated = [...prev, ...newImages];
-      console.log("Updated uploaded images count:", updated.length);
       return updated;
     });
 
-    // Reset the input value so the same file can be selected again if needed
     event.target.value = "";
   };
 
@@ -139,7 +162,7 @@ export const StudentSubmissionDetail: React.FC = () => {
       await updateSubmission(submission.id, allImageUrls);
       setEditing(false);
       setUploadedImages([]);
-      mutate(); // Refresh the submission data
+      mutate();
       showSuccess("Cập nhật bài nộp thành công!", {
         title: "Thành công",
         autoClose: true,

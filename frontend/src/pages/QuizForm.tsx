@@ -10,6 +10,11 @@ import {
 import { getDefaultDeadline } from "../components/utils";
 import { quizService } from "../services/quizService";
 import { useModal } from "../hooks";
+import {
+  validateFileSize,
+  validateFileType,
+  IMAGE_TYPES,
+} from "../components/utils/fileValidation";
 
 type FormQuestion = Omit<
   Question,
@@ -201,16 +206,23 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showError("Kích thước file không được vượt quá 5MB");
+    // Validate file type
+    const typeValidation = validateFileType(file, IMAGE_TYPES);
+    if (!typeValidation.isValid) {
+      showError(
+        typeValidation.errorMessage || "Loại file không được hỗ trợ",
+        "Lỗi tải file"
+      );
       return;
     }
 
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      showError("Chỉ hỗ trợ định dạng JPEG, PNG, GIF, WebP");
+    // Validate file size
+    const sizeValidation = validateFileSize(file);
+    if (!sizeValidation.isValid) {
+      showError(
+        sizeValidation.errorMessage || "File quá lớn",
+        "Lỗi kích thước file"
+      );
       return;
     }
 
@@ -840,7 +852,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                               Thêm hình ảnh
                             </label>
                             <span className="text-sm text-gray-500">
-                              (Tối đa 5MB, định dạng: JPEG, PNG, GIF, WebP)
+                              (Tối đa 10MB, định dạng: JPEG, PNG, GIF, WebP)
                             </span>
                           </div>
                         </div>

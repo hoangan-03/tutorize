@@ -32,7 +32,13 @@
     "goBack": "Quay lại",
     "unknown": "Không xác định",
     "accessDenied": "Truy cập bị từ chối",
-    "backToIelts": "Quay lại IELTS"
+    "backToIelts": "Quay lại IELTS",
+    "fileTooLarge": "Tập tin quá lớn",
+    "maximumSizeIs": "Kích thước tối đa là: ",
+    "fileTypeIsNotSupported": "Loại tệp không được hỗ trợ.",
+    "onlyAccept": "Chỉ chấp nhận: ",
+    "invalidFiles": "Lỗi tải tệp",
+    "someFilesIsNotValid": "Một số tệp không hợp lệ."
   },
   "subjects": {
     "math": "Toán học",

@@ -14,6 +14,8 @@ import { Exercise, ExerciseStatus, Subject } from "../types/api";
 import { useTranslation } from "react-i18next";
 import { ActionButton } from "../components/ui/ActionButton";
 import { exerciseService } from "../services/exerciseService";
+import { PDF_TYPES, validateFiles } from "../components/utils";
+import { useModal } from "../hooks/useModal";
 
 interface ExerciseFormProps {
   formData: Exercise;
@@ -40,6 +42,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { showError } = useModal();
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -47,19 +50,28 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (file.type !== "application/pdf") {
-      setUploadError("Chỉ chấp nhận file PDF");
-      return;
+    const fileArray = [file];
+    const { validFiles, invalidFiles } = validateFiles(fileArray, PDF_TYPES);
+
+    if (invalidFiles.length > 0) {
+      const errorMessages = invalidFiles
+        .map(({ file, errorMessage }) => `${file.name}: ${errorMessage}`)
+        .join("\n");
+
+      showError(
+        `${t("common.someFilesIsNotValid")}\n${errorMessages}`,
+        `${t("common.invalidFiles")}`
+      );
+      return; // Exit early if files are invalid
     }
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError("File không được vượt quá 5MB");
-      return;
+    // Only proceed if files are valid
+    if (validFiles.length === 0) {
+      return; // No valid files to process
     }
 
-    // For edit mode, upload immediately
+    const validFile = validFiles[0]; // Use the validated file
+
     if (isEdit) {
       setIsUploading(true);
       setUploadError(null);
@@ -67,22 +79,19 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
       try {
         const updatedExercise = await exerciseService.uploadFile(
           formData.id,
-          file
+          validFile // Use validated file
         );
         onExerciseUpdate?.(updatedExercise);
-        // Clear content field when file is uploaded
         onInputChange("content", "");
       } catch (error) {
         console.error("File upload failed:", error);
-        setUploadError("Không thể tải file lên. Vui lòng thử lại.");
+        setUploadError("File upload failed:");
       } finally {
         setIsUploading(false);
       }
     } else {
-      // For create mode, store file for later upload
-      setSelectedFile(file);
+      setSelectedFile(validFile); // Use validated file
       setUploadError(null);
-      // Clear text content when file is selected
       onInputChange("content", "");
     }
   };
@@ -327,9 +336,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({
                             </span>{" "}
                             hoặc kéo thả file
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Chỉ file PDF (tối đa 5MB)
-                          </p>
+                          <p className="text-xs text-gray-500">Chỉ file PDF</p>
                         </div>
                         <input
                           type="file"

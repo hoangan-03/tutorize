@@ -38,6 +38,8 @@ import {
   formatDate,
   formatDateTime,
   generateExercisePDF,
+  validateFiles,
+  IMAGE_TYPES,
 } from "../components/utils";
 import { FontList } from "../components/constant";
 
@@ -150,13 +152,13 @@ export const ExerciseDetailView: React.FC = () => {
       loadExistingSubmission();
 
       showSuccess(t("exercises.submissionUpdated"), {
-        title: t("common.success") || "Thành công",
+        title: t("common.success"),
         autoClose: true,
         autoCloseDelay: 2000,
       });
     } catch (error) {
       console.error("Error updating submission:", error);
-      showError(t("exercises.submissionError"), t("common.error") || "Lỗi");
+      showError(t("exercises.submissionError"), t("common.error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -167,40 +169,55 @@ export const ExerciseDetailView: React.FC = () => {
     if (!existingSubmission) return;
 
     showConfirm(
-      t("exercises.confirmDeleteMessage") ||
-        "Bạn có chắc chắn muốn xóa bài nộp này? Hành động này không thể hoàn tác.",
+      t("exercises.confirmDeleteMessage"),
       async () => {
         try {
           await exerciseService.deleteSubmission(existingSubmission.id);
           setExistingSubmission(null);
           setExistingImages([]);
           showSuccess(t("exercises.submissionDeleted"), {
-            title: t("common.success") || "Thành công",
+            title: t("common.success"),
             autoClose: true,
             autoCloseDelay: 2000,
           });
         } catch (error) {
           console.error("Error deleting submission:", error);
-          showError(t("exercises.submissionError"), t("common.error") || "Lỗi");
+          showError(t("exercises.submissionError"), t("common.error"));
         }
       },
       {
-        title: t("exercises.confirmDelete") || "Xác nhận xóa",
-        confirmText: t("common.delete") || "Xóa",
-        cancelText: t("common.cancel") || "Hủy",
+        title: t("exercises.confirmDelete"),
+        confirmText: t("common.delete"),
+        cancelText: t("common.cancel"),
       }
     );
   };
 
-  // Handle file selection
   const handleFileSelect = useCallback(
     (files: FileList | File[]) => {
       const fileArray = Array.from(files);
-      const imageFiles = fileArray.filter((file) =>
-        file.type.startsWith("image/")
+
+      const { validFiles, invalidFiles } = validateFiles(
+        fileArray,
+        IMAGE_TYPES
       );
 
-      const newImages = imageFiles.map((file) => ({
+      if (invalidFiles.length > 0) {
+        const errorMessages = invalidFiles
+          .map(({ file, errorMessage }) => `${file.name}: ${errorMessage}`)
+          .join("\n");
+
+        showError(
+          `${t("common.someFilesIsNotValid")}\n${errorMessages}`,
+          `${t("common.invalidFiles")}`
+        );
+      }
+
+      if (validFiles.length === 0) {
+        return;
+      }
+
+      const newImages = validFiles.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
         uploadStatus: UploadStatus.PENDING,
@@ -208,7 +225,7 @@ export const ExerciseDetailView: React.FC = () => {
 
       setUploadedImages((prev) => [...prev, ...newImages]);
     },
-    [UploadStatus.PENDING]
+    [UploadStatus.PENDING, showError, t]
   );
 
   // Handle drag and drop
@@ -292,7 +309,7 @@ export const ExerciseDetailView: React.FC = () => {
     }
 
     if (uploadedImages.length === 0) {
-      showError(t("exercises.pleaseUploadImages"), t("common.error") || "Lỗi");
+      showError(t("exercises.pleaseUploadImages"), t("common.error"));
       return;
     }
 
@@ -316,7 +333,7 @@ export const ExerciseDetailView: React.FC = () => {
       );
 
       showSuccess(t("exercises.submissionSuccess"), {
-        title: t("common.success") || "Thành công",
+        title: t("common.success"),
         autoClose: true,
         autoCloseDelay: 2000,
       });
