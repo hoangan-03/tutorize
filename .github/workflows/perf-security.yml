@@ -38,11 +38,11 @@ jobs:
       - name: Run k6 load test
         run: |
           mkdir -p load-test/k6
-          docker run --rm -v ${GITHUB_WORKSPACE}:/src -w /src --user $(id -u):$(id -g) grafana/k6:latest run \
+          # Use host networking so the container can reach localhost:3002 on the runner
+          docker run --rm --network host -v ${GITHUB_WORKSPACE}:/src -w /src --user $(id -u):$(id -g) -e BASE_URL="http://localhost:3002/api/v1" grafana/k6:latest run \
             --vus 20 --duration 30s --out json=load-test/k6/results.json load-test/k6/load-test.js
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
-          BASE_URL: http://localhost:3002/api/v1
 
       - name: Upload k6 results
         uses: actions/upload-artifact@v4
