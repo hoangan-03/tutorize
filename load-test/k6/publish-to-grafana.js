@@ -11,8 +11,8 @@ const scriptPath = process.argv[2] || 'load-test/k6/load-test.js';
 console.log(`Running: k6 cloud ${scriptPath}`);
 
 const k6 = spawn('k6', ['cloud', scriptPath], {
-	stdio: 'inherit',
-	env: { ...process.env, K6_CLOUD_TOKEN: k6Token },
+    stdio: 'inherit',
+    env: { ...process.env, K6_CLOUD_TOKEN: k6Token, BASE_URL: process.env.BASE_URL },
 });
 
 k6.on('close', (code) => {
