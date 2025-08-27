@@ -38,6 +38,7 @@ jobs:
           NODE_ENV=test
           DATABASE_URL=${{ secrets.PROD_DATABASE_URL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=7d
           BCRYPT_ROUNDS=10
           PORT=3000
           READ_ONLY_MODE=true
@@ -53,17 +54,14 @@ jobs:
           CLOUDINARY_API_SECRET=dummy_api_secret_for_testing
 
           # S3 (dummy values for testing)
-          AWS_ACCESS_KEY_ID=dummy_aws_key_for_testing
-          AWS_SECRET_ACCESS_KEY=dummy_aws_secret_for_testing
-          AWS_REGION=us-east-1
+          AWS_S3_ACCESS_KEY_ID=dummy_aws_key_for_testing
+          AWS_S3_SECRET_ACCESS_KEY=dummy_aws_secret_for_testing
+          AWS_S3_REGION=ap-northeast-1
           AWS_S3_BUCKET_NAME=dummy_bucket_for_testing
 
           FRONTEND_URL=https://annguyen.software
 
-          # Other optional configs
-          CORS_ORIGIN=http://localhost:3001
-          THROTTLE_TTL=60
-          THROTTLE_LIMIT=10
+          CORS_ORIGIN=https://annguyen.software,https://www.annguyen.software
           EOF
 
       - name: Start test container
