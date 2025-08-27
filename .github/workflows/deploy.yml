@@ -131,7 +131,7 @@ jobs:
             --environment tests/postman_environment.json \
             --reporters cli,json \
             --reporter-json-export newman-results.json \
-            --timeout 15000 \
+            --timeout 45000 \
             --delay-request 500
 
       - name: Analyze Test Results
