@@ -1390,51 +1390,7 @@
             ]
         },
         {
-            "name": "11 - PDF Generation",
-            "item": [
-                {
-                    "name": "Get Exercise PDF",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{AUTH_TOKEN}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{BASE_URL}}/pdf/exercise/{{SAMPLE_EXERCISE_ID}}",
-                            "host": [
-                                "{{BASE_URL}}"
-                            ],
-                            "path": [
-                                "pdf",
-                                "exercise",
-                                "{{SAMPLE_EXERCISE_ID}}"
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('PDF generation endpoint responds', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401, 403]);",
-                                    "});",
-                                    "",
-                                    "pm.test('Response time reasonable for PDF generation', function() {",
-                                    "    pm.expect(pm.response.responseTime).to.be.below(15000);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "12 - Error Handling & Edge Cases",
+            "name": "11 - Error Handling & Edge Cases",
             "item": [
                 {
                     "name": "Invalid Endpoint Returns 404",
@@ -1553,7 +1509,7 @@
             ]
         },
         {
-            "name": "13 - Performance & Load Testing",
+            "name": "12 - Performance & Load Testing",
             "item": [
                 {
                     "name": "Concurrent Health Checks",
