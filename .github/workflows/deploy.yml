@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  deploy:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -21,7 +21,93 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build Docker image for testing
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: false
+          tags: tutorize-backend:test
+          load: true
+          platforms: linux/amd64
+
+      - name: Start test container
+        run: |
+          echo "Starting test container..."
+          docker run -d \
+            --name tutorize-test-container \
+            -p 3001:3000 \
+            -e NODE_ENV=test \
+            -e DATABASE_URL="file:./test.db" \
+            tutorize-backend:test
+
+      - name: Wait for test application to be ready
+        run: |
+          echo "Waiting for test application to be ready..."
+          timeout 60 bash -c 'until curl -f http://localhost:3001/api/v1/health 2>/dev/null; do sleep 5; done' || echo "Health check timeout - continuing anyway"
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Configure test environment
+        run: |
+          # Update environment file for local testing
+          sed -i "s|https://api.annguyen.software/api/v1|http://localhost:3001/api/v1|g" tests/postman_environment.json
+          sed -i "s/{{TEST_USER_EMAIL}}/${{ secrets.TEST_USER_EMAIL }}/g" tests/postman_environment.json
+          sed -i "s/{{TEST_USER_PASSWORD}}/${{ secrets.TEST_USER_PASSWORD }}/g" tests/postman_environment.json
+
+      - name: Run API Tests with Newman
+        run: |
+          echo "Running API tests against test container..."
+          newman run tests/postman_collection.json \
+            --environment tests/postman_environment.json \
+            --reporters cli,json \
+            --reporter-json-export newman-results.json \
+            --timeout 15000 \
+            --delay-request 500
+
+      - name: Analyze Test Results
+        run: |
+          echo "Analyzing test results..."
+          if [ -f newman-results.json ]; then
+            # Extract test results
+            total_requests=$(jq '.run.stats.requests.total' newman-results.json)
+            failed_requests=$(jq '.run.stats.requests.failed' newman-results.json)
+            total_assertions=$(jq '.run.stats.assertions.total' newman-results.json)
+            failed_assertions=$(jq '.run.stats.assertions.failed' newman-results.json)
+
+            echo "📊 Test Results Summary:"
+            echo "   Total Requests: $total_requests"
+            echo "   Failed Requests: $failed_requests"
+            echo "   Total Assertions: $total_assertions"
+            echo "   Failed Assertions: $failed_assertions"
+
+            if [ "$failed_assertions" -gt 0 ]; then
+              echo "❌ Some tests failed - check the detailed results below"
+              jq '.run.failures[] | {test: .source.name, error: .error.message}' newman-results.json || true
+              exit 1
+            else
+              echo "✅ All tests passed!"
+            fi
+          else
+            echo "❌ Test results file not found"
+            exit 1
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: newman-test-results
+          path: newman-results.json
+
+      - name: Stop test container
+        if: always()
+        run: |
+          docker stop tutorize-test-container || true
+          docker rm tutorize-test-container || true
+
+      - name: Build and push Docker image to registry
+        if: success()
         uses: docker/build-push-action@v4
         with:
           context: ./backend
@@ -30,12 +116,10 @@ jobs:
           no-cache: true
           platforms: linux/amd64
 
-      - name: Verify image was pushed
-        run: |
-          echo "Verifying image was pushed to Docker Hub..."
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
-          docker images ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
-
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to EC2 instance
         uses: appleboy/ssh-action@master
         with:
@@ -88,62 +172,7 @@ jobs:
             # Final cleanup
             docker image prune -f
 
-      - name: Wait for application to be ready
+      - name: Verify deployment
         run: |
-          echo "Waiting for application to be ready..."
-          timeout 60 bash -c 'until curl -f http://localhost:3000/api/v1/health 2>/dev/null; do sleep 5; done' || echo "Health check timeout - continuing anyway"
-
-      - name: Install Newman
-        run: npm install -g newman
-
-      - name: Configure production environment
-        run: |
-          # Update environment file with production secrets and localhost URL
-          sed -i "s|https://api.annguyen.software/api/v1|http://localhost:3000/api/v1|g" tests/postman_environment.json
-          sed -i "s/{{TEST_USER_EMAIL}}/${{ secrets.TEST_USER_EMAIL }}/g" tests/postman_environment.json
-          sed -i "s/{{TEST_USER_PASSWORD}}/${{ secrets.TEST_USER_PASSWORD }}/g" tests/postman_environment.json
-
-      - name: Run API Tests with Newman
-        run: |
-          echo "Running production API tests against deployed application..."
-          newman run tests/postman_collection.json \
-            --environment tests/postman_environment.json \
-            --reporters cli,json \
-            --reporter-json-export newman-results.json \
-            --timeout 15000 \
-            --delay-request 500 \
-            --suppress-exit-code 1
-
-      - name: Analyze Test Results
-        run: |
-          echo "Analyzing test results..."
-          if [ -f newman-results.json ]; then
-            # Extract test results
-            total_requests=$(jq '.run.stats.requests.total' newman-results.json)
-            failed_requests=$(jq '.run.stats.requests.failed' newman-results.json)
-            total_assertions=$(jq '.run.stats.assertions.total' newman-results.json)
-            failed_assertions=$(jq '.run.stats.assertions.failed' newman-results.json)
-
-            echo "📊 Test Results Summary:"
-            echo "   Total Requests: $total_requests"
-            echo "   Failed Requests: $failed_requests"
-            echo "   Total Assertions: $total_assertions"
-            echo "   Failed Assertions: $failed_assertions"
-
-            if [ "$failed_assertions" -gt 0 ]; then
-              echo "❌ Some tests failed - check the detailed results below"
-              jq '.run.failures[] | {test: .source.name, error: .error.message}' newman-results.json || true
-            else
-              echo "✅ All production tests passed!"
-            fi
-          else
-            echo "❌ Test results file not found"
-            exit 1
-          fi
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: newman-test-results
-          path: newman-results.json
+          echo "Verifying deployment..."
+          timeout 60 bash -c 'until curl -f https://api.annguyen.software/api/v1/health 2>/dev/null; do sleep 5; done' || echo "Health check timeout - deployment may need manual verification"
