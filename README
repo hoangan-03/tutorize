@@ -168,7 +168,7 @@ Runs performance and security tests before deployment:
 4. Wait and poll the `/api/v1/health` endpoint until ready.
 5. Run k6 load tests with configurable VUs and duration, output JSON results.
 6. Upload k6 results as artifacts.
-7. Publish k6 metrics to Grafana (optional, if `GRAFANA_PUSH_URL` and `GRAFANA_API_KEY` secrets are set).
+7. Publish k6 metrics to Grafana (optional, if `GRAFANA_PUSH_URL` and authentication secrets are set).
 8. Run OWASP ZAP baseline security scan (dockerized).
 9. Upload ZAP security report as artifacts.
 10. Stop test container.
