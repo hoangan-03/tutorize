@@ -45,6 +45,7 @@ jobs:
           # Email service (dummy values for testing)
           SENDGRID_API_KEY=dummy_sendgrid_key_for_testing
           SENDGRID_FROM_EMAIL=test@example.com
+          SENDGRID_FROM_NAME=test-name
 
           # Cloudinary (dummy values for testing)
           CLOUDINARY_CLOUD_NAME=dummy_cloud_for_testing
