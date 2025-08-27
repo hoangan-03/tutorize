@@ -35,6 +35,19 @@ jobs:
             sleep 2
           done
 
+      - name: Diagnose test service
+        run: |
+          echo "== docker ps =="
+          docker ps -a || true
+          echo "\n== listening TCP ports (ss) =="
+          ss -ltnp || true
+          echo "\n== netstat fallback =="
+          netstat -tlnp || true
+          echo "\n== host curl to health =="
+          curl -v http://localhost:3002/api/v1/health || true
+          echo "\n== last 200 lines of container logs (tutorize-perf) =="
+          docker logs tutorize-perf --tail 200 || true
+
       - name: Run k6 load test
         run: |
           mkdir -p load-test/k6
