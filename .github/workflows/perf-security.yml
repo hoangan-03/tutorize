@@ -23,8 +23,38 @@ jobs:
 
       - name: Start test container
         run: |
-          docker run -d --name tutorize-perf -p 3002:3000 tutorize-backend:perf || true
-          sleep 5
+          echo "Creating test.env for perf container"
+          cat > test.env << EOF
+          NODE_ENV=test
+          DATABASE_URL=${{ secrets.PROD_DATABASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=7d
+          BCRYPT_ROUNDS=10
+          PORT=3000
+          READ_ONLY_MODE=true
+
+          SENDGRID_API_KEY=dummy_sendgrid_key_for_testing
+          SENDGRID_FROM_EMAIL=test@example.com
+          SENDGRID_FROM_NAME=test-name
+
+
+          CLOUDINARY_CLOUD_NAME=dummy_cloud_for_testing
+          CLOUDINARY_API_KEY=dummy_api_key_for_testing
+          CLOUDINARY_API_SECRET=dummy_api_secret_for_testing
+
+          AWS_S3_ACCESS_KEY_ID=dummy_aws_key_for_testing
+          AWS_S3_SECRET_ACCESS_KEY=dummy_aws_secret_for_testing
+          AWS_S3_REGION=ap-northeast-1
+          AWS_S3_BUCKET_NAME=dummy_bucket_for_testing
+
+          FRONTEND_URL=https://annguyen.software
+
+          CORS_ORIGIN=https://annguyen.software,https://www.annguyen.software
+          EOF
+
+          docker run -d --name tutorize-perf --env-file test.env -p 3002:3000 tutorize-backend:perf || true
+          # give extra time for startup
+          sleep 8
 
       - name: Wait for API
         run: |
