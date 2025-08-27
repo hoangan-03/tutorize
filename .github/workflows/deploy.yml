@@ -1,9 +1,14 @@
 name: Build and Deploy to EC2
 
+# TEMPORARY: Added workflow_run to wait for perf-security.yml to complete before deploying
 on:
   push:
     branches:
       - master
+  workflow_run:
+    workflows: ["Perf & Security Checks"]
+    types:
+      - completed
 
 jobs:
   build-and-test:
@@ -119,26 +124,32 @@ jobs:
 
       - name: Configure test environment
         run: |
-          # Update environment file for local testing
-          sed -i "s|https://api.annguyen.software/api/v1|http://localhost:3001/api/v1|g" tests/postman_environment.json
-          sed -i "s/{{TEST_USER_EMAIL}}/${{ secrets.TEST_USER_EMAIL }}/g" tests/postman_environment.json
-          sed -i "s/{{TEST_USER_PASSWORD}}/${{ secrets.TEST_USER_PASSWORD }}/g" tests/postman_environment.json
+          # Update environment file for local testing (integration-test folder)
+          sed -i "s|https://api.annguyen.software/api/v1|http://localhost:3001/api/v1|g" integration-test/postman_environment.json
+          sed -i "s/{{TEST_USER_EMAIL}}/${{ secrets.TEST_USER_EMAIL }}/g" integration-test/postman_environment.json
+          sed -i "s/{{TEST_USER_PASSWORD}}/${{ secrets.TEST_USER_PASSWORD }}/g" integration-test/postman_environment.json
 
       - name: Run API Tests with Newman
         run: |
           echo "Running API tests against test container..."
+          # Capture container logs periodically while tests run
+          (while true; do docker logs --tail 200 tutorize-test-container > container-logs.txt; sleep 5; done) &
           # Use explicit request and script timeouts to avoid callback timed out errors for slow endpoints (PDF, large DB queries)
-          newman run tests/postman_collection.json \
-            --environment tests/postman_environment.json \
+          set -o pipefail
+            newman run integration-test/postman_collection.json \
+              --environment integration-test/postman_environment.json \
             --reporters cli,json \
             --reporter-json-export newman-results.json \
             --timeout-request 120000 \
             --timeout-script 120000 \
-            --delay-request 300
+            --delay-request 300 || true
 
       - name: Analyze Test Results
         run: |
           echo "Analyzing test results..."
+          # Ensure container logs are saved
+          docker logs --tail 500 tutorize-test-container > container-logs.txt || true
+
           if [ -f newman-results.json ]; then
             # Extract test results
             total_requests=$(jq '.run.stats.requests.total' newman-results.json)
@@ -154,22 +165,28 @@ jobs:
 
             if [ "$failed_assertions" -gt 0 ]; then
               echo "❌ Some tests failed - check the detailed results below"
-              jq '.run.failures[] | {test: .source.name, error: .error.message}' newman-results.json || true
+              jq '.run.failures[] | {test: .source.name, error: .error.message, response: .error.stack}' newman-results.json || true
+              echo "Container logs (last 500 lines):"
+              tail -n 500 container-logs.txt || true
+              # Upload artifacts will happen in the artifact step; exit with failure to stop deployment
               exit 1
             else
               echo "✅ All tests passed!"
             fi
           else
-            echo "❌ Test results file not found"
+            echo "❌ Test results file not found - saving container logs for diagnosis"
+            tail -n 500 container-logs.txt || true
             exit 1
           fi
 
-      - name: Upload test results
+      - name: Upload test results and logs
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: newman-test-results
-          path: newman-results.json
+          name: newman-test-results-and-logs
+          path: |
+            newman-results.json
+            container-logs.txt
 
       - name: Stop test container
         if: always()
