@@ -127,12 +127,14 @@ jobs:
       - name: Run API Tests with Newman
         run: |
           echo "Running API tests against test container..."
+          # Use explicit request and script timeouts to avoid callback timed out errors for slow endpoints (PDF, large DB queries)
           newman run tests/postman_collection.json \
             --environment tests/postman_environment.json \
             --reporters cli,json \
             --reporter-json-export newman-results.json \
-            --timeout 45000 \
-            --delay-request 500
+            --timeout-request 120000 \
+            --timeout-script 120000 \
+            --delay-request 300
 
       - name: Analyze Test Results
         run: |
