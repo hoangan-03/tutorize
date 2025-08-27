@@ -58,6 +58,8 @@ jobs:
           AWS_REGION=us-east-1
           AWS_S3_BUCKET_NAME=dummy_bucket_for_testing
 
+          FRONTEND_URL=https://annguyen.software
+
           # Other optional configs
           CORS_ORIGIN=http://localhost:3001
           THROTTLE_TTL=60
