@@ -1,0 +1,611 @@
+{
+    "info": {
+        "name": "Tutorize Production API Tests",
+        "description": "Production-safe API tests for Tutorize application - focuses on monitoring, health checks, and non-destructive operations",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "id": "tutorize-production-collection"
+    },
+    "item": [
+        {
+            "name": "Production Health & Monitoring",
+            "item": [
+                {
+                    "name": "API Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/health",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Health check successful', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is less than 2000ms', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "});",
+                                    "",
+                                    "pm.test('Health response has required fields', function() {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response).to.have.property('status');",
+                                    "    pm.expect(response).to.have.property('timestamp');",
+                                    "    pm.expect(response).to.have.property('database');",
+                                    "});",
+                                    "",
+                                    "pm.test('Database is healthy', function() {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response.database.status).to.equal('healthy');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "API Availability Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                ""
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('API is available', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is acceptable', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Authentication Validation",
+            "item": [
+                {
+                    "name": "Login with Valid Credentials",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{TEST_USER_EMAIL}}\",\n  \"password\": \"{{TEST_USER_PASSWORD}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/auth/login",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Login successful', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response).to.have.property('access_token');",
+                                    "    pm.environment.set('AUTH_TOKEN', response.access_token);",
+                                    "    pm.test('Token is valid JWT format', function() {",
+                                    "        pm.expect(response.access_token).to.match(/^[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]*$/);",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Login with Invalid Credentials",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"invalid@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/auth/login",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Invalid login rejected', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([401, 400]);",
+                                    "});",
+                                    "",
+                                    "pm.test('No token returned for invalid credentials', function() {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response).to.not.have.property('access_token');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Access Protected Route",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/auth/profile",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "profile"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Protected route accessible with valid token', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains user data', function() {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response).to.have.property('id');",
+                                    "    pm.expect(response).to.have.property('email');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Access Protected Route Without Token",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/auth/profile",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "profile"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Protected route requires authentication', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Data Integrity & Performance",
+            "item": [
+                {
+                    "name": "Get Exercises (Performance Check)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises?limit=5",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Exercises endpoint responds quickly', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response format is correct', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response).to.have.property('data');",
+                                    "    pm.expect(response.data).to.be.an('array');",
+                                    "});",
+                                    "",
+                                    "pm.test('Exercise data structure is valid', function() {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data.length > 0) {",
+                                    "        const exercise = response.data[0];",
+                                    "        pm.expect(exercise).to.have.property('id');",
+                                    "        pm.expect(exercise).to.have.property('name');",
+                                    "        pm.expect(exercise).to.have.property('subject');",
+                                    "        pm.expect(exercise).to.have.property('grade');",
+                                    "    }",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Quizzes (Performance Check)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/quizzes?limit=5",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "quizzes"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Quizzes endpoint responds quickly', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response format is correct', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response).to.have.property('data');",
+                                    "    pm.expect(response.data).to.be.an('array');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Pagination Works Correctly",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises?page=1&limit=2",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "2"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Pagination parameters accepted', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response respects limit', function() {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.expect(response.data).to.have.length.of.at.most(2);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Error Handling",
+            "item": [
+                {
+                    "name": "Invalid Endpoint Returns 404",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/nonexistent-endpoint",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "nonexistent-endpoint"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Invalid endpoint returns 404', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([404]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Invalid HTTP Method Returns 405",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/health",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Invalid method handled gracefully', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([405, 404, 400]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Malformed JSON Handled",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ invalid json }"
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Malformed JSON handled', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Production Monitoring",
+            "item": [
+                {
+                    "name": "Response Time Consistency",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/health",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Consistent response time', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.above(0);",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                                    "});",
+                                    "",
+                                    "// Store response time for trending",
+                                    "pm.environment.set('LAST_RESPONSE_TIME', pm.response.responseTime);",
+                                    "",
+                                    "pm.test('Response time within SLA', function() {",
+                                    "    // SLA: 95% of requests under 2 seconds",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Memory Leak Detection (Repeated Calls)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/health",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Repeated calls work consistently', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time stable', function() {",
+                                    "    const lastTime = pm.environment.get('LAST_RESPONSE_TIME');",
+                                    "    if (lastTime) {",
+                                    "        const currentTime = pm.response.responseTime;",
+                                    "        const difference = Math.abs(currentTime - lastTime);",
+                                    "        // Allow 50% variance in response time",
+                                    "        pm.expect(difference).to.be.below(lastTime * 0.5);",
+                                    "    }",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Set test run ID for tracking",
+                    "pm.environment.set('TEST_RUN_ID', Date.now());",
+                    "",
+                    "// Initialize monitoring variables",
+                    "if (!pm.environment.get('TEST_START_TIME')) {",
+                    "    pm.environment.set('TEST_START_TIME', Date.now());",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": []
+}

@@ -1,1 +1,32 @@
 .vscode/settings.json
+
+# Environment files with potential secrets
+tests/postman_environment_local.json
+tests/postman_environment_dev.json
+tests/*secrets*.json
+tests/*credentials*.json
+
+# Test results and artifacts
+tests/newman-results.json
+tests/*.html
+test-results/
+*.log
+
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -36,6 +36,27 @@ async function main() {
     prisma.user.deleteMany(),
   ]);
 
+  // Create test account
+  console.log('👨‍💻 Creating test account...');
+  const testPassword = await bcrypt.hash('testpassword', 12);
+  await prisma.user.create({
+    data: {
+      email: 'test@example.com',
+      password: testPassword,
+      role: Role.TEACHER,
+      isActive: true,
+      profile: {
+        create: {
+          firstName: 'Test',
+          lastName: 'User',
+          phone: '0123456789',
+          grade: 12,
+          school: 'PTNK',
+        },
+      },
+    },
+  });
+
   // Create sample teacher
   console.log('👨‍🏫 Creating sample teacher...');
   const teacherPassword = await bcrypt.hash('Hoangan123456789', 12);

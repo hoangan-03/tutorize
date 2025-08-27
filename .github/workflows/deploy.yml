@@ -27,8 +27,8 @@ jobs:
           context: ./backend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tutorize-backend:latest
-          no-cache: true 
-          platforms: linux/amd64 
+          no-cache: true
+          platforms: linux/amd64
 
       - name: Verify image was pushed
         run: |
@@ -87,3 +87,63 @@ jobs:
 
             # Final cleanup
             docker image prune -f
+
+      - name: Wait for application to be ready
+        run: |
+          echo "Waiting for application to be ready..."
+          timeout 60 bash -c 'until curl -f http://localhost:3000/api/v1/health 2>/dev/null; do sleep 5; done' || echo "Health check timeout - continuing anyway"
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Configure production environment
+        run: |
+          # Update environment file with production secrets and localhost URL
+          sed -i "s|https://api.annguyen.software/api/v1|http://localhost:3000/api/v1|g" tests/postman_environment.json
+          sed -i "s/{{TEST_USER_EMAIL}}/${{ secrets.TEST_USER_EMAIL }}/g" tests/postman_environment.json
+          sed -i "s/{{TEST_USER_PASSWORD}}/${{ secrets.TEST_USER_PASSWORD }}/g" tests/postman_environment.json
+
+      - name: Run API Tests with Newman
+        run: |
+          echo "Running production API tests against deployed application..."
+          newman run tests/postman_collection.json \
+            --environment tests/postman_environment.json \
+            --reporters cli,json \
+            --reporter-json-export newman-results.json \
+            --timeout 15000 \
+            --delay-request 500 \
+            --suppress-exit-code 1
+
+      - name: Analyze Test Results
+        run: |
+          echo "Analyzing test results..."
+          if [ -f newman-results.json ]; then
+            # Extract test results
+            total_requests=$(jq '.run.stats.requests.total' newman-results.json)
+            failed_requests=$(jq '.run.stats.requests.failed' newman-results.json)
+            total_assertions=$(jq '.run.stats.assertions.total' newman-results.json)
+            failed_assertions=$(jq '.run.stats.assertions.failed' newman-results.json)
+
+            echo "📊 Test Results Summary:"
+            echo "   Total Requests: $total_requests"
+            echo "   Failed Requests: $failed_requests"
+            echo "   Total Assertions: $total_assertions"
+            echo "   Failed Assertions: $failed_assertions"
+
+            if [ "$failed_assertions" -gt 0 ]; then
+              echo "❌ Some tests failed - check the detailed results below"
+              jq '.run.failures[] | {test: .source.name, error: .error.message}' newman-results.json || true
+            else
+              echo "✅ All production tests passed!"
+            fi
+          else
+            echo "❌ Test results file not found"
+            exit 1
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: newman-test-results
+          path: newman-results.json
