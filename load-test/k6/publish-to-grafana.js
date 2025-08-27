@@ -4,7 +4,6 @@ const https = require("https");
 
 const resultsPath = process.argv[2] || "tests/k6/results.json";
 const pushUrl = process.env.GRAFANA_PUSH_URL;
-const apiKey = process.env.GRAFANA_ACCESS_TOKEN;
 const username = process.env.GRAFANA_USERNAME;
 const password = process.env.GRAFANA_PASSWORD;
 
@@ -18,10 +17,8 @@ if (!pushUrl) {
   process.exit(0);
 }
 
-if (!apiKey && (!username || !password)) {
-  console.log("Authentication not configured. Set either:");
-  console.log("- GRAFANA_API_KEY/GRAFANA_ACCESS_TOKEN (Bearer auth), OR");
-  console.log("- GRAFANA_USERNAME and GRAFANA_PASSWORD (Basic auth)");
+if (!username || !password) {
+  console.log("Authentication not configured. Set GRAFANA_USERNAME and GRAFANA_PASSWORD (Basic auth)");
   process.exit(0);
 }
 const payload = fs.readFileSync(resultsPath, "utf-8");
@@ -31,15 +28,9 @@ const url = new URL(pushUrl);
 console.log("Publishing to Grafana host:", url.hostname);
 console.log("Publishing to path:", url.pathname + url.search);
 
-let authHeader = "";
-if (apiKey) {
-  authHeader = `Bearer ${apiKey}`;
-  console.log("Using Bearer token authentication");
-} else if (username && password) {
-  const credentials = Buffer.from(`${username}:${password}`).toString("base64");
-  authHeader = `Basic ${credentials}`;
-  console.log("Using Basic authentication");
-}
+const credentials = Buffer.from(`${username}:${password}`).toString("base64");
+const authHeader = `Basic ${credentials}`;
+console.log("Using Basic authentication");
 
 const options = {
   hostname: url.hostname,

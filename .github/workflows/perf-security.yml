@@ -98,7 +98,8 @@ jobs:
           node load-test/k6/publish-to-grafana.js load-test/k6/results.json || true
         env:
           GRAFANA_PUSH_URL: ${{ secrets.GRAFANA_PUSH_URL }}
-          GRAFANA_ACCESS_TOKEN: ${{ secrets.GRAFANA_ACCESS_TOKEN }}
+          GRAFANA_USERNAME: ${{ secrets.GRAFANA_USERNAME }}
+          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
 
       - name: Run OWASP ZAP baseline (dockerized)
         run: |
