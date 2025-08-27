@@ -103,6 +103,7 @@ jobs:
           node load-test/k6/publish-to-grafana.js load-test/k6/load-test.js
         env:
           K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+          BASE_URL: ${{ secrets.BASE_URL }}
 
       - name: Run OWASP ZAP baseline (dockerized)
         run: |
