@@ -9,7 +9,7 @@ const https = require('https');
 const resultsPath = process.argv[2] || 'tests/k6/results.json';
 const pushUrl = process.env.GRAFANA_PUSH_URL;
 // Accept either the old name or a clearer name for access policy tokens
-const apiKey = process.env.GRAFANA_API_KEY || process.env.GRAFANA_ACCESS_TOKEN;
+const apiKey = process.env.GRAFANA_ACCESS_TOKEN;
 
 if (!fs.existsSync(resultsPath)) {
     console.error('k6 results file not found:', resultsPath);
