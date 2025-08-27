@@ -4,6 +4,7 @@ import { check, sleep } from 'k6';
 export let options = {
     vus: __ENV.K6_VUS ? parseInt(__ENV.K6_VUS) : 10,
     duration: __ENV.K6_DURATION || '30s',
+    cloud: {},
 };
 
 const BASE = __ENV.BASE_URL || 'http://localhost:3001/api/v1';
