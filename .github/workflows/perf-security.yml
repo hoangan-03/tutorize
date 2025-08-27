@@ -4,13 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - mast      - name: Publish k6 metrics to Grafana
-        run: |
-          node load-test/k6/publish-to-grafana.js load-test/k6/results.json || true
-        env:
-          GRAFANA_PUSH_URL: ${{ secrets.GRAFANA_PUSH_URL }}
-          GRAFANA_USERNAME: ${{ secrets.GRAFANA_USERNAME }}
-          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
+      - master
 
 jobs:
   perf-and-security:
