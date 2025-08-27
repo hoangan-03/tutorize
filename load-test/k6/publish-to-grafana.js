@@ -59,37 +59,5 @@ req.on("error", (e) => {
   process.exit(1);
 });
 
-process.on("exit", (code) => {
-  if (code === 1) {
-    console.error("\nIf you see a 401 authentication error, please check:");
-    console.error(
-      "- Make sure GRAFANA_PUSH_URL points to your Grafana Cloud push/remote_write endpoint."
-    );
-    console.error(
-      "- For Bearer token auth: Use an Access Policy token (not the deprecated API key)."
-    );
-    console.error("  Create it in Grafana Cloud -> Stack -> Access Tokens.");
-    console.error(
-      "  Set the token in GRAFANA_API_KEY or GRAFANA_ACCESS_TOKEN."
-    );
-    console.error(
-      "- For Basic auth: Use the same credentials as your Grafana data source."
-    );
-    console.error(
-      "  Set GRAFANA_USERNAME and GRAFANA_PASSWORD to match your data source config."
-    );
-    console.error("- Test locally with:");
-    if (apiKey) {
-      console.error(
-        '  curl -v -H "Authorization: Bearer <token>" -X POST --data-binary @results.json "<PUSH_URL>"'
-      );
-    } else {
-      console.error(
-        '  curl -v -u "<username>:<password>" -X POST --data-binary @results.json "<PUSH_URL>"'
-      );
-    }
-  }
-});
-
 req.write(payload);
 req.end();
