@@ -7,7 +7,7 @@ export let options = {
     cloud: {},
 };
 
-const BASE = __ENV.BASE_URL || 'http://localhost:3001/api/v1';
+const BASE = __ENV.BASE_URL;
 
 export default function () {
     // Health
