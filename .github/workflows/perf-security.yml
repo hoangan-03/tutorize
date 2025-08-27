@@ -93,13 +93,11 @@ jobs:
           name: k6-results
           path: load-test/k6/results.json
 
-      - name: Publish k6 metrics to Grafana
+      - name: Publish k6 metrics to Grafana Cloud k6
         run: |
-          node load-test/k6/publish-to-grafana.js load-test/k6/results.json || true
+          node load-test/k6/publish-to-grafana.js load-test/k6/load-test.js
         env:
-          GRAFANA_PUSH_URL: ${{ secrets.GRAFANA_PUSH_URL }}
-          GRAFANA_USERNAME: ${{ secrets.GRAFANA_USERNAME }}
-          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
+          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
 
       - name: Run OWASP ZAP baseline (dockerized)
         run: |

@@ -1,63 +1,20 @@
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
 
-const resultsPath = process.argv[2] || "tests/k6/results.json";
-const pushUrl = process.env.GRAFANA_PUSH_URL;
-const username = process.env.GRAFANA_USERNAME;
-const password = process.env.GRAFANA_PASSWORD;
+const { spawn } = require('child_process');
 
-if (!fs.existsSync(resultsPath)) {
-  console.error("k6 results file not found:", resultsPath);
-  process.exit(2);
+const k6Token = process.env.K6_CLOUD_TOKEN;
+if (!k6Token) {
+	console.error('K6_CLOUD_TOKEN environment variable is not set.');
+	process.exit(1);
 }
 
-if (!pushUrl) {
-  console.log("GRAFANA_PUSH_URL not set; skipping publish.");
-  process.exit(0);
-}
+const scriptPath = process.argv[2] || 'load-test/k6/load-test.js';
+console.log(`Running: k6 cloud ${scriptPath}`);
 
-if (!username || !password) {
-  console.log("Authentication not configured. Set GRAFANA_USERNAME and GRAFANA_PASSWORD (Basic auth)");
-  process.exit(0);
-}
-const payload = fs.readFileSync(resultsPath, "utf-8");
-
-const url = new URL(pushUrl);
-
-console.log("Publishing to Grafana host:", url.hostname);
-console.log("Publishing to path:", url.pathname + url.search);
-
-const credentials = Buffer.from(`${username}:${password}`).toString("base64");
-const authHeader = `Basic ${credentials}`;
-console.log("Using Basic authentication");
-
-const options = {
-  hostname: url.hostname,
-  port: url.port || 443,
-  path: url.pathname + url.search,
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Content-Length": Buffer.byteLength(payload),
-    Authorization: authHeader,
-  },
-};
-
-const req = https.request(options, (res) => {
-  console.log("Grafana response status:", res.statusCode);
-  let data = "";
-  res.on("data", (chunk) => (data += chunk));
-  res.on("end", () => {
-    console.log("Response body:", data);
-    process.exit(res.statusCode >= 200 && res.statusCode < 300 ? 0 : 1);
-  });
+const k6 = spawn('k6', ['cloud', scriptPath], {
+	stdio: 'inherit',
+	env: { ...process.env, K6_CLOUD_TOKEN: k6Token },
 });
 
-req.on("error", (e) => {
-  console.error("Error publishing to Grafana:", e);
-  process.exit(1);
+k6.on('close', (code) => {
+	process.exit(code);
 });
-
-req.write(payload);
-req.end();
