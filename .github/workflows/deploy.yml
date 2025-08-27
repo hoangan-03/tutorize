@@ -33,7 +33,7 @@ jobs:
       - name: Prepare test environment
         run: |
           echo "Setting up test environment with production database (READ-ONLY)..."
-          # Create a test environment file with production DB access
+          # Create a comprehensive test environment file
           cat > test.env << EOF
           NODE_ENV=test
           DATABASE_URL=${{ secrets.PROD_DATABASE_URL }}
@@ -41,6 +41,26 @@ jobs:
           BCRYPT_ROUNDS=10
           PORT=3000
           READ_ONLY_MODE=true
+
+          # Email service (dummy values for testing)
+          SENDGRID_API_KEY=dummy_sendgrid_key_for_testing
+          SENDGRID_FROM_EMAIL=test@example.com
+
+          # Cloudinary (dummy values for testing)
+          CLOUDINARY_CLOUD_NAME=dummy_cloud_for_testing
+          CLOUDINARY_API_KEY=dummy_api_key_for_testing
+          CLOUDINARY_API_SECRET=dummy_api_secret_for_testing
+
+          # S3 (dummy values for testing)
+          AWS_ACCESS_KEY_ID=dummy_aws_key_for_testing
+          AWS_SECRET_ACCESS_KEY=dummy_aws_secret_for_testing
+          AWS_REGION=us-east-1
+          AWS_S3_BUCKET_NAME=dummy_bucket_for_testing
+
+          # Other optional configs
+          CORS_ORIGIN=http://localhost:3001
+          THROTTLE_TTL=60
+          THROTTLE_LIMIT=10
           EOF
 
       - name: Start test container
@@ -58,7 +78,7 @@ jobs:
 
           # Show container logs (first few lines)
           echo "Container startup logs:"
-          sleep 3
+          sleep 5
           docker logs tutorize-test-container
 
       - name: Wait for test application to be ready
@@ -67,10 +87,19 @@ jobs:
           # Wait for the application to start up with production database
           for i in {1..30}; do
             echo "Attempt $i: Checking if API is ready..."
+            
+            # Check if container is still running first
+            if ! docker ps | grep -q tutorize-test-container; then
+              echo "❌ Container has stopped running! Checking logs..."
+              docker logs tutorize-test-container
+              exit 1
+            fi
+            
             if curl -f http://localhost:3001/api/v1/health 2>/dev/null; then
               echo "✅ API is ready!"
               break
             fi
+            
             if [ $i -eq 30 ]; then
               echo "❌ API health check failed after 30 attempts"
               echo "Container status:"
