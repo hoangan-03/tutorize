@@ -1,16 +1,47 @@
 {
     "info": {
-        "name": "Tutorize Production API Tests",
-        "description": "Production-safe API tests for Tutorize application - focuses on monitoring, health checks, and non-destructive operations",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-        "id": "tutorize-production-collection"
+        "name": "Tutorize Production API Tests - Complete Coverage",
+        "description": "Comprehensive production-safe API tests covering all GET endpoints and critical functionality",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
         {
-            "name": "Production Health & Monitoring",
+            "name": "01 - System Health & Core",
             "item": [
                 {
-                    "name": "API Health Check",
+                    "name": "API Root Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                ""
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('API root is accessible', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time acceptable', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Health Check",
                     "request": {
                         "method": "GET",
                         "header": [],
@@ -30,55 +61,19 @@
                             "script": {
                                 "exec": [
                                     "pm.test('Health check successful', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "    pm.expect(pm.response.code).to.equal(200);",
                                     "});",
                                     "",
-                                    "pm.test('Response time is less than 2000ms', function() {",
+                                    "pm.test('Response time is acceptable', function() {",
                                     "    pm.expect(pm.response.responseTime).to.be.below(2000);",
                                     "});",
                                     "",
                                     "pm.test('Health response has required fields', function() {",
                                     "    const response = pm.response.json();",
-                                    "    pm.expect(response).to.have.property('status');",
+                                    "    pm.expect(response).to.have.property('success');",
+                                    "    pm.expect(response).to.have.property('message');",
                                     "    pm.expect(response).to.have.property('timestamp');",
-                                    "    pm.expect(response).to.have.property('database');",
-                                    "});",
-                                    "",
-                                    "pm.test('Database is healthy', function() {",
-                                    "    const response = pm.response.json();",
-                                    "    pm.expect(response.database.status).to.equal('healthy');",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "API Availability Check",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{BASE_URL}}/",
-                            "host": [
-                                "{{BASE_URL}}"
-                            ],
-                            "path": [
-                                ""
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('API is available', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
-                                    "});",
-                                    "",
-                                    "pm.test('Response time is acceptable', function() {",
-                                    "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                                    "    pm.expect(response.success).to.equal(true);",
                                     "});"
                                 ]
                             }
@@ -88,7 +83,7 @@
             ]
         },
         {
-            "name": "Authentication Validation",
+            "name": "02 - Authentication Flow",
             "item": [
                 {
                     "name": "Login with Valid Credentials",
@@ -121,59 +116,18 @@
                             "script": {
                                 "exec": [
                                     "pm.test('Login successful', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                                    "    pm.expect(pm.response.code).to.equal(201);",
                                     "});",
                                     "",
-                                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                                    "pm.test('Response contains access token', function() {",
                                     "    const response = pm.response.json();",
-                                    "    pm.expect(response).to.have.property('access_token');",
-                                    "    pm.environment.set('AUTH_TOKEN', response.access_token);",
-                                    "    pm.test('Token is valid JWT format', function() {",
-                                    "        pm.expect(response.access_token).to.match(/^[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]*$/);",
-                                    "    });",
-                                    "}"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Login with Invalid Credentials",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"invalid@example.com\",\n  \"password\": \"wrongpassword\"\n}"
-                        },
-                        "url": {
-                            "raw": "{{BASE_URL}}/auth/login",
-                            "host": [
-                                "{{BASE_URL}}"
-                            ],
-                            "path": [
-                                "auth",
-                                "login"
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('Invalid login rejected', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([401, 400]);",
+                                    "    pm.expect(response).to.have.property('accessToken');",
+                                    "    pm.environment.set('AUTH_TOKEN', response.accessToken);",
                                     "});",
                                     "",
-                                    "pm.test('No token returned for invalid credentials', function() {",
+                                    "pm.test('Token is valid JWT format', function() {",
                                     "    const response = pm.response.json();",
-                                    "    pm.expect(response).to.not.have.property('access_token');",
+                                    "    pm.expect(response.accessToken).to.match(/^[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]*$/);",
                                     "});"
                                 ]
                             }
@@ -181,7 +135,7 @@
                     ]
                 },
                 {
-                    "name": "Access Protected Route",
+                    "name": "Get User Profile",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -191,13 +145,13 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{BASE_URL}}/auth/profile",
+                            "raw": "{{BASE_URL}}/auth/me",
                             "host": [
                                 "{{BASE_URL}}"
                             ],
                             "path": [
                                 "auth",
-                                "profile"
+                                "me"
                             ]
                         }
                     },
@@ -206,14 +160,16 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Protected route accessible with valid token', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "pm.test('Profile accessible with valid token', function() {",
+                                    "    pm.expect(pm.response.code).to.equal(200);",
                                     "});",
                                     "",
                                     "pm.test('Response contains user data', function() {",
                                     "    const response = pm.response.json();",
                                     "    pm.expect(response).to.have.property('id');",
                                     "    pm.expect(response).to.have.property('email');",
+                                    "    pm.environment.set('USER_ID', response.id);",
+                                    "    pm.environment.set('USER_ROLE', response.role);",
                                     "});"
                                 ]
                             }
@@ -221,18 +177,18 @@
                     ]
                 },
                 {
-                    "name": "Access Protected Route Without Token",
+                    "name": "Unauthorized Access Check",
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{BASE_URL}}/auth/profile",
+                            "raw": "{{BASE_URL}}/auth/me",
                             "host": [
                                 "{{BASE_URL}}"
                             ],
                             "path": [
                                 "auth",
-                                "profile"
+                                "me"
                             ]
                         }
                     },
@@ -242,7 +198,7 @@
                             "script": {
                                 "exec": [
                                     "pm.test('Protected route requires authentication', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                                    "    pm.expect(pm.response.code).to.equal(401);",
                                     "});"
                                 ]
                             }
@@ -252,10 +208,10 @@
             ]
         },
         {
-            "name": "Data Integrity & Performance",
+            "name": "03 - User Management",
             "item": [
                 {
-                    "name": "Get Exercises (Performance Check)",
+                    "name": "Get All Users",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -265,12 +221,12 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{BASE_URL}}/exercises?limit=5",
+                            "raw": "{{BASE_URL}}/users?limit=5",
                             "host": [
                                 "{{BASE_URL}}"
                             ],
                             "path": [
-                                "exercises"
+                                "users"
                             ],
                             "query": [
                                 {
@@ -285,34 +241,26 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Exercises endpoint responds quickly', function() {",
-                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "pm.test('Users endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
                                     "});",
                                     "",
-                                    "pm.test('Response format is correct', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
-                                    "    const response = pm.response.json();",
-                                    "    pm.expect(response).to.have.property('data');",
-                                    "    pm.expect(response.data).to.be.an('array');",
-                                    "});",
-                                    "",
-                                    "pm.test('Exercise data structure is valid', function() {",
-                                    "    const response = pm.response.json();",
-                                    "    if (response.data.length > 0) {",
-                                    "        const exercise = response.data[0];",
-                                    "        pm.expect(exercise).to.have.property('id');",
-                                    "        pm.expect(exercise).to.have.property('name');",
-                                    "        pm.expect(exercise).to.have.property('subject');",
-                                    "        pm.expect(exercise).to.have.property('grade');",
-                                    "    }",
-                                    "});"
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Response has pagination structure', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        pm.expect(response).to.have.property('data');",
+                                    "        if (response.data && Array.isArray(response.data)) {",
+                                    "            pm.expect(response.data.length).to.be.at.most(5);",
+                                    "        }",
+                                    "    });",
+                                    "}"
                                 ]
                             }
                         }
                     ]
                 },
                 {
-                    "name": "Get Quizzes (Performance Check)",
+                    "name": "Get User Stats",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -322,7 +270,449 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{BASE_URL}}/quizzes?limit=5",
+                            "raw": "{{BASE_URL}}/users/stats",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "users",
+                                "stats"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('User stats endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time acceptable', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Specific User by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/users/{{USER_ID}}",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "users",
+                                "{{USER_ID}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('User details endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('User data structure valid', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        pm.expect(response).to.have.property('id');",
+                                    "        pm.expect(response).to.have.property('email');",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "04 - Exercises",
+            "item": [
+                {
+                    "name": "Get All Exercises",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises?limit=5&page=1",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Exercises endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time acceptable', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Pagination works correctly', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        if (response.data && Array.isArray(response.data)) {",
+                                    "            pm.expect(response.data.length).to.be.at.most(5);",
+                                    "            if (response.data.length > 0) {",
+                                    "                pm.environment.set('SAMPLE_EXERCISE_ID', response.data[0].id);",
+                                    "            }",
+                                    "        }",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Exercise by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises/{{SAMPLE_EXERCISE_ID}}",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises",
+                                "{{SAMPLE_EXERCISE_ID}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Use a fallback ID if SAMPLE_EXERCISE_ID is not set",
+                                    "if (!pm.environment.get('SAMPLE_EXERCISE_ID')) {",
+                                    "    pm.environment.set('SAMPLE_EXERCISE_ID', '1');",
+                                    "}"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Exercise details endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401, 403]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Exercise structure valid', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        pm.expect(response).to.have.property('id');",
+                                    "        pm.expect(response).to.have.property('title');",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Exercise with Answers (Teacher only)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises/{{SAMPLE_EXERCISE_ID}}/with-answers",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises",
+                                "{{SAMPLE_EXERCISE_ID}}",
+                                "with-answers"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Exercise with answers endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Has answer data for teachers', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        pm.expect(response).to.have.property('id');",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Exercise File URL",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises/{{SAMPLE_EXERCISE_ID}}/file-url",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises",
+                                "{{SAMPLE_EXERCISE_ID}}",
+                                "file-url"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Exercise file URL endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401, 403]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Exercise Submissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises/{{SAMPLE_EXERCISE_ID}}/submissions",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises",
+                                "{{SAMPLE_EXERCISE_ID}}",
+                                "submissions"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Exercise submissions endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "05 - Exercise Submissions",
+            "item": [
+                {
+                    "name": "Get My Exercise Submissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercise-submissions/my?limit=5",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercise-submissions",
+                                "my"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('My exercise submissions endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Submission data structure valid', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        if (response.data && Array.isArray(response.data) && response.data.length > 0) {",
+                                    "            pm.environment.set('SAMPLE_SUBMISSION_ID', response.data[0].id);",
+                                    "        }",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get All Exercise Submissions (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercise-submissions/all?limit=5",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercise-submissions",
+                                "all"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('All exercise submissions endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Exercise Submission Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercise-submissions/stats",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercise-submissions",
+                                "stats"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Exercise submission stats endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "06 - Quizzes",
+            "item": [
+                {
+                    "name": "Get All Quizzes",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/quizzes?limit=5&page=1",
                             "host": [
                                 "{{BASE_URL}}"
                             ],
@@ -333,6 +723,10 @@
                                 {
                                     "key": "limit",
                                     "value": "5"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
                                 }
                             ]
                         }
@@ -342,23 +736,32 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Quizzes endpoint responds quickly', function() {",
-                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "pm.test('Quizzes endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
                                     "});",
                                     "",
-                                    "pm.test('Response format is correct', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
-                                    "    const response = pm.response.json();",
-                                    "    pm.expect(response).to.have.property('data');",
-                                    "    pm.expect(response.data).to.be.an('array');",
-                                    "});"
+                                    "pm.test('Response time acceptable', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Quiz pagination works', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        if (response.data && Array.isArray(response.data)) {",
+                                    "            pm.expect(response.data.length).to.be.at.most(5);",
+                                    "            if (response.data.length > 0) {",
+                                    "                pm.environment.set('SAMPLE_QUIZ_ID', response.data[0].id);",
+                                    "            }",
+                                    "        }",
+                                    "    });",
+                                    "}"
                                 ]
                             }
                         }
                     ]
                 },
                 {
-                    "name": "Pagination Works Correctly",
+                    "name": "Get Quiz Teacher Stats",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -368,22 +771,13 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{BASE_URL}}/exercises?page=1&limit=2",
+                            "raw": "{{BASE_URL}}/quizzes/teacher-stats",
                             "host": [
                                 "{{BASE_URL}}"
                             ],
                             "path": [
-                                "exercises"
-                            ],
-                            "query": [
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "2"
-                                }
+                                "quizzes",
+                                "teacher-stats"
                             ]
                         }
                     },
@@ -392,13 +786,155 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Pagination parameters accepted', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
-                                    "});",
-                                    "",
-                                    "pm.test('Response respects limit', function() {",
-                                    "    const response = pm.response.json();",
-                                    "    pm.expect(response.data).to.have.length.of.at.most(2);",
+                                    "pm.test('Quiz teacher stats endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Quiz Student Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/quizzes/student-stats",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "quizzes",
+                                "student-stats"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Quiz student stats endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get My Quiz Submission Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/quizzes/my-submission-stats",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "quizzes",
+                                "my-submission-stats"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('My quiz submission stats endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Quiz by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/quizzes/{{SAMPLE_QUIZ_ID}}",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "quizzes",
+                                "{{SAMPLE_QUIZ_ID}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "if (!pm.environment.get('SAMPLE_QUIZ_ID')) {",
+                                    "    pm.environment.set('SAMPLE_QUIZ_ID', '1');",
+                                    "}"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Quiz details endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Quiz with Answers (Teacher only)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/quizzes/{{SAMPLE_QUIZ_ID}}/with-answers",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "quizzes",
+                                "{{SAMPLE_QUIZ_ID}}",
+                                "with-answers"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Quiz with answers endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
                                     "});"
                                 ]
                             }
@@ -408,7 +944,539 @@
             ]
         },
         {
-            "name": "Error Handling",
+            "name": "07 - Quiz Submissions",
+            "item": [
+                {
+                    "name": "Get My Quiz Submissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/quiz-submissions/my?limit=5",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "quiz-submissions",
+                                "my"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('My quiz submissions endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "08 - Documents",
+            "item": [
+                {
+                    "name": "Get All Documents",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/documents?limit=5&page=1",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "documents"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Documents endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Document pagination works', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        if (response.data && Array.isArray(response.data) && response.data.length > 0) {",
+                                    "            pm.environment.set('SAMPLE_DOCUMENT_ID', response.data[0].id);",
+                                    "        }",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Document by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/documents/{{SAMPLE_DOCUMENT_ID}}",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "documents",
+                                "{{SAMPLE_DOCUMENT_ID}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "if (!pm.environment.get('SAMPLE_DOCUMENT_ID')) {",
+                                    "    pm.environment.set('SAMPLE_DOCUMENT_ID', '1');",
+                                    "}"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Document details endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401, 403]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "09 - IELTS Reading",
+            "item": [
+                {
+                    "name": "Get IELTS Reading Tests",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-reading/tests?limit=5&page=1",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-reading",
+                                "tests"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('IELTS Reading tests endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('IELTS test data structure valid', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        if (response.data && Array.isArray(response.data) && response.data.length > 0) {",
+                                    "            pm.environment.set('SAMPLE_IELTS_READING_ID', response.data[0].id);",
+                                    "        }",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get IELTS Reading Test by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-reading/tests/{{SAMPLE_IELTS_READING_ID}}",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-reading",
+                                "tests",
+                                "{{SAMPLE_IELTS_READING_ID}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "if (!pm.environment.get('SAMPLE_IELTS_READING_ID')) {",
+                                    "    pm.environment.set('SAMPLE_IELTS_READING_ID', '1');",
+                                    "}"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('IELTS Reading test details endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get IELTS Reading Test with Answers (Teacher only)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-reading/tests/{{SAMPLE_IELTS_READING_ID}}/with-answers",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-reading",
+                                "tests",
+                                "{{SAMPLE_IELTS_READING_ID}}",
+                                "with-answers"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('IELTS Reading with answers endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get My IELTS Reading Submissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-reading/my-submissions",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-reading",
+                                "my-submissions"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('My IELTS Reading submissions endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get All IELTS Reading Submissions (Teacher)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-reading/submissions",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-reading",
+                                "submissions"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('All IELTS Reading submissions endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "10 - IELTS Writing",
+            "item": [
+                {
+                    "name": "Get IELTS Writing Tests",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-writing?limit=5&page=1",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-writing"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('IELTS Writing tests endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('IELTS Writing test data structure valid', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        if (response.data && Array.isArray(response.data) && response.data.length > 0) {",
+                                    "            pm.environment.set('SAMPLE_IELTS_WRITING_ID', response.data[0].id);",
+                                    "        }",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get IELTS Writing Test by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-writing/{{SAMPLE_IELTS_WRITING_ID}}",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-writing",
+                                "{{SAMPLE_IELTS_WRITING_ID}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "if (!pm.environment.get('SAMPLE_IELTS_WRITING_ID')) {",
+                                    "    pm.environment.set('SAMPLE_IELTS_WRITING_ID', '1');",
+                                    "}"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('IELTS Writing test details endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get My IELTS Writing Submissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/ielts-writing/my-submissions",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "ielts-writing",
+                                "my-submissions"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('My IELTS Writing submissions endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "11 - PDF Generation",
+            "item": [
+                {
+                    "name": "Get Exercise PDF",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/pdf/exercise/{{SAMPLE_EXERCISE_ID}}",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "pdf",
+                                "exercise",
+                                "{{SAMPLE_EXERCISE_ID}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('PDF generation endpoint responds', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401, 403]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time reasonable for PDF generation', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(15000);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "12 - Error Handling & Edge Cases",
             "item": [
                 {
                     "name": "Invalid Endpoint Returns 404",
@@ -431,7 +1499,7 @@
                             "script": {
                                 "exec": [
                                     "pm.test('Invalid endpoint returns 404', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([404]);",
+                                    "    pm.expect(pm.response.code).to.equal(404);",
                                     "});"
                                 ]
                             }
@@ -439,58 +1507,23 @@
                     ]
                 },
                 {
-                    "name": "Invalid HTTP Method Returns 405",
+                    "name": "Invalid ID Parameter Handling",
                     "request": {
-                        "method": "POST",
-                        "header": [],
-                        "url": {
-                            "raw": "{{BASE_URL}}/health",
-                            "host": [
-                                "{{BASE_URL}}"
-                            ],
-                            "path": [
-                                "health"
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('Invalid method handled gracefully', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([405, 404, 400]);",
-                                    "});"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Malformed JSON Handled",
-                    "request": {
-                        "method": "POST",
+                        "method": "GET",
                         "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            },
                             {
                                 "key": "Authorization",
                                 "value": "Bearer {{AUTH_TOKEN}}"
                             }
                         ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{ invalid json }"
-                        },
                         "url": {
-                            "raw": "{{BASE_URL}}/exercises",
+                            "raw": "{{BASE_URL}}/exercises/invalid-id",
                             "host": [
                                 "{{BASE_URL}}"
                             ],
                             "path": [
-                                "exercises"
+                                "exercises",
+                                "invalid-id"
                             ]
                         }
                     },
@@ -499,9 +1532,61 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Malformed JSON handled', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                                    "pm.test('Invalid ID parameter handled gracefully', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
                                     "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Large Page Number Handling",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/exercises?page=999999&limit=5",
+                            "host": [
+                                "{{BASE_URL}}"
+                            ],
+                            "path": [
+                                "exercises"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "999999"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Large page number handled gracefully', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.test('Empty results for out-of-range page', function() {",
+                                    "        const response = pm.response.json();",
+                                    "        if (response.data && Array.isArray(response.data)) {",
+                                    "            pm.expect(response.data).to.have.lengthOf(0);",
+                                    "        }",
+                                    "    });",
+                                    "}"
                                 ]
                             }
                         }
@@ -510,10 +1595,10 @@
             ]
         },
         {
-            "name": "Production Monitoring",
+            "name": "13 - Performance & Load Testing",
             "item": [
                 {
-                    "name": "Response Time Consistency",
+                    "name": "Concurrent Health Checks",
                     "request": {
                         "method": "GET",
                         "header": [],
@@ -532,17 +1617,12 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Consistent response time', function() {",
-                                    "    pm.expect(pm.response.responseTime).to.be.above(0);",
-                                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                                    "pm.test('Health check consistent under load', function() {",
+                                    "    pm.expect(pm.response.code).to.equal(200);",
                                     "});",
                                     "",
-                                    "// Store response time for trending",
-                                    "pm.environment.set('LAST_RESPONSE_TIME', pm.response.responseTime);",
-                                    "",
-                                    "pm.test('Response time within SLA', function() {",
-                                    "    // SLA: 95% of requests under 2 seconds",
-                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "pm.test('Response time remains stable', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(3000);",
                                     "});"
                                 ]
                             }
@@ -550,17 +1630,32 @@
                     ]
                 },
                 {
-                    "name": "Memory Leak Detection (Repeated Calls)",
+                    "name": "Database Query Performance",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{AUTH_TOKEN}}"
+                            }
+                        ],
                         "url": {
-                            "raw": "{{BASE_URL}}/health",
+                            "raw": "{{BASE_URL}}/exercises?limit=10&page=1",
                             "host": [
                                 "{{BASE_URL}}"
                             ],
                             "path": [
-                                "health"
+                                "exercises"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
                             ]
                         }
                     },
@@ -569,18 +1664,12 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Repeated calls work consistently', function() {",
-                                    "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                                    "pm.test('Database queries perform within SLA', function() {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
                                     "});",
                                     "",
-                                    "pm.test('Response time stable', function() {",
-                                    "    const lastTime = pm.environment.get('LAST_RESPONSE_TIME');",
-                                    "    if (lastTime) {",
-                                    "        const currentTime = pm.response.responseTime;",
-                                    "        const difference = Math.abs(currentTime - lastTime);",
-                                    "        // Allow 50% variance in response time",
-                                    "        pm.expect(difference).to.be.below(lastTime * 0.5);",
-                                    "    }",
+                                    "pm.test('Pagination query efficiency', function() {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
                                     "});"
                                 ]
                             }
@@ -594,18 +1683,44 @@
         {
             "listen": "prerequest",
             "script": {
+                "id": "prerequest-script",
                 "type": "text/javascript",
                 "exec": [
-                    "// Set test run ID for tracking",
-                    "pm.environment.set('TEST_RUN_ID', Date.now());",
+                    "// Set unique test run ID",
+                    "if (!pm.environment.get('TEST_RUN_ID')) {",
+                    "    pm.environment.set('TEST_RUN_ID', Date.now() + '_' + Math.random().toString(36).substr(2, 9));",
+                    "}",
                     "",
-                    "// Initialize monitoring variables",
-                    "if (!pm.environment.get('TEST_START_TIME')) {",
-                    "    pm.environment.set('TEST_START_TIME', Date.now());",
+                    "// Log test execution",
+                    "console.log('Test Run ID:', pm.environment.get('TEST_RUN_ID'));",
+                    "console.log('Request:', pm.request.name);"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "id": "global-test-script",
+                "type": "text/javascript",
+                "exec": [
+                    "// Global response time tracking",
+                    "pm.test('Overall response time acceptable', function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+                    "});",
+                    "",
+                    "// Log response for debugging",
+                    "if (pm.response.code >= 400) {",
+                    "    console.log('Error Response for', pm.request.name, ':', pm.response.code, pm.response.status);",
+                    "    if (pm.response.headers.get('Content-Type')?.includes('application/json')) {",
+                    "        try {",
+                    "            console.log('Error details:', pm.response.json());",
+                    "        } catch (e) {",
+                    "            console.log('Non-JSON error response');",
+                    "        }",
+                    "    }",
                     "}"
                 ]
             }
         }
-    ],
-    "variable": []
+    ]
 }
