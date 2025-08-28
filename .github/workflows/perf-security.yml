@@ -9,7 +9,7 @@ on:
 jobs:
   perf-and-security:
     runs-on: ubuntu-latest
-    permissions:    
+    permissions:   
       issues: write 
     steps:
       - name: Checkout
