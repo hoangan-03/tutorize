@@ -404,7 +404,6 @@ export const IeltsTestPlayer: React.FC = () => {
       }
       const detailedTest = test;
       if (!detailedTest) {
-        console.log("No test data available, will retry when data loads");
         return;
       }
 
@@ -427,9 +426,6 @@ export const IeltsTestPlayer: React.FC = () => {
             state.testId === id
           ) {
             hasValidSavedState = true;
-            console.log(
-              "Found valid saved state, will preserve timer and progress"
-            );
           }
         } catch (error) {
           console.error("Error checking saved state:", error);

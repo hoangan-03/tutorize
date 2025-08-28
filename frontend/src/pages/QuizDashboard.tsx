@@ -50,7 +50,6 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { stats, isLoading: loading } = useDetailedQuizStats(quiz?.id);
-  console.log("Quiz stats:", stats);
   const [activeTab, setActiveTab] = useState<
     "overview" | "students" | "questions"
   >("overview");

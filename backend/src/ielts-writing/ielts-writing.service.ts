@@ -14,8 +14,6 @@ export class IeltsWritingService {
 
   // Create IELTS Writing Test
   async createTest(userId: number, createDto: CreateIeltsWritingTestDto) {
-    console.log('Creating IELTS Writing test:', createDto);
-
     try {
       const test = await this.prisma.ieltsWritingTest.create({
         data: {
@@ -40,7 +38,6 @@ export class IeltsWritingService {
         },
       });
 
-      console.log('IELTS Writing test created successfully:', test);
       return test;
     } catch (error) {
       console.error('Error creating IELTS Writing test:', error);

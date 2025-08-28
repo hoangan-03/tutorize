@@ -39,14 +39,8 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
   const downloadAsPDF = async () => {
     try {
       const fontValue = getCurrentFontFamily();
-      console.log(
-        "Generating PDF with font:",
-        selectedFont,
-        "CSS value:",
-        fontValue
-      );
       await generateExercisePDF(exercise, {
-        selectedFont: fontValue, // Use CSS font family value instead of display name
+        selectedFont: fontValue,
         showHeader: false,
       });
     } catch (error) {
@@ -55,7 +49,6 @@ export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
     }
   };
 
-  // Get the current font family value for preview
   const getCurrentFontFamily = () => {
     const font = FontList.find((font) => font.name === selectedFont);
     return font?.value || '"Cambria Math", Cambria, "Times New Roman", serif';

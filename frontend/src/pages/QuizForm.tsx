@@ -345,8 +345,6 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
       // Save the quiz (this will create the questions with IDs)
       const savedQuiz = await onSave(quizDataToSave);
 
-      console.log("Saved quiz:", savedQuiz); // Debug log
-
       // If there are base64 images and we got the saved quiz back, upload them
       if (
         questionsWithBase64Images.length > 0 &&
@@ -355,22 +353,13 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
       ) {
         showSuccess("Quiz đã được lưu. Đang tải lên hình ảnh...");
 
-        console.log("Questions with base64 images:", questionsWithBase64Images); // Debug log
-        console.log("Saved quiz questions:", savedQuiz.questions); // Debug log
-
-        // Upload base64 images for each question
         for (const item of questionsWithBase64Images) {
           const savedQuestion = savedQuiz.questions[item.questionIndex];
-          console.log(
-            `Processing question ${item.questionIndex}, savedQuestion:`,
-            savedQuestion
-          ); // Debug log
 
           if (savedQuestion && savedQuestion.id) {
             // Upload each base64 image
             for (const base64Url of item.base64Images) {
               try {
-                console.log(`Uploading image for question ${savedQuestion.id}`); // Debug log
                 const file = base64ToFile(
                   base64Url,
                   `question-${savedQuestion.id}-image.jpg`

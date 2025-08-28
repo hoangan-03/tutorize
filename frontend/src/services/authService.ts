@@ -13,7 +13,6 @@ class AuthService {
 
   // Token management
   saveToken(token: string): void {
-    console.log("authService: Saving token:", token);
     localStorage.setItem(this.TOKEN_KEY, token);
     console.log("authService: Token saved to localStorage");
   }

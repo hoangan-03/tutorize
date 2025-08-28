@@ -85,11 +85,9 @@ export class PdfService {
           { timeout: 5000 },
         )
         .catch(() => {
-          // If no katex elements found, that's also OK
-          console.log('No KaTeX elements found or timeout reached');
+          this.logger.warn('KaTeX rendering failed or timed out');
         });
 
-      // Additional wait to ensure all styles are applied
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const pdf = await page.pdf({

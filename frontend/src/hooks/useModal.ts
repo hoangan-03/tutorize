@@ -20,27 +20,21 @@ export const useModal = () => {
 
   const setModal = useCallback(
     (newState: ModalState | ((prev: ModalState) => ModalState)) => {
-      console.log("setModal called with:", newState);
-      console.trace("setModal stack trace:");
       setModalState(newState);
     },
     []
   );
 
   const closeModal = useCallback(() => {
-    console.log("closeModal called! Stack trace:");
-    console.trace();
     setModal((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
   const openModal = useCallback((config: Partial<ModalState>) => {
-    console.log("openModal called with config:", config);
     const newModalState: ModalState = {
       isOpen: true,
       type: "info" as const,
       ...config,
     };
-    console.log("Setting modal state to:", newModalState);
     setModal(newModalState);
   }, []);
 

@@ -276,7 +276,6 @@ const StudentQuizView: React.FC = () => {
 
   const handleQuizExit = async () => {
     if (currentView === "quiz" && currentQuiz && !isTeacher) {
-      console.log("Quiz exit requested - auto-submitting with score 0");
       await autoSubmitWithZeroScore();
     }
     clearAttemptAndNavigate();
@@ -299,9 +298,6 @@ const StudentQuizView: React.FC = () => {
         currentQuiz &&
         !isTeacher
       ) {
-        console.log(
-          "Tab switched while in quiz - auto-submitting with score 0"
-        );
         autoSubmitWithZeroScore();
       }
     };
@@ -322,9 +318,6 @@ const StudentQuizView: React.FC = () => {
   useEffect(() => {
     const handlePopState = async () => {
       if (currentView === "quiz" && currentQuiz && !isTeacher) {
-        console.log(
-          "Browser navigation detected during quiz - auto-submitting with score 0"
-        );
         await autoSubmitWithZeroScore();
       }
     };
@@ -344,11 +337,8 @@ const StudentQuizView: React.FC = () => {
         return;
       }
 
-      console.log("Beginning quiz attempt for ID:", id);
-
       const detailedQuiz = detailedQuizData;
       if (!detailedQuiz) {
-        console.log("No quiz data available, will retry when data loads");
         return; // Let the hook load the data
       }
 
@@ -371,9 +361,6 @@ const StudentQuizView: React.FC = () => {
             state.quizId === id
           ) {
             hasValidSavedState = true;
-            console.log(
-              "Found valid saved state, will preserve timer and progress"
-            );
           }
         } catch (error) {
           console.error("Error checking saved state:", error);
@@ -388,14 +375,9 @@ const StudentQuizView: React.FC = () => {
         setTimeLeft((detailedQuiz.timeLimit || 15) * 60);
         setCurrentQuestionIndex(0);
         setSelectedAnswers([]);
-        console.log("Starting fresh quiz attempt");
-      } else {
-        console.log("Preserving existing quiz state from localStorage");
       }
 
       setQuizResults(null);
-
-      console.log("Quiz attempt started successfully for:", detailedQuiz.title);
     } catch (error: unknown) {
       console.error("Lỗi khi bắt đầu lượt làm bài mới:", error);
 
@@ -492,27 +474,13 @@ const StudentQuizView: React.FC = () => {
           timeSpent: Math.floor((Date.now() - quizStartTime) / 1000), // in seconds
         };
 
-        if (isAutoSubmit) {
-          console.log("Quiz auto-submitted due to timeout");
-        }
-
         const submission = await submitQuizWithAnswers(
           currentQuiz.id,
           submitData
         );
 
-        // Get fresh submission history data
         const freshSubmissionHistory =
           await quizService.getQuizSubmissionHistory(currentQuiz.id);
-
-        console.log(
-          "Fresh submission history after submit:",
-          freshSubmissionHistory
-        );
-        console.log(
-          "Number of submissions:",
-          freshSubmissionHistory.submissions?.length
-        );
 
         const results = {
           correct: submission.answers?.filter((a) => a.isCorrect).length || 0,
@@ -528,10 +496,6 @@ const StudentQuizView: React.FC = () => {
           isSubmissionHistory: true,
           quiz: freshSubmissionHistory.quiz || currentQuiz,
         };
-
-        console.log("Quiz results with fresh data:", results);
-
-        // Remove the timeout since we'll invalidate before setting view
 
         if (isAutoSubmit) {
           showSuccess(
@@ -1146,10 +1110,6 @@ const StudentQuizView: React.FC = () => {
                 submissionHistory.submissions.length > 0 && (
                   <ActionButton
                     onClick={() => {
-                      console.log(
-                        "Exit button clicked, current view:",
-                        currentView
-                      );
                       if (currentView === "quiz" && currentQuiz && !isTeacher) {
                         showConfirm(
                           "Bạn có chắc muốn thoát khỏi quiz? Lượt làm bài này sẽ được tính là 0 điểm.",
@@ -1489,17 +1449,8 @@ const StudentQuizView: React.FC = () => {
               />
               <ActionButton
                 onClick={() => {
-                  console.log(
-                    "Retake clicked (single result), currentQuiz:",
-                    currentQuiz
-                  );
                   const quizIdToRetake = currentQuiz?.id || Number(quizId);
-                  console.log(
-                    "Quiz ID for retake (single result):",
-                    quizIdToRetake
-                  );
                   if (quizIdToRetake) {
-                    // Clear localStorage before retaking
                     if (storageKey) {
                       localStorage.removeItem(storageKey);
                     }

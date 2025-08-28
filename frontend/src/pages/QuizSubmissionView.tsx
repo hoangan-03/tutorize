@@ -45,10 +45,6 @@ export const QuizSubmissionView: React.FC = () => {
     }
   };
 
-  console.log("Submission Data:", submission);
-  console.log("Answers array:", submission?.answers);
-  console.log("Answers length:", submission?.answers?.length);
-
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto">

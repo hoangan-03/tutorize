@@ -48,15 +48,8 @@ import { IeltsWritingSubmissionDetail } from "./pages/IeltsWritingSubmissionDeta
 import { Role } from "./types/api";
 
 const RoleBasedRedirect = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const isTeacher = user?.role === Role.TEACHER;
-
-  console.log("RoleBasedRedirect:", {
-    isAuthenticated,
-    isTeacher,
-    user,
-    redirectTo: isTeacher ? "/quiz" : "/quizzes",
-  });
 
   return <Navigate to={isTeacher ? "/quiz" : "/quizzes"} replace />;
 };

@@ -11,10 +11,7 @@ import {
   Edit,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  useIeltsWritingTestSubmissions,
-  useIeltsWritingTest,
-} from "../hooks";
+import { useIeltsWritingTestSubmissions, useIeltsWritingTest } from "../hooks";
 import { IeltsWritingSubmission, IeltsWritingTest } from "@/types/api";
 
 export const IeltsWritingSubmissionsList: React.FC = () => {
@@ -27,7 +24,6 @@ export const IeltsWritingSubmissionsList: React.FC = () => {
   );
 
   const { submissions, isLoading } = submissionsData;
-  console.log("Submissions Data:", submissions);
   const { tasks } = useIeltsWritingTest({ page: 1, limit: 100 });
 
   const [searchTerm, setSearchTerm] = useState("");

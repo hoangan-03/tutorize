@@ -836,20 +836,8 @@ export class QuizService {
 
   private checkAnswer(question: any, userAnswer: string): boolean {
     if (!question.correctAnswer || question.correctAnswer.length === 0) {
-      console.log(`Question ${question.id} - No correct answer provided`);
       return false;
     }
-
-    console.log(
-      `Checking answer for Question ${question.id} (${question.type}):`,
-      {
-        correctAnswer: question.correctAnswer,
-        userAnswer: userAnswer,
-        correctAnswerType: typeof question.correctAnswer,
-        userAnswerType: typeof userAnswer,
-        options: question.options,
-      },
-    );
 
     switch (question.type) {
       case 'MULTIPLE_CHOICE':
@@ -861,11 +849,6 @@ export class QuizService {
         if (/^\d+$/.test(question.correctAnswer)) {
           const correctIndex = parseInt(question.correctAnswer);
           isMultipleCorrect = userAnswerIndex === correctIndex;
-          console.log(`  Index comparison:`, {
-            userAnswerIndex,
-            correctIndex,
-            isMultipleCorrect,
-          });
         }
         // Case 2: correctAnswer is stored as text of the option
         else {
@@ -873,12 +856,6 @@ export class QuizService {
             (option: string) => option === question.correctAnswer,
           );
           isMultipleCorrect = userAnswerIndex === correctIndex;
-          console.log(`  Text-to-index comparison:`, {
-            userAnswerIndex,
-            correctAnswerText: question.correctAnswer,
-            correctIndex,
-            isMultipleCorrect,
-          });
         }
 
         return isMultipleCorrect;
@@ -889,12 +866,6 @@ export class QuizService {
         const correctBool = question.correctAnswer.toLowerCase();
         const isTrueFalseCorrect = userBool === correctBool;
 
-        console.log(`  True/False comparison:`, {
-          userBool,
-          correctBool,
-          isTrueFalseCorrect,
-        });
-
         return isTrueFalseCorrect;
       case 'FILL_BLANK':
         // For fill in the blank, do case-insensitive comparison
@@ -902,19 +873,10 @@ export class QuizService {
         const userFillAnswer = userAnswer.toLowerCase().trim();
         const isFillCorrect = correctFillAnswer === userFillAnswer;
 
-        console.log(`  Fill blank comparison:`, {
-          correctFillAnswer,
-          userFillAnswer,
-          isFillCorrect,
-        });
-
         return isFillCorrect;
       case 'ESSAY':
-        // Essay questions need manual grading
-        console.log(`  Essay question - manual grading required`);
         return false;
       default:
-        console.log(`  Unknown question type: ${question.type}`);
         return false;
     }
   }

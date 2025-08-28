@@ -90,7 +90,6 @@ export class IeltsWritingController {
     description: 'Lấy thông tin bài test thành công',
   })
   async getTestById(@Param('testId', ParseIntPipe) testId: number) {
-    console.log('Getting IELTS Writing test by ID:', testId);
     return await this.ieltsWritingService.getTestById(testId);
   }
 
@@ -106,7 +105,6 @@ export class IeltsWritingController {
     @CurrentUser('id') userId: number,
     @Body() updateDto: UpdateIeltsWritingTestDto,
   ) {
-    console.log('Updating IELTS Writing test:', testId, 'by user:', userId);
     return await this.ieltsWritingService.updateTest(testId, userId, updateDto);
   }
 
@@ -151,12 +149,6 @@ export class IeltsWritingController {
     @CurrentUser('id') userId: number,
     @Body() gradeDto: ManualGradeIeltsWritingTestDto,
   ) {
-    console.log(
-      'Manual grading IELTS Writing test:',
-      testId,
-      'by user:',
-      userId,
-    );
     return await this.ieltsWritingService.manualGradeTest(
       testId,
       userId,
@@ -186,12 +178,6 @@ export class IeltsWritingController {
     @Param('testId', ParseIntPipe) testId: number,
     @Param('submissionId', ParseIntPipe) submissionId: number,
   ) {
-    console.log(
-      'Getting submission for IELTS Writing test:',
-      testId,
-      'submission:',
-      submissionId,
-    );
     return await this.ieltsWritingService.getTestSubmission(
       testId,
       submissionId,

@@ -81,9 +81,8 @@ export class EmailService {
 
     try {
       await this.sgMail.send(msg);
-      console.log(`✅ Temporary password sent successfully to ${email}`);
     } catch (error) {
-      console.error('❌ SendGrid Error:', error);
+      console.error('❌ SendGrid Error (Temporary Password):', error);
       throw new Error('Failed to send email via SendGrid');
     }
   }
@@ -147,9 +146,6 @@ export class EmailService {
 
     try {
       await this.sgMail.send(msg);
-      console.log(
-        `✅ Password change notification sent successfully to ${email}`,
-      );
     } catch (error) {
       console.error('❌ SendGrid Error (Password Change Notification):', error);
     }
@@ -202,7 +198,6 @@ export class EmailService {
 
     try {
       await this.sgMail.send(msg);
-      console.log(`✅ Welcome email sent successfully to ${email}`);
     } catch (error) {
       console.error('❌ SendGrid Error (Welcome Email):', error);
     }

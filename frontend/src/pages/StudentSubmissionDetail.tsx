@@ -67,7 +67,6 @@ export const StudentSubmissionDetail: React.FC = () => {
     const files = Array.from(event.target.files || []);
 
     if (files.length === 0) {
-      console.log("No files selected");
       return;
     }
 
@@ -89,7 +88,6 @@ export const StudentSubmissionDetail: React.FC = () => {
     }
 
     const newImages = validFiles.map((file) => {
-      console.log("Processing file:", file.name, file.type, file.size);
       return {
         file,
         preview: URL.createObjectURL(file),
