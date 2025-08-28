@@ -10,12 +10,12 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../hooks/useAuth";
 import {
+  useAuth,
   useIeltsWritingTestManagement,
   useIeltsWritingSubmissionForGrading,
+  useModal,
 } from "../hooks";
-import { useModal } from "../hooks";
 import { Badge } from "../components/ui";
 
 export const IeltsWritingSubmissionDetail: React.FC = () => {

@@ -16,14 +16,14 @@ import {
   Pause,
   AlertTriangle,
 } from "lucide-react";
-import { QuizForm } from "./QuizForm";
-import { QuizPreview } from "./QuizPreview";
+import { QuizFormTeacherView } from "./QuizFormTeacherView";
+import { QuizPreviewTeacherView } from "./QuizPreviewTeacherView";
 import { Quiz, QuizStatus, Question } from "../types/api";
 import { formatDate, getStatusColor } from "../components/utils";
 import { useQuizzes, useQuizManagement, useTeacherStats } from "../hooks";
 import { StatCard } from "../components/ui";
 
-export const QuizManagement: React.FC = () => {
+export const QuizManagementTeacherView: React.FC = () => {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<
     "list" | "create" | "edit" | "preview"
@@ -474,7 +474,7 @@ export const QuizManagement: React.FC = () => {
                   Thiết kế bài kiểm tra tương tác cho học sinh
                 </p>
               </div>
-              <QuizForm
+              <QuizFormTeacherView
                 onBack={handleBack}
                 onSave={async (quizData) => {
                   const transformedData = transformQuizData(quizData);
@@ -492,7 +492,7 @@ export const QuizManagement: React.FC = () => {
                   Chỉnh sửa Quiz
                 </h1>
               </div>
-              <QuizForm
+              <QuizFormTeacherView
                 quiz={selectedQuiz}
                 onBack={handleBack}
                 onSave={async (quizData) => {
@@ -515,7 +515,7 @@ export const QuizManagement: React.FC = () => {
                 </h1>
                 <p className="text-gray-600">Kiểm tra giao diện và nội dung</p>
               </div>
-              <QuizPreview quiz={selectedQuiz} onBack={handleBack} />
+              <QuizPreviewTeacherView quiz={selectedQuiz} onBack={handleBack} />
             </div>
           )}
         </div>

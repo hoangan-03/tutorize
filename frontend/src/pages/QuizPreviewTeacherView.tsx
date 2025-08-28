@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { Question, Quiz } from "../types/api";
 
-interface QuizPreviewProps {
+interface QuizPreviewTeacherViewProps {
   quiz: Quiz;
   onBack: () => void;
 }
 
-export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
+export const QuizPreviewTeacherView: React.FC<QuizPreviewTeacherViewProps> = ({
+  quiz,
+}) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{
     [key: number]: string;

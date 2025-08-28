@@ -9,7 +9,7 @@ interface IeltsQuestionManagerProps {
   onDeleteQuestion: (questionId: number) => void;
 }
 
-export const IeltsQuestionManager: React.FC<IeltsQuestionManagerProps> = ({
+export const IeltsQuestionManagement: React.FC<IeltsQuestionManagerProps> = ({
   questions,
   onAddQuestion,
   onEditQuestion,

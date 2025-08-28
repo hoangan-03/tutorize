@@ -6,7 +6,7 @@ import { IeltsSkill, IeltsLevel } from "../types/api";
 import { BookOpen, Calendar, User, Eye, BarChart3, Search } from "lucide-react";
 import { getBandScoreColor, getLevelInfo } from "../components/utils";
 
-export const IeltsSubmissionsList: React.FC = () => {
+export const IeltsReadingSubmissionsList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { submissions, isLoading, error } = useIeltsReadingAllSubmissions();

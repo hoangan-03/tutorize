@@ -12,8 +12,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-import { StatCard } from "../components/ui";
-import { ActionButton } from "../components/ui/ActionButton";
+import { StatCard, ActionButton } from "../components/ui";
 import {
   IeltsReadingTest,
   IeltsWritingTest,

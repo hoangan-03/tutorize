@@ -18,11 +18,9 @@ import {
 } from "lucide-react";
 
 import "katex/dist/katex.min.css";
-import { ExerciseForm } from "./ExerciseForm";
-import { ExercisePreview } from "./ExercisePreview";
+import { ExerciseForm } from "./ExerciseFormTeacherView";
+import { ExercisePreviewTeacherView } from "./ExercisePreviewTeacherView";
 import { ExerciseListStudentView } from "./ExerciseListStudentView";
-import { TeacherSubmissionsView } from "./TeacherSubmissionsView";
-import { ExerciseDashboard } from "./ExerciseDashboard";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExercises, useExerciseManagement } from "../hooks";
@@ -30,7 +28,7 @@ import { Exercise, Subject, ExerciseStatus } from "../types/api";
 import { Badge } from "../components/ui";
 import { formatDate, getDefaultDeadline } from "../components/utils";
 
-export const ExerciseEditor: React.FC = () => {
+export const ExerciseListTeacherView: React.FC = () => {
   const { isTeacher, user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -284,7 +282,7 @@ export const ExerciseEditor: React.FC = () => {
   if (currentView === "preview") {
     return (
       <div className="p-18">
-        <ExercisePreview
+        <ExercisePreviewTeacherView
           exercise={formData as any}
           onBack={() => setCurrentView("list")}
           onEdit={() => setCurrentView("edit")}
@@ -294,25 +292,15 @@ export const ExerciseEditor: React.FC = () => {
     );
   }
 
-  // Submissions View
-  if (currentView === "submissions" && selectedExercise) {
-    return (
-      <TeacherSubmissionsView
-        exercise={selectedExercise}
-        onBack={() => setCurrentView("list")}
-      />
-    );
-  }
-
-  // Dashboard View
-  if (currentView === "dashboard" && selectedExercise) {
-    return (
-      <ExerciseDashboard
-        exercise={selectedExercise}
-        onBack={() => setCurrentView("list")}
-      />
-    );
-  }
+  // // Submissions View
+  // if (currentView === "submissions" && selectedExercise) {
+  //   return (
+  //     <TeacherSubmissionsView
+  //       exercise={selectedExercise}
+  //       onBack={() => setCurrentView("list")}
+  //     />
+  //   );
+  // }
 
   // Main List View - Teacher with card layout like student view
   return (

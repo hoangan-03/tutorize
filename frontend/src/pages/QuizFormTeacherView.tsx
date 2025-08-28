@@ -32,7 +32,6 @@ interface QuizFormData {
   timeLimit: number;
   deadline: string | null;
   status: QuizStatus;
-  // Newly added configurable fields
   tags: string[];
   instructions: string;
   maxAttempts: number;
@@ -49,7 +48,11 @@ interface QuizFormProps {
   onSave: (quiz: QuizFormData) => Promise<Quiz | void>;
 }
 
-export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
+export const QuizFormTeacherView: React.FC<QuizFormProps> = ({
+  quiz,
+  onBack,
+  onSave,
+}) => {
   const formatDateForInput = (
     dateString: string | null | undefined
   ): string => {

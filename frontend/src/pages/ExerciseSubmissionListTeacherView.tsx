@@ -15,7 +15,7 @@ import { Badge } from "../components/ui";
 import { formatDateTime } from "../components/utils";
 import { useTranslation } from "react-i18next";
 
-export const SubmissionsList: React.FC = () => {
+export const ExerciseSubmissionListTeacherView: React.FC = () => {
   const { t } = useTranslation();
   const { isTeacher } = useAuth();
   const [filter, setFilter] = useState<"all" | "submitted" | "graded">("all");

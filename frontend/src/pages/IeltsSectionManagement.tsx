@@ -5,7 +5,7 @@ import {
   TrashIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
-import { IeltsQuestionManager } from "./IeltsQuestionManager";
+import { IeltsQuestionManagement } from "./IeltsQuestionManagement";
 
 interface IeltsSectionManagerProps {
   sections: IeltsSection[];
@@ -18,7 +18,7 @@ interface IeltsSectionManagerProps {
   onDeleteQuestion: (questionId: number) => void;
 }
 
-export const IeltsSectionManager: React.FC<IeltsSectionManagerProps> = ({
+export const IeltsSectionManagement: React.FC<IeltsSectionManagerProps> = ({
   sections,
   onAddSection,
   onEditSection,
@@ -96,7 +96,7 @@ export const IeltsSectionManager: React.FC<IeltsSectionManagerProps> = ({
                 </div>
               </div>
               {expandedSections.has(section.id) && (
-                <IeltsQuestionManager
+                <IeltsQuestionManagement
                   questions={section.questions || []}
                   onAddQuestion={() => onAddQuestion(section.id)}
                   onEditQuestion={onEditQuestion}

@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { formatDateTime } from "../components/utils";
 
-export const IeltsResultPage: React.FC = () => {
+export const IeltsResultStudentView: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -20,7 +20,9 @@ export const IeltsResultPage: React.FC = () => {
     submission,
     isLoading: loading,
     error,
-  } = useIeltsReadingSubmissionDetails(submissionId ? parseInt(submissionId) : null);
+  } = useIeltsReadingSubmissionDetails(
+    submissionId ? parseInt(submissionId) : null
+  );
 
   const questionNumberOffsets = useMemo(() => {
     if (!submission?.test) return [];

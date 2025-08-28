@@ -2,11 +2,11 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { useIeltsReadingSubmissionDetails } from "../hooks";
-import { IeltsTestResult } from "./IeltsTestResult";
-import { ActionButton } from "../components/ui/ActionButton";
+import { IeltsResultTeacherView } from "./IeltsResultTeacherView";
+import { ActionButton } from "../components/ui";
 import { ArrowLeft } from "lucide-react";
 
-export const IeltsSubmissionDetail: React.FC = () => {
+export const IeltsReadingSubmissionDetail: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -63,7 +63,7 @@ export const IeltsSubmissionDetail: React.FC = () => {
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 sm:px-6 lg:px-16">
         {submissionId && (
-          <IeltsTestResult
+          <IeltsResultTeacherView
             submissionId={submissionId}
             onBack={() => navigate("/ielts/submissions")}
           />

@@ -14,19 +14,15 @@ import {
   useIeltsTests,
   useIeltsSubmissions,
   useIeltsTestManagement,
-} from "../hooks";
-import { IeltsTestForm } from "./IeltsTestForm";
-import { WritingTestManage } from "./WritingTestManage";
-import { BookOpen, Plus, PenSquare } from "lucide-react";
-import { formatDateTime } from "../components/utils";
-
-import { RichTextEditor } from "../components/ui/RichTextEditor";
-
-import {
   useIeltsWritingMySubmissions,
   useIeltsWritingTest,
   useIeltsWritingTestManagement,
-} from "../hooks/useIeltsWriting";
+} from "../hooks";
+import { IeltsTestForm } from "./IeltsTestForm";
+import { WritingTestManagement } from "./WritingTestManagement";
+import { BookOpen, Plus, PenSquare } from "lucide-react";
+import { formatDateTime } from "../components/utils";
+import { RichTextEditor } from "../components/ui";
 import {
   IeltsStatsCards,
   IeltsTestCard,
@@ -505,7 +501,7 @@ const TeacherIeltsView: React.FC<{
   );
 };
 
-export const IeltsCenter: React.FC = () => {
+export const IeltsView: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [view, setView] = useState<"list" | "form" | "writingForm">("list");
@@ -584,7 +580,7 @@ export const IeltsCenter: React.FC = () => {
 
   if (view === "writingForm") {
     return (
-      <WritingTestManage
+      <WritingTestManagement
         testId={currentWritingTaskId}
         onBack={handleBackToList}
       />

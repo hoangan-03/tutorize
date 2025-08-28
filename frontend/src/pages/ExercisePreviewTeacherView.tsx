@@ -22,7 +22,7 @@ interface ExercisePreviewProps {
   isReadOnly?: boolean;
 }
 
-export const ExercisePreview: React.FC<ExercisePreviewProps> = ({
+export const ExercisePreviewTeacherView: React.FC<ExercisePreviewProps> = ({
   exercise,
   onBack,
   onEdit,

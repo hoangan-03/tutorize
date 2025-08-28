@@ -13,7 +13,7 @@ interface WritingTestManageProps {
   testId?: number | null;
 }
 
-export const WritingTestManage: React.FC<WritingTestManageProps> = ({
+export const WritingTestManagement: React.FC<WritingTestManageProps> = ({
   onBack,
   testId,
 }) => {

@@ -25,7 +25,7 @@ import {
 
 import { t } from "i18next";
 
-export const StudentSubmissionDetail: React.FC = () => {
+export const ExerciseSubmissionStudentView: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
   const navigate = useNavigate();
 

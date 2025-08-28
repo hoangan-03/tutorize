@@ -10,12 +10,12 @@ import {
 import { ActionButton } from "../components/ui";
 import { ArrowLeft } from "lucide-react";
 
-interface IeltsTestResultProps {
+interface IeltsResultTeacherViewProps {
   submissionId: number;
   onBack: () => void;
 }
 
-export const IeltsTestResult: React.FC<IeltsTestResultProps> = ({
+export const IeltsResultTeacherView: React.FC<IeltsResultTeacherViewProps> = ({
   submissionId,
   onBack,
 }) => {

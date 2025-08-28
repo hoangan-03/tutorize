@@ -17,7 +17,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import Modal from "./components/ui/Modal";
+import { Modal } from "./components/ui";
 
 // Context and Hooks
 import { ModalProvider, useModal } from "./contexts/ModalContext";
@@ -26,26 +26,25 @@ import { ModalProvider, useModal } from "./contexts/ModalContext";
 import { LandingPage } from "./pages/LandingPage";
 import { AuthForm } from "./pages/AuthForm";
 import { DocumentLibrary } from "./pages/DocumentLibrary";
-import { IeltsCenter } from "./pages/IeltsCenter";
-import { IeltsSubmissionsList } from "./pages/IeltsSubmissionsList";
-import { IeltsSubmissionDetail } from "./pages/IeltsSubmissionDetail";
-import { OnlineQuizzes } from "./pages/OnlineQuizzes";
-import { QuizManagement } from "./pages/QuizManagement";
-import { QuizDashboardPage } from "./pages/QuizDashboardPage";
-import { QuizSubmissionView } from "./pages/QuizSubmissionView";
+import { IeltsView } from "./pages/IeltsView";
+import { IeltsReadingSubmissionsList } from "./pages/IeltsReadingSubmissionsList";
+import { IeltsReadingSubmissionDetail } from "./pages/IeltsReadingSubmissionDetail";
+import { QuizListStudentView } from "./pages/QuizListStudentView";
+import { QuizManagementTeacherView } from "./pages/QuizManagementTeacherView";
+import { QuizDashboardTeacherView } from "./pages/QuizDashboardTeacherView";
+import { QuizSubmissionsTeacherView } from "./pages/QuizSubmissionsTeacherView";
 import { WritingGrader } from "./pages/WritingGrader";
-import { ExerciseEditor } from "./pages/ExerciseEditor";
-import { ExerciseDetailView } from "./pages/ExerciseDetailView";
-import { SubmissionsList } from "./pages/SubmissionsList";
-import { StudentSubmissionDetail } from "./pages/StudentSubmissionDetail";
-import { TeacherSubmissionView } from "./pages/TeacherSubmissionView";
-import { QuizStudentReview } from "./pages/QuizStudentReview";
+import { ExerciseListTeacherView } from "./pages/ExerciseListTeacherView";
+import { ExerciseDetailStudentView } from "./pages/ExerciseDetailStudentView";
+import { ExerciseSubmissionListTeacherView } from "./pages/ExerciseSubmissionListTeacherView";
+import { TeacherSubmissionView } from "./pages/ExerciseSubmissionDetailTeacherView";
+import { QuizStudentReview } from "./pages/QuizReviewStudentView";
 import { IeltsTestPlayer } from "./pages/IeltsTestPlayer";
-import { IeltsResultPage } from "./pages/IeltsResultPage";
 import { IeltsWritingResultPage } from "./pages/IeltsWritingResultPage";
 import { IeltsWritingSubmissionsList } from "./pages/IeltsWritingSubmissionsList";
 import { IeltsWritingSubmissionDetail } from "./pages/IeltsWritingSubmissionDetail";
 import { Role } from "./types/api";
+import { IeltsResultStudentView } from "./pages/IeltsResultStudentView";
 
 const RoleBasedRedirect = () => {
   const { user } = useAuth();
@@ -157,7 +156,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <ExerciseEditor />
+                <ExerciseListTeacherView />
               </main>
             </ProtectedRoute>
           }
@@ -173,7 +172,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <ExerciseDetailView />
+                <ExerciseDetailStudentView />
               </main>
             </ProtectedRoute>
           }
@@ -189,7 +188,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <SubmissionsList />
+                <ExerciseSubmissionListTeacherView />
               </main>
             </ProtectedRoute>
           }
@@ -221,7 +220,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <StudentSubmissionDetail />
+                <QuizSubmissionsTeacherView />
               </main>
             </ProtectedRoute>
           }
@@ -253,7 +252,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <OnlineQuizzes />
+                <QuizListStudentView />
               </main>
             </ProtectedRoute>
           }
@@ -269,7 +268,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <QuizManagement />
+                <QuizManagementTeacherView />
               </main>
             </ProtectedRoute>
           }
@@ -285,7 +284,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <QuizDashboardPage />
+                <QuizDashboardTeacherView />
               </main>
             </ProtectedRoute>
           }
@@ -301,7 +300,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <QuizSubmissionView />
+                <QuizSubmissionsTeacherView />
               </main>
             </ProtectedRoute>
           }
@@ -328,7 +327,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <main>
-                <OnlineQuizzes />
+                <QuizListStudentView />
               </main>
             </ProtectedRoute>
           }
@@ -343,7 +342,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <OnlineQuizzes />
+                <QuizListStudentView />
               </main>
             </ProtectedRoute>
           }
@@ -359,7 +358,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <IeltsCenter />
+                <IeltsView />
               </main>
             </ProtectedRoute>
           }
@@ -374,7 +373,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <IeltsSubmissionsList />
+                <IeltsReadingSubmissionsList />
               </main>
             </ProtectedRoute>
           }
@@ -389,7 +388,7 @@ function AppContent() {
                 setMobileMenuOpen={setMobileMenuOpen}
               />
               <main>
-                <IeltsSubmissionDetail />
+                <IeltsReadingSubmissionDetail />
               </main>
             </ProtectedRoute>
           }
@@ -411,7 +410,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <main>
-                <IeltsResultPage />
+                <IeltsResultStudentView />
               </main>
             </ProtectedRoute>
           }

@@ -27,7 +27,7 @@ interface AnswerDetail {
   };
 }
 
-export const QuizSubmissionView: React.FC = () => {
+export const QuizSubmissionsTeacherView: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();

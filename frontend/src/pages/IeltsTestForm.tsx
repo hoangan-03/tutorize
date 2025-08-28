@@ -13,7 +13,7 @@ import {
   IeltsLevel,
   IeltsQuestionType,
 } from "../types/api";
-import { IeltsSectionManager } from "./IeltsSectionManager";
+import { IeltsSectionManagement } from "./IeltsSectionManagement";
 import { IeltsSectionModal } from "./IeltsSectionModal";
 import { IeltsQuestionModal } from "./IeltsQuestionModal";
 import { ArrowLeft } from "lucide-react";
@@ -362,7 +362,7 @@ export const IeltsTestForm: React.FC<IeltsTestFormProps> = ({
                 {testId && (
                   <div className="bg-white shadow-lg border border-gray-100 rounded-xl">
                     <div className="px-4 py-5 sm:p-6">
-                      <IeltsSectionManager
+                      <IeltsSectionManagement
                         sections={test.sections || []}
                         onAddSection={handleAddSection}
                         onEditSection={handleEditSection}

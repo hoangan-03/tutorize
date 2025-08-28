@@ -43,7 +43,7 @@ import {
 } from "../components/utils";
 import { FontList } from "../components/constant";
 
-export const ExerciseDetailView: React.FC = () => {
+export const ExerciseDetailStudentView: React.FC = () => {
   const { exerciseId } = useParams<{ exerciseId: string }>();
   const navigate = useNavigate();
   const { isTeacher } = useAuth();

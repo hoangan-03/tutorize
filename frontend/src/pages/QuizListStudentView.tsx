@@ -34,7 +34,7 @@ import { mutate } from "swr";
 import { formatDate, formatDateTime } from "../components/utils";
 import { ActionButton, Badge, StatCard } from "../components/ui";
 
-const StudentQuizView: React.FC = () => {
+export const QuizListStudentView: React.FC = () => {
   const { user } = useAuth();
   const isTeacher = user?.role === Role.TEACHER;
   const { t } = useTranslation();
@@ -1793,8 +1793,4 @@ const StudentQuizView: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export const OnlineQuizzes: React.FC = () => {
-  return <StudentQuizView />;
 };

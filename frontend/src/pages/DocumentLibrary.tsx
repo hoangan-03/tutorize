@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, Download, Eye, BookOpen } from "lucide-react";
 import { useDocuments } from "../hooks/useDocuments";
-import { Badge } from "../components/ui/Badge";
+import { Badge } from "../components/ui";
 
 export const DocumentLibrary: React.FC = () => {
   const { t } = useTranslation();
