@@ -120,7 +120,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
-          path: zap-report/
+          path: |
+            report_json.json
+            report_md.md
+            report_html.html
+            zap_scan.zip
 
       - name: Stop container
         if: always()
