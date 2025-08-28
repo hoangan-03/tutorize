@@ -1,8 +1,7 @@
-name: Build and Deploy to EC2
-
+name: Production CI/CD
 on:
   workflow_run:
-    workflows: ["Perf & Security Checks"]
+    workflows: ["Performance and Security Scan"]
     types:
       - completed
 
