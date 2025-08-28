@@ -7,41 +7,119 @@ Tutorize — Educational platform
 - Frontend: React + Vite (TypeScript) UI in `frontend/`.
 - Tests: 
   - Integration tests in `integration-test/` (Postman collection + Newman runner)
-  - Load & performance tests in `load-test/k6/` (k6 scripts + Grafana publishing)
+  - Load & performance tests in `load-test/` (k6 scripts)
 - Infrastructure: Dockerfile(s) under `backend/` and GitHub Actions workflows for CI/CD.
 
 ## Summary
 
 - Backend: NestJS 10, Postgres (Prisma), JWT auth, Passport, Socket.IO, Puppeteer for PDF generation.
 - Frontend: React 19, Vite, Tailwind, React Router, SWR, i18n.
+- Hosting: AWS Amplify (frontend) + Amazon EC2 (backend) with Route 53 DNS management.
 - Storage & Integrations: S3 (AWS SDK), Cloudinary, SendGrid.
-- Testing: Jest (unit/e2e), Postman + Newman (integration), k6 (load/performance), OWASP ZAP (security scanning).
-- CI/CD: GitHub Actions (build image, launch test container, Newman tests, push to DockerHub, deploy to EC2 via SSH).
+- Testing: Postman + Newman (integration), k6 (load/performance), OWASP ZAP (security scanning).
+- CI/CD: GitHub Actions (sequential workflow: performance-security-scan → production-deploy)
 
 ## Architecture (high level)
 
-ASCII diagram:
+### AWS Infrastructure Architecture
 
 ```
-	[Users] ---> [Frontend (Vite / React)]
-											|
-											v (REST / fetch + websockets)
-								[Backend - NestJS API]
-									|     |        |     
-			Prisma ---> |     |        | ---> Socket.IO (real-time)
-		 (Postgres)   |     |        |
-									|     |        ---> S3 / Cloudinary (file storage)
-									|     ---> SendGrid (email)
-									---> Puppeteer (PDF generation)
+      Users
+        ↓
+    [Route 53] (DNS Management)
+        ↓
+    ┌─────────────────────────────────────┐
+    │          AWS Amplify                 │
+    │    Frontend (React + Vite)          │
+    │    - Global CDN distribution        │
+    │    - Automatic deployments          │
+    │    - SSL/TLS certificates           │
+    └──────────────────┬──────────────────┘
+                       │ HTTPS/WebSocket
+                       ↓
+    ┌─────────────────────────────────────┐
+    │            Amazon EC2               │
+    │        Backend (NestJS API)         │
+    │                                     │
+    │  ┌─────────────────────────────────┐ │
+    │  │       Application Layer        │ │
+    │  │  ┌─────────────┬─────────────┐ │ │
+    │  │  │  Auth/JWT   │   Socket.IO │ │ │
+    │  │  └─────────────┴─────────────┘ │ │
+    │  │  ┌─────────────┬─────────────┐ │ │
+    │  │  │   Modules   │   Services  │ │ │
+    │  │  │ (Quiz,User, │ (Prisma,    │ │ │
+    │  │  │  Exercise)  │  Puppeteer) │ │ │
+    │  │  └─────────────┴─────────────┘ │ │
+    │  └─────────────────────────────────┘ │
+    │                                     │
+    │  ┌─────────────────────────────────┐ │
+    │  │       Database Layer           │ │
+    │  │         PostgreSQL             │ │
+    │  │       (via Prisma ORM)         │ │
+    │  └─────────────────────────────────┘ │
+    └──────────────────┬──────────────────┘
+                       │
+          ┌────────────┼────────────┐
+          │            │            │
+          ↓            ↓            ↓
+    ┌─────────────┐ ┌─────────┐ ┌─────────────┐
+    │   Amazon    │ │ SendGrid│ │ Cloudinary  │
+    │     S3      │ │ (Email) │ │  (Images)   │
+    │ (File Store)│ └─────────┘ └─────────────┘
+    └─────────────┘
+```
 
-	CI/CD:
-	GitHub Actions -> Build Docker image -> Run tests (Newman) -> Push image -> SSH deploy to EC2
+### Data Flow
+
+1. **User Access**: Users access the application through Route 53 DNS, which routes traffic to AWS Amplify
+2. **Frontend Delivery**: Amplify serves the React application with global CDN for optimal performance
+3. **API Communication**: Frontend communicates with NestJS API on EC2 via HTTPS/WebSocket
+4. **Authentication**: JWT-based authentication with role-based access (TEACHER/STUDENT)
+5. **Real-time Features**: Socket.IO enables real-time notifications and live features
+6. **File Storage**: S3 for document storage, Cloudinary for image processing
+7. **Email Services**: SendGrid handles notifications and reports
+8. **PDF Generation**: Puppeteer running on EC2 generates PDFs for exercises and quizzes
+
+### CI/CD Pipeline
+
+```
+		GitHub Repository
+        		↓
+		Performance & Security Scan
+	(k6 load tests + ZAP security scan)
+        		↓
+		If scan succeeds
+        		↓
+		Production CI/CD
+    ┌─────────────────────────────────────┐
+    │         GitHub Actions              │
+    │                                     │
+    │  1. Build Docker image              │
+    │  2. Run integration tests           │
+    │  3. Push image to Docker Hub        │
+    │  4. SSH deploy to EC2               │
+    │  5. Run database migrations         │
+    │  6. Start production container      │
+    └──────────────────┬──────────────────┘
+                       │
+                       ↓
+    ┌─────────────────────────────────────┐
+    │            Amazon EC2               │
+    │      Production Environment         │
+    │  - Docker container orchestration   │
+    │  - Environment variable management  │
+    │  - SSL/TLS termination             │
+    └─────────────────────────────────────┘
 ```
 
 ## Tech stack
 
 | Layer | Technology (primary) | Notes |
 |-------|----------------------|-------|
+| Frontend Hosting | AWS Amplify | Global CDN, automatic deployments, SSL certificates, branch-based environments |
+| Backend Hosting | Amazon EC2 | Docker container deployment, auto-scaling capabilities, security groups |
+| DNS Management | Amazon Route 53 | Domain routing, health checks, DNS failover |
 | Backend framework | NestJS 10 | Modular controllers/services, global validation pipe, Swagger at `/api/docs` |
 | ORM / DB | Prisma + PostgreSQL | `backend/prisma/schema.prisma` describes domain models (User, Quiz, Exercise, Document, IELTS, Submissions) |
 | Auth | JWT, Passport | `@nestjs/jwt`, `passport-jwt` used for auth and role-based access (Role: TEACHER/STUDENT) |
@@ -79,10 +157,10 @@ ASCII diagram:
 	- `postman_environment.json` - Postman environment variables
 - `load-test/k6/` - Performance and load testing
 	- `load-test.js` - k6 load test script
-	- `publish-to-grafana.js` - Script to publish k6 metrics to Grafana
 - `.github/workflows/` - GitHub Actions CI/CD
-	- `deploy.yml` - Main pipeline (build, integration test, push, deploy)
-	- `perf-security.yml` - Performance & security checks (k6, ZAP, Grafana publishing)
+ 	- `performance-security.yml` - Performance and security checks (k6, ZAP)
+	- `cicd_prd.yml` - Production CI/CD pipeline (build, integration test, push, deploy)
+
 
 ## Developer local quickstart
 
@@ -133,50 +211,33 @@ See `.github/workflows/deploy.yml` for an example `test.env` assembled during CI
 
 ## Testing
 
-- **Unit & integration**: `npm test` (runs Jest) in `backend/`.
-- **End-to-end / production-safe API tests**: Postman collection in `integration-test/postman_collection.json`. Run locally with Newman:
+- **End-to-end / production-safe API tests**: Postman collection in `integration-test/postman_collection.json`.
 
-```powershell
-# install newman globally or use npx
-npx newman run integration-test/postman_collection.json --environment integration-test/postman_environment.json \
-	--timeout-request 120000 --timeout-script 120000 --delay-request 300 --reporters cli,json --reporter-json-export newman-results.json
-```
-
-- **Load & performance testing**: k6 scripts in `load-test/k6/`. Run locally with Docker:
-
-```powershell
-# Run load test
-docker run --rm -v "$(pwd)":/src -w /src grafana/k6:latest run \
-  --vus 10 --duration 30s --out json=load-test/k6/results.json load-test/k6/load-test.js
-
-# Publish results to Grafana (if secrets set)
-node load-test/k6/publish-to-grafana.js load-test/k6/results.json
-```
+- **Load & performance testing**: k6 scripts in `load-test/load-test.js`.
 
 - **CI uses GitHub Actions** to build a Docker image, run it (with a read-only production DB URL supplied via secrets), wait for health to pass, then run Newman tests. Failing assertions cause the job to fail and upload `newman-results.json` as an artifact.
 
 ## CI/CD pipeline
 
-The CI/CD pipeline consists of two GitHub Actions workflows:
+The CI/CD pipeline consists of two GitHub Actions workflows that run sequentially:
 
-### 1. Performance & Security Checks (`.github/workflows/perf-security.yml`)
+### 1. Performance and Security Scan (`.github/workflows/performance-security.yml`)
 Runs performance and security tests before deployment:
 
 1. Checkout repository.
 2. Build Docker image for the backend using `backend/Dockerfile` (tag: `tutorize-backend:perf`).
-3. Start a test container exposing the API on `localhost:3002`.
+3. Start a test container exposing the API on `localhost:3000`.
 4. Wait and poll the `/api/v1/health` endpoint until ready.
 5. Run k6 load tests with configurable VUs and duration, output JSON results.
 6. Upload k6 results as artifacts.
-7. Publish k6 metrics to Grafana (optional, if `GRAFANA_PUSH_URL` and authentication secrets are set).
-8. Run OWASP ZAP baseline security scan (dockerized).
-9. Upload ZAP security report as artifacts.
-10. Stop test container.
+7. Run OWASP ZAP baseline security scan using GitHub Action.
+8. Upload ZAP security report as artifacts (JSON, HTML, Markdown, ZIP).
+9. Stop test container.
 
 **Triggers**: Manual dispatch or push to `master`.
 
-### 2. Build & Deploy (`.github/workflows/deploy.yml`)
-The main deployment pipeline that runs after perf-security completes:
+### 2. Production CI/CD (`.github/workflows/deploy.yml`)
+The main deployment pipeline that runs after performance-security scan completes successfully:
 
 1. Checkout repository.
 2. Build Docker image for the backend using `backend/Dockerfile` (tag: `tutorize-backend:test`).
@@ -186,7 +247,21 @@ The main deployment pipeline that runs after perf-security completes:
 6. Install Newman and run the Postman collection from `integration-test/` against the running container. The workflow exports `newman-results.json` and uploads it as an artifact.
 7. If tests pass, build and push the Docker image to Docker Hub, then SSH to EC2 and deploy (pull image, run migrations, start container).
 
-**Triggers**: Push to `master` or completion of perf-security workflow (temporary chaining for testing).
+**Triggers**: Completion of performance-security workflow (sequential execution).
+
+### Workflow Sequence
+
+```
+Push to master
+    ↓
+Performance and Security Scan
+(k6 load tests + ZAP security scan)
+    ↓
+If scan succeeds
+    ↓
+Production CI/CD
+(integration tests + build + deploy)
+```
 
 ## License
 
