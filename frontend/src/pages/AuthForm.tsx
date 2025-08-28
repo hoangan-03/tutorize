@@ -201,9 +201,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     setError("");
 
     try {
+      const email = (formData.email || "").toString().trim();
+      const password = (formData.password || "").toString().trim();
+
       await login({
-        email: formData.email,
-        password: formData.password,
+        email,
+        password,
       });
 
       setTimeout(() => {
