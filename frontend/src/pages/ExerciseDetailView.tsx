@@ -409,8 +409,8 @@ export const ExerciseDetailView: React.FC = () => {
   const exerciseTitle = exercise.name;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
-      <div className="mx-auto p-6 lg:px-16 xl:px-20">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 ">
+      <div className="mx-auto p-2 lg:px-16 xl:px-20">
         {/* Header Section with Gradient */}
         <div className="bg-gradient-to-r from-sky-700 to-sky-900 rounded-2xl shadow-xl text-white p-4 md:p-8 mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between">
@@ -639,7 +639,7 @@ export const ExerciseDetailView: React.FC = () => {
               ) : exercise.content ? (
                 /* Text Content Display */
                 <div className="max-w-none">
-                  <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 md:p-8 border border-blue-100">
+                  <div className="reading-mode-content bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-2 md:p-8 border border-blue-100">
                     <div className="bg-white rounded-lg p-4 md:p-8 shadow-sm">
                       <style>
                         {`

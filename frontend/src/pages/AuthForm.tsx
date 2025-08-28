@@ -24,7 +24,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { convertISOToDMY } from "../components/utils";
 import { Role, Subject } from "../types/api";
-import { DateInput } from "../components/ui";
+import { ActionButton, DateInput } from "../components/ui";
 
 interface AuthFormProps {
   mode: "login" | "signup" | "forgot-password" | "change-password" | "profile";
@@ -499,13 +499,16 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
         {(mode === "profile" || mode === "change-password") && (
-          <button
+          <ActionButton
             onClick={() => navigate(-1)}
-            className="mb-4 flex items-center text-blue-600 hover:text-blue-500 pl-4 lg:pl-0"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {t("common.back")}
-          </button>
+            colorTheme="blue"
+            textColor="text-white"
+            hasIcon={true}
+            icon={ArrowLeft}
+            text={t("common.back")}
+            className="border border-white/20 backdrop-blur-sm ml-4"
+            size="md"
+          />
         )}
 
         <div className="flex justify-center">

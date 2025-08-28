@@ -12,7 +12,7 @@ import {
 import { RichTextEditor } from "../components/ui/RichTextEditor";
 import { Exercise, ExerciseStatus, Subject } from "../types/api";
 import { useTranslation } from "react-i18next";
-import { ActionButton } from "../components/ui/ActionButton";
+import { ActionButton } from "../components/ui";
 import { exerciseService } from "../services/exerciseService";
 import { PDF_TYPES, validateFiles } from "../components/utils";
 import { useModal } from "../hooks";

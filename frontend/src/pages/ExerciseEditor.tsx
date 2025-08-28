@@ -20,7 +20,7 @@ import {
 import "katex/dist/katex.min.css";
 import { ExerciseForm } from "./ExerciseForm";
 import { ExercisePreview } from "./ExercisePreview";
-import { ExercisePublicView } from "./ExercisePublicView";
+import { ExerciseListStudentView } from "./ExerciseListStudentView";
 import { TeacherSubmissionsView } from "./TeacherSubmissionsView";
 import { ExerciseDashboard } from "./ExerciseDashboard";
 import { useAuth } from "../contexts/AuthContext";
@@ -87,7 +87,7 @@ export const ExerciseEditor: React.FC = () => {
   }, [exercises]);
 
   if (!isTeacher) {
-    return <ExercisePublicView />;
+    return <ExerciseListStudentView />;
   }
 
   const handleInputChange = (field: string, value: any) => {

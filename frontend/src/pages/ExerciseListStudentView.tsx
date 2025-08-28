@@ -9,13 +9,13 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useExercises } from "../hooks";
-import { Exercise } from "../types/api";
+import { Exercise, ExerciseStatus } from "../types/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../components/utils";
 import { StatCard, Badge } from "../components/ui";
 
-export const ExercisePublicView: React.FC = () => {
+export const ExerciseListStudentView: React.FC = () => {
   const { isTeacher } = useAuth();
   const { t } = useTranslation();
   const { exercises, isLoading } = useExercises();
@@ -99,7 +99,9 @@ export const ExercisePublicView: React.FC = () => {
             bgColor="bg-green-100"
             label={t("status.active")}
             value={
-              exercises.filter((ex: Exercise) => ex.status === "ACTIVE").length
+              exercises.filter(
+                (ex: Exercise) => ex.status === ExerciseStatus.ACTIVE
+              ).length
             }
           />
           <StatCard
@@ -108,8 +110,7 @@ export const ExercisePublicView: React.FC = () => {
             label={t("exercises.overdue")}
             value={
               exercises.filter(
-                (ex: Exercise) =>
-                  ex.status === "ACTIVE" && new Date(ex.deadline) > new Date()
+                (ex: Exercise) => new Date(ex.deadline) < new Date()
               ).length
             }
           />

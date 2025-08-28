@@ -313,10 +313,10 @@ const StudentIeltsView: React.FC<{
                     .map((submission: AnySubmission) => (
                       <li
                         key={submission.id}
-                        className="px-6 py-4 hover:bg-gray-50 flex items-center justify-between"
+                        className="px-3 lg:px-6 py-4 hover:bg-gray-50 flex items-center justify-between"
                       >
                         <div className="text-start">
-                          <h3 className="text-base lg:text-md font-semibold text-gray-800">
+                          <h3 className="text-base lg:text-md font-semibold text-gray-800 pr-2">
                             {submission.test?.title ||
                               `Test ID: ${submission.testId}`}
                           </h3>
@@ -325,11 +325,11 @@ const StudentIeltsView: React.FC<{
                             {formatDateTime(submission.submittedAt)}
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right ">
                           <p className="text-sm text-gray-500">
                             {t("ielts.score")}
                           </p>
-                          <p className="text-lg lg:text-xl font-bold text-indigo-600">
+                          <p className="text-base lg:text-xl font-bold text-indigo-600">
                             {activeSkill === IeltsSkill.WRITING
                               ? (submission as IeltsWritingSubmission)
                                   .aiScore ||
@@ -348,7 +348,7 @@ const StudentIeltsView: React.FC<{
                               ? onViewWritingResult(submission.id)
                               : onViewResult(submission.id)
                           }
-                          className="ml-4 inline-flex items-center px-3 py-1 lg:px-5 lg:py-2 border border-transparent text-xs lg:text-base font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700"
+                          className="ml-2 lg:ml-4 inline-flex items-center px-3 py-1 lg:px-5 lg:py-2 border border-transparent text-xs lg:text-base font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700"
                         >
                           {t("ielts.review")}
                         </button>
