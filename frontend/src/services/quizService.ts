@@ -49,10 +49,10 @@ export const quizService = {
     return response.data;
   },
 
-  async checkOverdueQuizzes(): Promise<any> {
-    const response = await api.post("/quizzes/check-overdue");
-    return response.data;
-  },
+  // async checkOverdueQuizzes(): Promise<any> {
+  //   const response = await api.post("/quizzes/check-overdue");
+  //   return response.data;
+  // },
 
   async publishQuiz(id: number): Promise<Quiz> {
     return this.updateQuizStatus(id, "ACTIVE");
@@ -62,11 +62,10 @@ export const quizService = {
     return this.updateQuizStatus(id, "INACTIVE");
   },
 
-  // Question Management
-  async getQuizQuestions(quizId: number): Promise<Question[]> {
-    const response = await api.get<Question[]>(`/quizzes/${quizId}/questions`);
-    return response.data;
-  },
+  // async getQuizQuestions(quizId: number): Promise<Question[]> {
+  //   const response = await api.get<Question[]>(`/quizzes/${quizId}/questions`);
+  //   return response.data;
+  // },
 
   async createQuestion(
     quizId: number,
@@ -95,7 +94,6 @@ export const quizService = {
     await api.delete(`/quizzes/${quizId}/questions/${questionId}`);
   },
 
-  // Quiz Taking
   async startQuiz(quizId: number): Promise<QuizSubmission> {
     const response = await api.post<QuizSubmission>(`/quizzes/${quizId}/start`);
     return response.data;
@@ -159,16 +157,16 @@ export const quizService = {
     return response.data;
   },
 
-  async getQuizSubmissions(
-    quizId: number,
-    params?: PaginationParams
-  ): Promise<PaginatedResult<QuizSubmission>> {
-    const response = await api.get<PaginatedResult<QuizSubmission>>(
-      `/quizzes/${quizId}/submissions`,
-      { params }
-    );
-    return response.data;
-  },
+  // async getQuizSubmissions(
+  //   quizId: number,
+  //   params?: PaginationParams
+  // ): Promise<PaginatedResult<QuizSubmission>> {
+  //   const response = await api.get<PaginatedResult<QuizSubmission>>(
+  //     `/quizzes/${quizId}/submissions`,
+  //     { params }
+  //   );
+  //   return response.data;
+  // },
 
   async gradeSubmission(
     submissionId: number,
@@ -191,10 +189,10 @@ export const quizService = {
     return response.data;
   },
 
-  async getMyQuizStats(): Promise<any> {
-    const response = await api.get("/quizzes/my-submission-stats");
-    return response.data;
-  },
+  // async getMyQuizStats(): Promise<any> {
+  //   const response = await api.get("/quizzes/my-submission-stats");
+  //   return response.data;
+  // },
 
   async getTeacherStats(): Promise<{
     totalQuizzes: number;

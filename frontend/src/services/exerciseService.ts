@@ -36,12 +36,12 @@ export const exerciseService = {
     return response.data;
   },
 
-  async getMaxScore(submissionId: number): Promise<number> {
-    const response = await api.get<{ maxScore: number }>(
-      `/exercise-submissions/${submissionId}/max-score`
-    );
-    return response.data.maxScore;
-  },
+  // async getMaxScore(submissionId: number): Promise<number> {
+  //   const response = await api.get<{ maxScore: number }>(
+  //     `/exercise-submissions/${submissionId}/max-score`
+  //   );
+  //   return response.data.maxScore;
+  // },
 
   async getExerciseWithAnswers(id: number): Promise<Exercise> {
     const response = await api.get<Exercise>(`/exercises/${id}/with-answers`);
@@ -123,12 +123,12 @@ export const exerciseService = {
     return response.data;
   },
 
-  async getFileUrl(id: number): Promise<{ fileUrl: string; fileName: string }> {
-    const response = await api.get<{ fileUrl: string; fileName: string }>(
-      `/exercises/${id}/file-url`
-    );
-    return response.data;
-  },
+  // async getFileUrl(id: number): Promise<{ fileUrl: string; fileName: string }> {
+  //   const response = await api.get<{ fileUrl: string; fileName: string }>(
+  //     `/exercises/${id}/file-url`
+  //   );
+  //   return response.data;
+  // },
 
   // Exercise Submissions
   async submitExerciseWithImages(

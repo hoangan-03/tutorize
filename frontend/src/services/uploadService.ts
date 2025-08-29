@@ -22,26 +22,26 @@ export class uploadService {
     }
   }
 
-  static async uploadMultipleFiles(
-    files: File[],
-    exerciseId?: number
-  ): Promise<string[]> {
-    const uploadPromises = files.map((file) =>
-      this.uploadFile(file, exerciseId)
-    );
-    return Promise.all(uploadPromises);
-  }
-
-  static async deleteFile(fileUrl: string): Promise<boolean> {
-    try {
-      const response = await api.delete("/upload/file", {
-        data: { fileUrl },
-      });
-
-      return response.data.success;
-    } catch (error) {
-      console.error("File delete error:", error);
-      return false;
-    }
-  }
+  // static async uploadMultipleFiles(
+  //   files: File[],
+  //   exerciseId?: number
+  // ): Promise<string[]> {
+  //   const uploadPromises = files.map((file) =>
+  //     this.uploadFile(file, exerciseId)
+  //   );
+  //   return Promise.all(uploadPromises);
+  // }
+  //
+  // static async deleteFile(fileUrl: string): Promise<boolean> {
+  //   try {
+  //     const response = await api.delete("/upload/file", {
+  //       data: { fileUrl },
+  //     });
+  //
+  //     return response.data.success;
+  //   } catch (error) {
+  //     console.error("File delete error:", error);
+  //     return false;
+  //   }
+  // }
 }

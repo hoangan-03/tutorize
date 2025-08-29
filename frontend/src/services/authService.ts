@@ -14,7 +14,6 @@ class AuthService {
   // Token management
   saveToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
-    console.log("authService: Token saved to localStorage");
   }
 
   getToken(): string | null {
@@ -151,7 +150,6 @@ class AuthService {
       return true;
     }
 
-    // Admin can edit any content (if we add admin role later)
     return false;
   }
 
