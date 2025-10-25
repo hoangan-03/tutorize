@@ -38,7 +38,10 @@
     "fileTypeIsNotSupported": "Loại tệp không được hỗ trợ.",
     "onlyAccept": "Chỉ chấp nhận: ",
     "invalidFiles": "Lỗi tải tệp",
-    "someFilesIsNotValid": "Một số tệp không hợp lệ."
+    "someFilesIsNotValid": "Một số tệp không hợp lệ.",
+    "grade": "Lớp",
+    "saving": "Đang lưu...",
+    "saveChanges": "Lưu thay đổi"
   },
   "subjects": {
     "math": "Toán học",
@@ -72,6 +75,7 @@
     "writing": "Viết",
     "ielts": "IELTS",
     "documents": "Tài liệu",
+    "library": "Thư viện",
     "profile": "Hồ sơ",
     "settings": "Cài đặt",
     "logout": "Đăng xuất",
@@ -152,7 +156,18 @@
     "passwordHasLowercase": "Ít nhất 1 chữ thường (a-z)",
     "passwordHasUppercase": "Ít nhất 1 chữ hoa (A-Z)",
     "passwordHasNumber": "Ít nhất 1 số (0-9)",
-    "passwordValidChars": "Chỉ chứa chữ cái, số và ký tự đặc biệt (@$!%*?&)"
+    "passwordValidChars": "Chỉ chứa chữ cái, số và ký tự đặc biệt (@$!%*?&)",
+    "profileUpdated": "Cập nhật hồ sơ thành công!",
+    "loadingProfile": "Đang tải hồ sơ..."
+  },
+  "profile": {
+    "accountStatus": "Trạng thái tài khoản",
+    "status": "Trạng thái",
+    "active": "Hoạt động",
+    "role": "Vai trò",
+    "quickActions": "Thao tác nhanh",
+    "personalInformation": "Thông tin cá nhân",
+    "emailCannotBeChanged": "Địa chỉ email không thể thay đổi"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -888,7 +903,8 @@
     "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự.",
     "forgotPasswordFailed": "Gửi mật khẩu tạm thời thất bại. Vui lòng thử lại.",
     "changePasswordFailed": "Đổi mật khẩu thất bại. Vui lòng kiểm tra mật khẩu hiện tại.",
-    "profileUpdateFailed": "Cập nhật thông tin thất bại. Vui lòng thử lại."
+    "profileUpdateFailed": "Cập nhật thông tin thất bại. Vui lòng thử lại.",
+    "updateFailed": "Cập nhật thất bại. Vui lòng thử lại."
   },
   "validation": {
     "required": "Trường này là bắt buộc",

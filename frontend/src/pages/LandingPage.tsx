@@ -11,41 +11,44 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-8xl mx-auto">
-          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-            <svg
-              className="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white transform translate-x-1/2"
-              fill="currentColor"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <polygon points="50,0 100,0 50,100 0,100" />
-            </svg>
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+        </div>
 
-            <main className="pt-10 mx-auto max-w-8xl px-4 sm:pt-12 sm:px-6 md:pt-16 lg:pt-20 lg:px-16 xl:pt-28">
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block xl:inline">
-                    {t("landing.heroTitle")}
-                  </span>
-                </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  {t("landing.heroSubtitle")}
-                </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                  <div className="rounded-md shadow">
+        <div className="max-w-7xl mx-auto relative">
+          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:pb-28 xl:pb-32">
+            <main className="pt-10 mx-auto max-w-7xl px-4 sm:pt-12 sm:px-6 md:pt-16 lg:pt-20 lg:px-8 xl:pt-28">
+              <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
+                <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
+                  <div>
+                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg mb-4">
+                      <Award className="h-4 w-4 mr-2" />
+                      {t("landing.featuresTitle")}
+                    </span>
+                  </div>
+                  <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl lg:text-5xl xl:text-6xl">
+                    <span className="block mb-2">{t("landing.heroTitle")}</span>
+                    <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      {t("landing.learnAnywhere")}
+                    </span>
+                  </h1>
+                  <p className="mt-3 text-base text-gray-600 sm:mt-5 sm:text-xl sm:max-w-xl sm:mx-auto md:mt-5 lg:mx-0">
+                    {t("landing.heroSubtitle")}
+                  </p>
+                  <div className="mt-8 sm:flex sm:justify-center lg:justify-start gap-4">
                     <ActionButton
                       onClick={() => navigate("/signup")}
                       colorTheme="blue"
-                      hasIcon={false}
+                      hasIcon={true}
+                      icon={ChevronRight}
                       text={t("landing.getStarted")}
                       size="lg"
-                      className="w-full"
+                      className="w-full sm:w-auto shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 transition-all duration-200"
                     />
-                  </div>
-                  <div className="mt-3 sm:mt-0 sm:ml-3">
                     <ActionButton
                       onClick={() => navigate("/login")}
                       colorTheme="transparent"
@@ -53,22 +56,93 @@ export const LandingPage: React.FC = () => {
                       hasIcon={false}
                       text={t("navigation.login")}
                       size="lg"
-                      className="w-full bg-blue-100 hover:bg-blue-200"
+                      className="w-full sm:w-auto mt-3 sm:mt-0 bg-white hover:bg-gray-50 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-200"
                     />
+                  </div>
+
+                  {/* Trust indicators */}
+                  <div className="mt-8 sm:mt-12">
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-gray-500">
+                      <div className="flex items-center">
+                        <div className="flex -space-x-2">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white"></div>
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 border-2 border-white"></div>
+                        </div>
+                        <span className="ml-3 text-sm font-medium">
+                          10,000+ {t("landing.students")}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Award className="h-5 w-5 text-yellow-500 mr-2" />
+                        <span className="text-sm font-medium">
+                          7.5 {t("landing.avgIeltsScore")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-12 relative lg:mt-0 lg:col-span-6">
+                  <div className="relative mx-auto w-full lg:max-w-md">
+                    {/* Floating card effect */}
+                    <div className="relative bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-105 transition-transform duration-300">
+                      <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20 blur-2xl"></div>
+                      <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full opacity-20 blur-2xl"></div>
+
+                      <div className="relative">
+                        <div className="flex items-center justify-center w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-6">
+                          <BookOpen className="h-10 w-10 text-white" />
+                        </div>
+
+                        <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
+                          {t("landing.learnAnywhere")}
+                        </h3>
+
+                        <div className="space-y-3">
+                          <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-100 text-blue-600">
+                                <FileText className="h-5 w-5" />
+                              </div>
+                            </div>
+                            <p className="ml-3 text-sm text-gray-600">
+                              {t("landing.interactiveQuizzesTitle")}
+                            </p>
+                          </div>
+
+                          <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-purple-100 text-purple-600">
+                                <Award className="h-5 w-5" />
+                              </div>
+                            </div>
+                            <p className="ml-3 text-sm text-gray-600">
+                              {t("landing.ieltsPrepTitle")}
+                            </p>
+                          </div>
+
+                          <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-indigo-100 text-indigo-600">
+                                <BookOpen className="h-5 w-5" />
+                              </div>
+                            </div>
+                            <p className="ml-3 text-sm text-gray-600">
+                              {t("landing.docLibraryTitle")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Decorative floating elements */}
+                    <div className="hidden lg:block absolute top-0 -right-16 w-32 h-32 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-full opacity-40 blur-xl animate-pulse"></div>
+                    <div className="hidden lg:block absolute bottom-0 -left-16 w-24 h-24 bg-gradient-to-br from-pink-200 to-pink-400 rounded-full opacity-40 blur-xl animate-pulse animation-delay-2000"></div>
                   </div>
                 </div>
               </div>
             </main>
-          </div>
-        </div>
-        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <div className="h-56 w-full bg-gradient-to-r from-blue-500 to-purple-600 sm:h-72 md:h-96 lg:w-full lg:h-full flex items-center justify-center">
-            <div className="text-white text-center">
-              <BookOpen className="h-32 w-32 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold">
-                {t("landing.learnAnywhere")}
-              </h3>
-            </div>
           </div>
         </div>
       </div>

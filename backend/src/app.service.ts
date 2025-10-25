@@ -15,7 +15,27 @@ export class AppService {
   }
 
   async getHealth() {
-    const dbHealth = await this.prisma.healthCheck();
+    let dbHealth;
+    try {
+      // Add timeout to database health check to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Database health check timeout')),
+          5000,
+        ),
+      );
+
+      dbHealth = await Promise.race([
+        this.prisma.healthCheck(),
+        timeoutPromise,
+      ]);
+    } catch (error) {
+      dbHealth = {
+        status: 'unhealthy',
+        error: error.message || 'Database health check failed',
+        timestamp: new Date().toISOString(),
+      };
+    }
 
     return {
       success: true,

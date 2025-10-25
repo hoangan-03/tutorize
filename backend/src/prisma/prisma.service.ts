@@ -21,12 +21,18 @@ export class PrismaService
 
   async healthCheck() {
     try {
-      await this.$queryRaw`SELECT 1`;
+      // Simple query with timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Query timeout')), 3000),
+      );
+
+      await Promise.race([this.$queryRaw`SELECT 1`, timeoutPromise]);
+
       return { status: 'healthy', timestamp: new Date().toISOString() };
     } catch (error) {
       return {
         status: 'unhealthy',
-        error: error,
+        error: error.message || String(error),
         timestamp: new Date().toISOString(),
       };
     }

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  BookOpen,
   Eye,
   EyeOff,
   Mail,
@@ -142,7 +141,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const location = useLocation();
   const { t } = useTranslation();
 
-  const from = location.state?.from?.pathname || "/dashboard";
+  const from = location.state?.from?.pathname || "/exercises";
 
   useEffect(() => {
     if (mode === "profile" && user?.profile) {
@@ -450,20 +449,20 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     if (mode === "profile" || mode === "change-password") return null;
 
     return (
-      <p className="mt-2 text-center text-sm text-gray-600">
+      <p className="mt-4 text-center text-sm text-gray-700">
         {mode === "login" && (
           <>
             {t("auth.noAccount")}{" "}
             <Link
               to="/signup"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-semibold text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-2"
             >
               {t("auth.signUpNow")}
             </Link>
-            {" | "}
+            <span className="mx-2 text-gray-400">|</span>
             <Link
               to="/forgot-password"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-semibold text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-2"
             >
               {t("auth.forgotPassword")}
             </Link>
@@ -474,7 +473,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             {t("auth.alreadyHaveAccount")}{" "}
             <Link
               to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-semibold text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-2"
             >
               {t("auth.login")}
             </Link>
@@ -485,7 +484,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
             {t("auth.rememberPassword")}{" "}
             <Link
               to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-semibold text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-2"
             >
               {t("auth.backToLogin")}
             </Link>
@@ -495,570 +494,165 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     );
   };
 
+  const shouldRemoveTopPadding =
+    mode === "login" || mode === "signup" || mode === "forgot-password";
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
+    <div
+      className={`min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden ${
+        shouldRemoveTopPadding ? "-mt-8" : ""
+      }`}
+    >
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-1/2 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
         {(mode === "profile" || mode === "change-password") && (
-          <ActionButton
-            onClick={() => navigate(-1)}
-            colorTheme="blue"
-            textColor="text-white"
-            hasIcon={true}
-            icon={ArrowLeft}
-            text={t("common.back")}
-            className="border border-white/20 backdrop-blur-sm ml-4"
-            size="md"
-          />
+          <div className="mb-6 ml-4">
+            <ActionButton
+              onClick={() => navigate(-1)}
+              colorTheme="transparent"
+              textColor="text-blue-700"
+              hasIcon={true}
+              icon={ArrowLeft}
+              text={t("common.back")}
+              className="bg-white/80 backdrop-blur-sm hover:bg-white border border-blue-200 shadow-lg"
+              size="md"
+            />
+          </div>
         )}
 
-        <div className="flex justify-center">
-          <div className="flex items-center">
-            <BookOpen className="h-12 w-12 text-blue-600" />
-            <span className="ml-3 text-base md:text-xl lg:text-3xl font-bold text-gray-900">
-              {t("common.appName")}
-            </span>
-          </div>
-        </div>
-
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="text-center text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
           {getPageTitle()}
         </h2>
 
         {renderAuthLinks()}
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
+        <div className="bg-white/95 backdrop-blur-sm py-8 px-4 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/50 relative">
+          {/* Decorative corner elements */}
+          <div className="absolute -top-3 -left-3 w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20 blur-xl"></div>
+          <div className="absolute -bottom-3 -right-3 w-24 h-24 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full opacity-20 blur-xl"></div>
 
-          {success && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-              <p className="text-sm text-green-600">{success}</p>
-            </div>
-          )}
-
-          {tempPassword && (
-            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-              <h4 className="text-sm font-medium text-yellow-800 mb-2">
-                {t("auth.tempPasswordTitle")}
-              </h4>
-              <p className="text-sm text-yellow-700 mb-2">
-                {t("auth.tempPasswordMessage")}
-              </p>
-              <div className="bg-yellow-100 p-2 rounded border border-yellow-300">
-                <code className="text-yellow-900 font-mono text-lg">
-                  {tempPassword}
-                </code>
+          <div className="relative">
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex items-start shadow-sm">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-red-700 font-medium">{error}</p>
               </div>
-              <p className="text-xs text-yellow-600 mt-2">
-                {t("auth.tempPasswordWarning")}
-              </p>
-            </div>
-          )}
-
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Login Form */}
-            {mode === "login" && (
-              <>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.email")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterEmail")}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.password")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      required
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterPassword")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </>
             )}
 
-            {/* Signup Form */}
-            {mode === "signup" && (
-              <>
-                <div>
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.firstName")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      required
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        handleInputChange("firstName", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterFirstName")}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.lastName")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      required
-                      value={formData.lastName}
-                      onChange={(e) =>
-                        handleInputChange("lastName", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterLastName")}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.email")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterEmail")}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="role"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.role")}
-                  </label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={(e) =>
-                      handleInputChange("role", e.target.value as Role)
-                    }
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
-                  >
-                    <option value={Role.STUDENT}>{t("auth.student")}</option>
-                    {/* <option value={Role.TEACHER}>{t("auth.teacher")}</option> */}
-                  </select>
-                </div>
-
-                {formData.role === Role.STUDENT && (
-                  <div>
-                    <label
-                      htmlFor="grade"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      {t("auth.grade")}
-                    </label>
-                    <select
-                      id="grade"
-                      name="grade"
-                      value={formData.grade}
-                      onChange={(e) =>
-                        handleInputChange("grade", parseInt(e.target.value))
-                      }
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
-                    >
-                      {[6, 7, 8, 9, 10, 11, 12].map((grade) => (
-                        <option key={grade} value={grade}>
-                          {t("auth.gradeNumber", { grade })}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {formData.role === Role.TEACHER && (
-                  <div>
-                    <label
-                      htmlFor="subject"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      {t("auth.subject")}
-                    </label>
-                    <select
-                      id="subject"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={(e) =>
-                        handleInputChange("subject", e.target.value)
-                      }
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
-                    >
-                      {Object.values(Subject).map((subject) => (
-                        <option key={subject} value={subject}>
-                          {t(`subjects.${subject.toLowerCase()}`)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.password")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      required
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
-                      onFocus={() => setPasswordFocused(true)}
-                      onBlur={() => setPasswordFocused(false)}
-                      className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterPassword")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                  <PasswordValidation
-                    password={formData.password}
-                    showValidation={
-                      passwordFocused || formData.password.length > 0
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.confirmPassword")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={(e) =>
-                        handleInputChange("confirmPassword", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.confirmPassword")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </>
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-xl flex items-start shadow-sm">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-green-700 font-medium">{success}</p>
+              </div>
             )}
 
-            {/* Forgot Password Form */}
-            {mode === "forgot-password" && (
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {t("auth.email")}
-                </label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t("auth.enterEmail")}
-                  />
+            {tempPassword && (
+              <div className="mb-6 p-5 bg-gradient-to-br from-yellow-50 to-orange-50 border-l-4 border-yellow-500 rounded-r-xl shadow-md">
+                <h4 className="text-base font-semibold text-yellow-900 mb-3 flex items-center">
+                  <Key className="h-5 w-5 mr-2" />
+                  {t("auth.tempPasswordTitle")}
+                </h4>
+                <p className="text-sm text-yellow-800 mb-3">
+                  {t("auth.tempPasswordMessage")}
+                </p>
+                <div className="bg-white/80 p-3 rounded-lg border border-yellow-300 shadow-inner">
+                  <code className="text-yellow-900 font-mono text-lg font-bold">
+                    {tempPassword}
+                  </code>
                 </div>
-                <p className="mt-2 text-sm text-gray-600">
-                  {t("auth.forgotPasswordDescription")}
+                <p className="text-xs text-yellow-700 mt-3 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {t("auth.tempPasswordWarning")}
                 </p>
               </div>
             )}
 
-            {/* Change Password Form */}
-            {mode === "change-password" && (
-              <>
-                <div>
-                  <label
-                    htmlFor="currentPassword"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.currentPassword")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Key className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      required
-                      value={formData.currentPassword}
-                      onChange={(e) =>
-                        handleInputChange("currentPassword", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterCurrentPassword")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() =>
-                        setShowCurrentPassword(!showCurrentPassword)
-                      }
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {/* Login Form */}
+              {mode === "login" && (
+                <>
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
                     >
-                      {showCurrentPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="newPassword"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.newPassword")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      {t("auth.email")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) =>
+                          handleInputChange("email", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterEmail")}
+                      />
                     </div>
-                    <input
-                      id="newPassword"
-                      name="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      required
-                      value={formData.newPassword}
-                      onChange={(e) =>
-                        handleInputChange("newPassword", e.target.value)
-                      }
-                      onFocus={() => setShowPasswordValidation(true)}
-                      onBlur={() => setShowPasswordValidation(false)}
-                      className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterNewPassword")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
                   </div>
-                  <PasswordValidation
-                    password={formData.newPassword}
-                    showValidation={
-                      showPasswordValidation || formData.newPassword.length > 0
-                    }
-                  />
-                </div>
 
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.confirmNewPassword")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
+                    >
+                      {t("auth.password")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        required
+                        value={formData.password}
+                        onChange={(e) =>
+                          handleInputChange("password", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterPassword")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
                     </div>
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={(e) =>
-                        handleInputChange("confirmPassword", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.confirmNewPassword")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
 
-            {/* Profile Form */}
-            {mode === "profile" && (
-              <>
-                {isLoadingProfile && (
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center">
-                    <LoadingSpinner
-                      size="sm"
-                      color="border-blue-600"
-                      className="mr-2"
-                    />
-                    <p className="text-sm text-blue-600">
-                      {t("auth.loadingProfile")}
-                    </p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              {/* Signup Form */}
+              {mode === "signup" && (
+                <>
                   <div>
                     <label
                       htmlFor="firstName"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
                     >
                       {t("auth.firstName")}
                     </label>
@@ -1070,11 +664,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                         id="firstName"
                         name="firstName"
                         type="text"
+                        required
                         value={formData.firstName}
                         onChange={(e) =>
                           handleInputChange("firstName", e.target.value)
                         }
-                        className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
                         placeholder={t("auth.enterFirstName")}
                       />
                     </div>
@@ -1083,7 +678,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                   <div>
                     <label
                       htmlFor="lastName"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
                     >
                       {t("auth.lastName")}
                     </label>
@@ -1095,124 +690,547 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                         id="lastName"
                         name="lastName"
                         type="text"
+                        required
                         value={formData.lastName}
                         onChange={(e) =>
                           handleInputChange("lastName", e.target.value)
                         }
-                        className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
                         placeholder={t("auth.enterLastName")}
                       />
                     </div>
                   </div>
-                </div>
 
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
+                    >
+                      {t("auth.email")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) =>
+                          handleInputChange("email", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterEmail")}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="role"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
+                    >
+                      {t("auth.role")}
+                    </label>
+                    <select
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={(e) =>
+                        handleInputChange("role", e.target.value as Role)
+                      }
+                      className="mt-1 block w-full pl-3 pr-10 py-3 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl bg-gray-50 hover:bg-white transition-all duration-200"
+                    >
+                      <option value={Role.STUDENT}>{t("auth.student")}</option>
+                      {/* <option value={Role.TEACHER}>{t("auth.teacher")}</option> */}
+                    </select>
+                  </div>
+
+                  {formData.role === Role.STUDENT && (
+                    <div>
+                      <label
+                        htmlFor="grade"
+                        className="block text-sm font-semibold text-gray-700 mb-1"
+                      >
+                        {t("auth.grade")}
+                      </label>
+                      <select
+                        id="grade"
+                        name="grade"
+                        value={formData.grade}
+                        onChange={(e) =>
+                          handleInputChange("grade", parseInt(e.target.value))
+                        }
+                        className="mt-1 block w-full pl-3 pr-10 py-3 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl bg-gray-50 hover:bg-white transition-all duration-200"
+                      >
+                        {[6, 7, 8, 9, 10, 11, 12].map((grade) => (
+                          <option key={grade} value={grade}>
+                            {t("auth.gradeNumber", { grade })}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {formData.role === Role.TEACHER && (
+                    <div>
+                      <label
+                        htmlFor="subject"
+                        className="block text-sm font-semibold text-gray-700 mb-1"
+                      >
+                        {t("auth.subject")}
+                      </label>
+                      <select
+                        id="subject"
+                        name="subject"
+                        value={formData.subject}
+                        onChange={(e) =>
+                          handleInputChange("subject", e.target.value)
+                        }
+                        className="mt-1 block w-full pl-3 pr-10 py-3 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl bg-gray-50 hover:bg-white transition-all duration-200"
+                      >
+                        {Object.values(Subject).map((subject) => (
+                          <option key={subject} value={subject}>
+                            {t(`subjects.${subject.toLowerCase()}`)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
+                    >
+                      {t("auth.password")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        required
+                        value={formData.password}
+                        onChange={(e) =>
+                          handleInputChange("password", e.target.value)
+                        }
+                        onFocus={() => setPasswordFocused(true)}
+                        onBlur={() => setPasswordFocused(false)}
+                        className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterPassword")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
+                    <PasswordValidation
+                      password={formData.password}
+                      showValidation={
+                        passwordFocused || formData.password.length > 0
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
+                    >
+                      {t("auth.confirmPassword")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        required
+                        value={formData.confirmPassword}
+                        onChange={(e) =>
+                          handleInputChange("confirmPassword", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.confirmPassword")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Forgot Password Form */}
+              {mode === "forgot-password" && (
                 <div>
                   <label
-                    htmlFor="phone"
+                    htmlFor="email"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    {t("auth.phone")}
+                    {t("auth.email")}
                   </label>
                   <div className="mt-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={formData.email}
                       onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
+                        handleInputChange("email", e.target.value)
                       }
                       className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterPhone")}
+                      placeholder={t("auth.enterEmail")}
                     />
                   </div>
+                  <p className="mt-2 text-sm text-gray-600">
+                    {t("auth.forgotPasswordDescription")}
+                  </p>
                 </div>
+              )}
 
-                <div>
-                  <label
-                    htmlFor="dateOfBirth"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.dateOfBirth")}
-                  </label>
-                  <DateInput
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={(value) =>
-                      handleInputChange("dateOfBirth", value)
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="address"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.address")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <MapPin className="h-5 w-5 text-gray-400" />
+              {/* Change Password Form */}
+              {mode === "change-password" && (
+                <>
+                  <div>
+                    <label
+                      htmlFor="currentPassword"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
+                    >
+                      {t("auth.currentPassword")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Key className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="currentPassword"
+                        name="currentPassword"
+                        type={showCurrentPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        required
+                        value={formData.currentPassword}
+                        onChange={(e) =>
+                          handleInputChange("currentPassword", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterCurrentPassword")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() =>
+                          setShowCurrentPassword(!showCurrentPassword)
+                        }
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
                     </div>
-                    <input
-                      id="address"
-                      name="address"
-                      type="text"
-                      value={formData.address}
-                      onChange={(e) =>
-                        handleInputChange("address", e.target.value)
-                      }
-                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterAddress")}
-                    />
                   </div>
-                </div>
 
-                <div>
-                  <label
-                    htmlFor="school"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    {t("auth.school")}
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <School className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <label
+                      htmlFor="newPassword"
+                      className="block text-sm font-semibold text-gray-700 mb-1"
+                    >
+                      {t("auth.newPassword")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="newPassword"
+                        name="newPassword"
+                        type={showNewPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        required
+                        value={formData.newPassword}
+                        onChange={(e) =>
+                          handleInputChange("newPassword", e.target.value)
+                        }
+                        onFocus={() => setShowPasswordValidation(true)}
+                        onBlur={() => setShowPasswordValidation(false)}
+                        className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterNewPassword")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
                     </div>
-                    <input
-                      id="school"
-                      name="school"
-                      type="text"
-                      value={formData.school}
-                      onChange={(e) =>
-                        handleInputChange("school", e.target.value)
+                    <PasswordValidation
+                      password={formData.newPassword}
+                      showValidation={
+                        showPasswordValidation ||
+                        formData.newPassword.length > 0
                       }
-                      className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={t("auth.enterSchool")}
                     />
                   </div>
-                </div>
-              </>
-            )}
 
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading || (mode === "profile" && isLoadingProfile)}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {mode === "profile" && <Save className="h-5 w-5 mr-2" />}
-                {getSubmitText()}
-              </button>
-            </div>
-          </form>
+                  <div>
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      {t("auth.confirmNewPassword")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        required
+                        value={formData.confirmPassword}
+                        onChange={(e) =>
+                          handleInputChange("confirmPassword", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.confirmNewPassword")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
-          {/* {mode === "login" && (
+              {/* Profile Form */}
+              {mode === "profile" && (
+                <>
+                  {isLoadingProfile && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center">
+                      <LoadingSpinner
+                        size="sm"
+                        color="border-blue-600"
+                        className="mr-2"
+                      />
+                      <p className="text-sm text-blue-600">
+                        {t("auth.loadingProfile")}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                      <label
+                        htmlFor="firstName"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        {t("auth.firstName")}
+                      </label>
+                      <div className="mt-1 relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="firstName"
+                          name="firstName"
+                          type="text"
+                          value={formData.firstName}
+                          onChange={(e) =>
+                            handleInputChange("firstName", e.target.value)
+                          }
+                          className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                          placeholder={t("auth.enterFirstName")}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="lastName"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        {t("auth.lastName")}
+                      </label>
+                      <div className="mt-1 relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="lastName"
+                          name="lastName"
+                          type="text"
+                          value={formData.lastName}
+                          onChange={(e) =>
+                            handleInputChange("lastName", e.target.value)
+                          }
+                          className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                          placeholder={t("auth.enterLastName")}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      {t("auth.phone")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) =>
+                          handleInputChange("phone", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterPhone")}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="dateOfBirth"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      {t("auth.dateOfBirth")}
+                    </label>
+                    <DateInput
+                      id="dateOfBirth"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={(value) =>
+                        handleInputChange("dateOfBirth", value)
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="address"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      {t("auth.address")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <MapPin className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="address"
+                        name="address"
+                        type="text"
+                        value={formData.address}
+                        onChange={(e) =>
+                          handleInputChange("address", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterAddress")}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="school"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      {t("auth.school")}
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <School className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        id="school"
+                        name="school"
+                        type="text"
+                        value={formData.school}
+                        onChange={(e) =>
+                          handleInputChange("school", e.target.value)
+                        }
+                        className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                        placeholder={t("auth.enterSchool")}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={
+                    isLoading || (mode === "profile" && isLoadingProfile)
+                  }
+                  className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  {mode === "profile" && <Save className="h-5 w-5 mr-2" />}
+                  {getSubmitText()}
+                </button>
+              </div>
+            </form>
+
+            {/* {mode === "login" && (
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -1258,6 +1276,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
               </div>
             </div>
           )} */}
+          </div>
         </div>
       </div>
     </div>

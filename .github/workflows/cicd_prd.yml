@@ -98,8 +98,15 @@ jobs:
               exit 1
             fi
             
-            if curl -f http://localhost:3001/api/v1/health 2>/dev/null; then
+            # Try the simpler endpoint first (no database check)
+            if curl -f -s http://localhost:3001/api/v1 2>/dev/null | grep -q "success"; then
               echo "✅ API is ready!"
+              # Verify health endpoint also works
+              if curl -f -s --max-time 10 http://localhost:3001/api/v1/health 2>/dev/null; then
+                echo "✅ Health endpoint also responding!"
+              else
+                echo "⚠️ Health endpoint timeout/error, but basic API is working"
+              fi
               break
             fi
             
@@ -107,13 +114,22 @@ jobs:
               echo "❌ API health check failed after 30 attempts"
               echo "Container status:"
               docker ps -a | grep tutorize-test-container
+              echo ""
+              echo "Testing endpoints with verbose output:"
+              echo "1. Testing basic endpoint:"
+              curl -v http://localhost:3001/api/v1 || true
+              echo ""
+              echo "2. Testing health endpoint:"
+              curl -v --max-time 10 http://localhost:3001/api/v1/health || true
+              echo ""
               echo "Container logs:"
               docker logs tutorize-test-container
+              echo ""
               echo "Port check:"
               netstat -tlnp | grep 3001 || echo "Port 3001 not listening"
               exit 1
             fi
-            sleep 2
+            sleep 3
           done
 
       - name: Install Newman

@@ -2,7 +2,7 @@ import React from "react";
 import { LucideIcon } from "lucide-react";
 
 interface ActionButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   colorTheme?:
     | "blue"
     | "red"
@@ -21,6 +21,7 @@ interface ActionButtonProps {
   size?: "sm" | "md" | "lg";
   iconOnly?: boolean;
   title?: string;
+  type?: "button" | "submit" | "reset";
 }
 
 const colorThemes = {
@@ -59,6 +60,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   size = "sm",
   iconOnly = false,
   title,
+  type = "button",
 }) => {
   const baseClasses =
     "flex items-center justify-center rounded-lg font-medium transition-all shadow-md";
@@ -68,6 +70,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
 
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={disabled}
       title={title}

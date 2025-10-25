@@ -15,16 +15,16 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
 import { Header } from "./components/layout/Header";
-import { Footer } from "./components/layout/Footer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { LandingOrRedirect } from "./components/LandingOrRedirect";
 import { Modal } from "./components/ui";
 
 // Context and Hooks
 import { ModalProvider, useModal } from "./contexts/ModalContext";
 
 // Pages
-import { LandingPage } from "./pages/LandingPage";
 import { AuthForm } from "./pages/AuthForm";
+import { ProfilePage } from "./pages/ProfilePage";
 import { DocumentLibrary } from "./pages/DocumentLibrary";
 import { IeltsView } from "./pages/IeltsView";
 import { IeltsReadingSubmissionsList } from "./pages/IeltsReadingSubmissionsList";
@@ -56,16 +56,10 @@ function AppContent() {
         <Route
           path="/"
           element={
-            <>
-              <Header
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-              />
-              <main>
-                <LandingPage />
-              </main>
-              <Footer />
-            </>
+            <LandingOrRedirect
+              mobileMenuOpen={mobileMenuOpen}
+              setMobileMenuOpen={setMobileMenuOpen}
+            />
           }
         />
 
@@ -105,9 +99,7 @@ function AppContent() {
                 mobileMenuOpen={mobileMenuOpen}
                 setMobileMenuOpen={setMobileMenuOpen}
               />
-              <main>
-                <AuthForm mode="profile" />
-              </main>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
