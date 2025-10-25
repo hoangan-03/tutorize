@@ -32,7 +32,10 @@ export class AppService {
     } catch (error) {
       dbHealth = {
         status: 'unhealthy',
-        error: error.message || 'Database health check failed',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Database health check failed',
         timestamp: new Date().toISOString(),
       };
     }

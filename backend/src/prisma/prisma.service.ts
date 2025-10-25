@@ -32,7 +32,10 @@ export class PrismaService
     } catch (error) {
       return {
         status: 'unhealthy',
-        error: error.message || String(error),
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Database health check failed',
         timestamp: new Date().toISOString(),
       };
     }
