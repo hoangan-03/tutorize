@@ -82,14 +82,24 @@ jobs:
           CORS_ORIGIN=https://annguyen.software,https://www.annguyen.software
           EOF
       
-      - name: Run database migrations and seed data
+      - name: Run database migrations
         run: |
-          echo "Running database migrations and seeding test data..."
+          echo "Running database migrations..."
           docker run --rm \
             --network host \
             --env-file test.env \
             tutorize-backend:test \
-            sh -c "npx prisma db push && node dist/scripts/init-db.js"
+            npx prisma db push
+      
+      - name: Seed test data
+        run: |
+          echo "Seeding test data..."
+          docker run --rm \
+            --network host \
+            --env-file test.env \
+            tutorize-backend:test \
+            node dist/scripts/init-db.js
+        continue-on-error: true
 
       - name: Start test container
         run: |
