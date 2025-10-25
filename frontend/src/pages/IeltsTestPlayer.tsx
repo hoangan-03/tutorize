@@ -12,7 +12,7 @@ import {
   useIeltsTestManagement,
   useModal,
 } from "../hooks";
-import { ActionButton, LoadingSpinner } from "../components/ui";
+import { ActionButton } from "../components/ui";
 
 export type Answer = string;
 export type AnswerState = Record<number, Answer>;
