@@ -9,23 +9,6 @@ jobs:
   build-and-test:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    
-    # Add PostgreSQL service for testing
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: tutorize_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -47,26 +30,19 @@ jobs:
           tags: tutorize-backend:test
           load: true
           platforms: linux/amd64
-          no-cache: true
-      
-      - name: Verify Docker image contents
-        run: |
-          echo "Checking if dist/main.js exists in the image..."
-          docker run --rm tutorize-backend:test ls -la dist/ || echo "dist/ not found"
-          docker run --rm tutorize-backend:test ls -la dist/scripts/ || echo "dist/scripts/ not found"
 
       - name: Prepare test environment
         run: |
-          echo "Setting up test environment with test database..."
-          # Create a comprehensive test environment file
+          echo "Setting up test environment with production database (READ-ONLY)..."
           cat > test.env << EOF
           NODE_ENV=test
-          DATABASE_URL=postgresql://testuser:testpassword@localhost:5432/tutorize_test
+          DATABASE_URL=${{ secrets.PROD_DATABASE_URL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_ACCESS_EXPIRES_IN=15m
           JWT_REFRESH_EXPIRES_IN=7d
           BCRYPT_ROUNDS=10
           PORT=3000
+          READ_ONLY_MODE=true
 
           # Email service (dummy values for testing)
           SENDGRID_API_KEY=dummy_sendgrid_key_for_testing
@@ -88,32 +64,13 @@ jobs:
 
           CORS_ORIGIN=https://annguyen.software,https://www.annguyen.software
           EOF
-      
-      - name: Run database migrations
-        run: |
-          echo "Running database migrations..."
-          docker run --rm \
-            --network host \
-            --env-file test.env \
-            tutorize-backend:test \
-            npx prisma db push
-      
-      - name: Seed test data
-        run: |
-          echo "Seeding test data..."
-          docker run --rm \
-            --network host \
-            --env-file test.env \
-            tutorize-backend:test \
-            node dist/scripts/init-db.js
-        continue-on-error: true
 
       - name: Start test container
         run: |
-          echo "Starting test container with test database..."
+          echo "Starting test container with production database (READ-ONLY)..."
           docker run -d \
             --name tutorize-test-container \
-            --network host \
+            -p 3001:3000 \
             --env-file test.env \
             tutorize-backend:test
 
@@ -141,10 +98,10 @@ jobs:
             fi
             
             # Try the simpler endpoint first (no database check)
-            if curl -f -s http://localhost:3000/api/v1 2>/dev/null | grep -q "success"; then
+            if curl -f -s http://localhost:3001/api/v1 2>/dev/null | grep -q "success"; then
               echo "✅ API is ready!"
               # Verify health endpoint also works
-              if curl -f -s --max-time 10 http://localhost:3000/api/v1/health 2>/dev/null; then
+              if curl -f -s --max-time 10 http://localhost:3001/api/v1/health 2>/dev/null; then
                 echo "✅ Health endpoint also responding!"
               else
                 echo "⚠️ Health endpoint timeout/error, but basic API is working"
@@ -159,16 +116,16 @@ jobs:
               echo ""
               echo "Testing endpoints with verbose output:"
               echo "1. Testing basic endpoint:"
-              curl -v http://localhost:3000/api/v1 || true
+              curl -v http://localhost:3001/api/v1 || true
               echo ""
               echo "2. Testing health endpoint:"
-              curl -v --max-time 10 http://localhost:3000/api/v1/health || true
+              curl -v --max-time 10 http://localhost:3001/api/v1/health || true
               echo ""
               echo "Container logs:"
               docker logs tutorize-test-container
               echo ""
               echo "Port check:"
-              netstat -tlnp | grep 3000 || echo "Port 3000 not listening"
+              netstat -tlnp | grep 3001 || echo "Port 3001 not listening"
               exit 1
             fi
             sleep 3
@@ -180,7 +137,7 @@ jobs:
       - name: Configure test environment
         run: |
           # Update environment file for local testing (integration-test folder)
-          sed -i "s|https://api.annguyen.software/api/v1|http://localhost:3000/api/v1|g" integration-test/postman_environment.json
+          sed -i "s|https://api.annguyen.software/api/v1|http://localhost:3001/api/v1|g" integration-test/postman_environment.json
           sed -i "s/{{TEST_USER_EMAIL}}/${{ secrets.TEST_USER_EMAIL }}/g" integration-test/postman_environment.json
           sed -i "s/{{TEST_USER_PASSWORD}}/${{ secrets.TEST_USER_PASSWORD }}/g" integration-test/postman_environment.json
 
