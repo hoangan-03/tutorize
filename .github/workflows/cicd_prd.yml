@@ -47,6 +47,13 @@ jobs:
           tags: tutorize-backend:test
           load: true
           platforms: linux/amd64
+          no-cache: true
+      
+      - name: Verify Docker image contents
+        run: |
+          echo "Checking if dist/main.js exists in the image..."
+          docker run --rm tutorize-backend:test ls -la dist/ || echo "dist/ not found"
+          docker run --rm tutorize-backend:test ls -la dist/scripts/ || echo "dist/scripts/ not found"
 
       - name: Prepare test environment
         run: |

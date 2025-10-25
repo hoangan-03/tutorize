@@ -12,14 +12,22 @@ COPY prisma ./prisma
 COPY src ./src
 COPY scripts ./scripts
 
-# Generate Prisma Client and build app
+# Generate Prisma Client
 RUN npx prisma generate
+
+# Build app
 RUN npm run build
+
+# Verify main.js was created
+RUN test -f dist/main.js || (echo "ERROR: dist/main.js not found after build!" && exit 1)
 
 # Build scripts separately (for database seeding)
 RUN npx tsc scripts/*.ts --outDir dist/scripts --module commonjs --target ES2021 \
     --esModuleInterop --skipLibCheck --resolveJsonModule --allowSyntheticDefaultImports \
     --emitDecoratorMetadata --experimentalDecorators
+
+# Verify init-db.js was created
+RUN test -f dist/scripts/init-db.js || (echo "WARNING: dist/scripts/init-db.js not found, seed data may not work" && exit 0)
 
 # ---- Stage 2: Production ----
 FROM node:22-alpine AS production
@@ -52,8 +60,13 @@ COPY prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
 
-# Ensure scripts are available for seeding
-# dist/scripts already copied from builder stage's dist folder
+# Verify critical files exist in production image
+RUN test -f dist/main.js || (echo "FATAL: dist/main.js not found in production image!" && exit 1)
+RUN test -f dist/scripts/init-db.js || echo "Warning: dist/scripts/init-db.js not found"
+
+# List dist contents for debugging
+RUN echo "=== Production image dist/ contents ===" && ls -la dist/ && \
+    echo "=== Production image dist/scripts/ contents ===" && ls -la dist/scripts/ || echo "No scripts directory"
 
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
