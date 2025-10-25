@@ -21,7 +21,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (requireAdmin && !isTeacher) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/quiz" replace />;
   }
 
   return <>{children}</>;

@@ -173,7 +173,7 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     return exercise;
@@ -191,7 +191,7 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     // Check if user can see answers (Teacher or creator)
@@ -252,11 +252,13 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     if (exercise.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền cập nhật bài tập này');
+      throw new ForbiddenException(
+        'You do not have permission to update this exercise',
+      );
     }
 
     const updateData: any = { ...updateExerciseDto };
@@ -277,12 +279,12 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     if (exercise.createdBy !== userId) {
       throw new ForbiddenException(
-        'Không có quyền upload file cho bài tập này',
+        'You do not have permission to upload files for this exercise',
       );
     }
 
@@ -318,7 +320,7 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     if (!exercise.fileKey) {
@@ -343,12 +345,12 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     if (exercise.createdBy !== userId) {
       throw new ForbiddenException(
-        'Không có quyền thay đổi trạng thái bài tập này',
+        'You do not have permission to change this exercise status',
       );
     }
 
@@ -381,11 +383,13 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     if (exercise.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xóa bài tập này');
+      throw new ForbiddenException(
+        'You do not have permission to delete this exercise',
+      );
     }
 
     return this.prisma.exercise.delete({
@@ -403,7 +407,7 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     // Convert image links array to JSON string for storage
@@ -467,7 +471,7 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     if (user?.role !== $Enums.Role.TEACHER && exercise.createdBy !== userId) {
@@ -514,7 +518,7 @@ export class ExerciseService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp');
+      throw new NotFoundException('Submission not found');
     }
 
     // Only creator or admin can grade
@@ -526,7 +530,7 @@ export class ExerciseService {
       user?.role !== $Enums.Role.TEACHER ||
       submission.exercise.createdBy !== userId
     ) {
-      throw new ForbiddenException('Không có quyền chấm điểm');
+      throw new ForbiddenException('You do not have permission to grade');
     }
 
     const gradedSubmission = await this.prisma.exerciseSubmission.update({
@@ -697,7 +701,7 @@ export class ExerciseService {
       },
     });
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
     return exercise.maxScore || 10;
   }
@@ -772,16 +776,20 @@ export class ExerciseService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp');
+      throw new NotFoundException('Submission not found');
     }
 
     // Check permission: student can only see their own submission, teacher can see all
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (user?.role === 'STUDENT' && submission.userId !== userId) {
-      throw new ForbiddenException('Không có quyền xem bài nộp này');
+      throw new ForbiddenException(
+        'You do not have permission to view this submission',
+      );
     }
     if (user?.role === 'TEACHER' && submission.exercise.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xem bài nộp này');
+      throw new ForbiddenException(
+        'You do not have permission to view this submission',
+      );
     }
 
     return submission;
@@ -798,17 +806,19 @@ export class ExerciseService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp');
+      throw new NotFoundException('Submission not found');
     }
 
     // Only the student who submitted can update their submission
     if (submission.userId !== userId) {
-      throw new ForbiddenException('Không có quyền cập nhật bài nộp này');
+      throw new ForbiddenException(
+        'You do not have permission to update this submission',
+      );
     }
 
     // Check if exercise is still active
     if (submission.exercise.status !== 'ACTIVE') {
-      throw new BadRequestException('Bài tập không còn hoạt động');
+      throw new BadRequestException('Exercise is no longer active');
     }
 
     // Check deadline
@@ -857,18 +867,20 @@ export class ExerciseService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp');
+      throw new NotFoundException('Submission not found');
     }
 
     // Only the student who submitted can delete their submission
     if (submission.userId !== userId) {
-      throw new ForbiddenException('Không có quyền xóa bài nộp này');
+      throw new ForbiddenException(
+        'You do not have permission to delete this submission',
+      );
     }
 
     // Check if exercise is still active
     if (submission.exercise.status !== 'ACTIVE') {
       throw new BadRequestException(
-        'Bài tập không còn hoạt động, không thể xóa bài nộp',
+        'Exercise is no longer active, cannot delete submission',
       );
     }
 
@@ -877,7 +889,9 @@ export class ExerciseService {
       submission.exercise.deadline &&
       new Date() > submission.exercise.deadline
     ) {
-      throw new BadRequestException('Đã hết hạn, không thể xóa bài nộp');
+      throw new BadRequestException(
+        'Deadline passed, cannot delete submission',
+      );
     }
 
     await this.prisma.exerciseSubmission.delete({
@@ -899,11 +913,11 @@ export class ExerciseService {
     });
 
     if (!exercise) {
-      throw new NotFoundException('Không tìm thấy bài tập');
+      throw new NotFoundException('Exercise not found');
     }
 
     if (!exercise.fileKey) {
-      throw new NotFoundException('Không tìm thấy file đính kèm');
+      throw new NotFoundException('Attachment not found');
     }
 
     try {

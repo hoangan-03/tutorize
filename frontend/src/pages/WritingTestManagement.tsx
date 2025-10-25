@@ -6,7 +6,7 @@ import {
   useIeltsWritingTestManagement,
   useIeltsWritingTestById,
 } from "../hooks";
-import { RichTextEditor, ActionButton } from "../components/ui";
+import { RichTextEditor, ActionButton, LoadingSpinner } from "../components/ui";
 
 interface WritingTestManageProps {
   onBack: () => void;
@@ -85,7 +85,7 @@ export const WritingTestManagement: React.FC<WritingTestManageProps> = ({
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        <LoadingSpinner />
       </div>
     );
   }

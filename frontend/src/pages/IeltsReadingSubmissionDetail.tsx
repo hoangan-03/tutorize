@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { useIeltsReadingSubmissionDetails } from "../hooks";
 import { IeltsResultTeacherView } from "./IeltsResultTeacherView";
-import { ActionButton } from "../components/ui";
+import { ActionButton, LoadingSpinner, ErrorDisplay } from "../components/ui";
 import { ArrowLeft } from "lucide-react";
 
 export const IeltsReadingSubmissionDetail: React.FC = () => {
@@ -21,25 +21,19 @@ export const IeltsReadingSubmissionDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        <LoadingSpinner />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center p-8">
-        <h2 className="text-xl text-red-600 mb-4">{t("common.error")}</h2>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <ActionButton
-          onClick={() => navigate("/ielts/submissions")}
-          colorTheme="gray"
-          hasIcon={true}
-          icon={ArrowLeft}
-          text={t("common.back")}
-          size="md"
-        />
-      </div>
+      <ErrorDisplay
+        title={t("common.error")}
+        message={error}
+        onBack={() => navigate("/ielts/submissions")}
+        backText={t("common.back")}
+      />
     );
   }
 

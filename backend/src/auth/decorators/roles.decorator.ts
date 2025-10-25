@@ -1,5 +1,13 @@
 import { SetMetadata } from '@nestjs/common';
-import { Role } from '@prisma/client';
-import { ROLES_KEY } from '../guards/roles.guard';
+import { $Enums } from '@prisma/client';
 
-export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
+export const ROLES_KEY = 'roles';
+
+/**
+ * Decorator để chỉ định roles được phép truy cập endpoint
+ *
+ * Usage:
+ * @Roles(Role.TEACHER)
+ * @Roles(Role.TEACHER, Role.ADMIN)
+ */
+export const Roles = (...roles: $Enums.Role[]) => SetMetadata(ROLES_KEY, roles);

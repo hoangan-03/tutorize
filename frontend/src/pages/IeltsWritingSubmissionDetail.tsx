@@ -16,7 +16,7 @@ import {
   useIeltsWritingSubmissionForGrading,
   useModal,
 } from "../hooks";
-import { Badge } from "../components/ui";
+import { Badge, LoadingSpinner } from "../components/ui";
 
 export const IeltsWritingSubmissionDetail: React.FC = () => {
   const { submissionId } = useParams<{
@@ -368,7 +368,11 @@ export const IeltsWritingSubmissionDetail: React.FC = () => {
               >
                 {isGrading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <LoadingSpinner
+                      size="sm"
+                      color="border-white"
+                      className="mr-2"
+                    />
                     {t("ieltsWriting.submission.submittingGrade")}
                   </>
                 ) : (

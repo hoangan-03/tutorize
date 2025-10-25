@@ -9,6 +9,7 @@ import {
 
 class AuthService {
   private readonly TOKEN_KEY = "auth_token";
+  private readonly REFRESH_TOKEN_KEY = "refresh_token";
   private readonly USER_KEY = "auth_user";
 
   // Token management
@@ -19,6 +20,15 @@ class AuthService {
   getToken(): string | null {
     const token = localStorage.getItem(this.TOKEN_KEY);
     return token;
+  }
+
+  // Refresh token management
+  saveRefreshToken(refreshToken: string): void {
+    localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   // User management
@@ -35,12 +45,37 @@ class AuthService {
   // Clear authentication data
   clearAuth(): void {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
   }
 
   // Check if user is authenticated
   isAuthenticated(): boolean {
     return !!this.getToken() && !!this.getUser();
+  }
+
+  /**
+   * Refresh access token using refresh token
+   * This is called automatically by axios interceptor when access token expires
+   */
+  async refreshAccessToken(): Promise<{
+    accessToken: string;
+    tokenType: string;
+    expiresIn: string;
+  }> {
+    const refreshToken = this.getRefreshToken();
+
+    if (!refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
+    const response = await api.post<{
+      accessToken: string;
+      tokenType: string;
+      expiresIn: string;
+    }>("/auth/refresh", { refreshToken });
+
+    return response.data;
   }
 
   // Authentication methods
@@ -56,7 +91,8 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      await api.post("/auth/logout");
+      const token = this.getToken();
+      await api.post("/auth/logout", { token });
     } catch (error) {
       // Even if logout API fails, clear local storage
       console.error("Logout API error:", error);

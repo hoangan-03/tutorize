@@ -21,7 +21,7 @@ import { QuizPreviewTeacherView } from "./QuizPreviewTeacherView";
 import { Quiz, QuizStatus, Question } from "../types/api";
 import { formatDate, getStatusColor } from "../components/utils";
 import { useQuizzes, useQuizManagement, useTeacherStats } from "../hooks";
-import { StatCard } from "../components/ui";
+import { StatCard, LoadingSpinner } from "../components/ui";
 
 export const QuizManagementTeacherView: React.FC = () => {
   const navigate = useNavigate();
@@ -246,7 +246,7 @@ export const QuizManagementTeacherView: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             {loading ? (
               <div className="flex justify-center items-center py-16">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                <LoadingSpinner color="border-blue-600" />
               </div>
             ) : quizzes.length === 0 ? (
               <div className="text-center py-16">

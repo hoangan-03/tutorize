@@ -13,7 +13,7 @@ import { Exercise, ExerciseStatus } from "../types/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../components/utils";
-import { StatCard, Badge } from "../components/ui";
+import { StatCard, Badge, LoadingSpinner, EmptyState } from "../components/ui";
 
 export const ExerciseListStudentView: React.FC = () => {
   const { isTeacher } = useAuth();
@@ -129,7 +129,7 @@ export const ExerciseListStudentView: React.FC = () => {
         {/* Exercises Grid */}
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <LoadingSpinner size="sm" color="border-blue-600" />
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -218,15 +218,11 @@ export const ExerciseListStudentView: React.FC = () => {
         )}
 
         {exercises.length === 0 && !isLoading && (
-          <div className="text-center py-12">
-            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {t("exercisePublicView.noExercises")}
-            </h3>
-            <p className="text-gray-600">
-              {t("exercisePublicView.noExercisesDescription")}
-            </p>
-          </div>
+          <EmptyState
+            icon={<BookOpen className="h-12 w-12" />}
+            title={t("exercisePublicView.noExercises")}
+            description={t("exercisePublicView.noExercisesDescription")}
+          />
         )}
       </div>
     </div>

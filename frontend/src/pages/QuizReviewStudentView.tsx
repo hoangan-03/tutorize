@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuizSubmissionForReview } from "../hooks";
-import { ActionButton } from "../components/ui";
+import { ActionButton, LoadingSpinner } from "../components/ui";
 
 interface ApiError extends Error {
   response?: {
@@ -100,7 +100,9 @@ export const QuizStudentReview: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="flex justify-center mb-4">
+            <LoadingSpinner size="sm" color="border-blue-600" />
+          </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             {t("quizzes.submission.loading")}
           </h2>

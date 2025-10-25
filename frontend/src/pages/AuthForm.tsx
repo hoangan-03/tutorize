@@ -24,7 +24,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { convertISOToDMY } from "../components/utils";
 import { Role, Subject } from "../types/api";
-import { ActionButton, DateInput } from "../components/ui";
+import { ActionButton, DateInput, LoadingSpinner } from "../components/ui";
 
 interface AuthFormProps {
   mode: "login" | "signup" | "forgot-password" | "change-password" | "profile";
@@ -1043,7 +1043,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
               <>
                 {isLoadingProfile && (
                   <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    <LoadingSpinner
+                      size="sm"
+                      color="border-blue-600"
+                      className="mr-2"
+                    />
                     <p className="text-sm text-blue-600">
                       {t("auth.loadingProfile")}
                     </p>

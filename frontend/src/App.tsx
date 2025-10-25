@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 // Contexts
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
 import { Header } from "./components/layout/Header";
@@ -43,15 +43,7 @@ import { IeltsTestPlayer } from "./pages/IeltsTestPlayer";
 import { IeltsWritingResultPage } from "./pages/IeltsWritingResultPage";
 import { IeltsWritingSubmissionsList } from "./pages/IeltsWritingSubmissionsList";
 import { IeltsWritingSubmissionDetail } from "./pages/IeltsWritingSubmissionDetail";
-import { Role } from "./types/api";
 import { IeltsResultStudentView } from "./pages/IeltsResultStudentView";
-
-const RoleBasedRedirect = () => {
-  const { user } = useAuth();
-  const isTeacher = user?.role === Role.TEACHER;
-
-  return <Navigate to={isTeacher ? "/quiz" : "/quizzes"} replace />;
-};
 
 function AppContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -131,16 +123,6 @@ function AppContent() {
               <main>
                 <AuthForm mode="change-password" />
               </main>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirect dashboard to role-based page */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <RoleBasedRedirect />
             </ProtectedRoute>
           }
         />

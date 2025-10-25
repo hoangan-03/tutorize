@@ -172,6 +172,7 @@ export interface RegisterRequest {
 export interface AuthResponse {
   user: User;
   accessToken: string;
+  refreshToken?: string; // Optional for backward compatibility
   tokenType: string;
   expiresIn: string;
 }

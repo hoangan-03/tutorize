@@ -5,6 +5,7 @@ import { useIeltsReadingAllSubmissions } from "../hooks";
 import { IeltsSkill, IeltsLevel } from "../types/api";
 import { BookOpen, Calendar, User, Eye, BarChart3, Search } from "lucide-react";
 import { getBandScoreColor, getLevelInfo } from "../components/utils";
+import { LoadingSpinner } from "../components/ui";
 
 export const IeltsReadingSubmissionsList: React.FC = () => {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ export const IeltsReadingSubmissionsList: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        <LoadingSpinner />
       </div>
     );
   }

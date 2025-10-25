@@ -202,7 +202,7 @@ API docs (after backend started):
 
 Environment variables (important)
 - `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET`, `JWT_EXPIRES_IN` - auth config
+- `JWT_SECRET`, `JWT_ACCESS_EXPIRES_IN` , `JWT_REFRESH_EXPIRES_IN` - auth config
 - `AWS_S3_*`, `CLOUDINARY_*` - file storage
 - `SENDGRID_API_KEY` - email
 - `PORT` - server port

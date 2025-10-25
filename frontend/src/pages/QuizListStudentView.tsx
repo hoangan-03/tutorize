@@ -32,7 +32,13 @@ import {
 } from "../hooks";
 import { mutate } from "swr";
 import { formatDate, formatDateTime } from "../components/utils";
-import { ActionButton, Badge, StatCard } from "../components/ui";
+import {
+  ActionButton,
+  Badge,
+  StatCard,
+  LoadingSpinner,
+  EmptyState,
+} from "../components/ui";
 
 export const QuizListStudentView: React.FC = () => {
   const { user } = useAuth();
@@ -1477,7 +1483,9 @@ export const QuizListStudentView: React.FC = () => {
       <div className="p-3 lg:p-8">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="flex justify-center mb-4">
+              <LoadingSpinner size="sm" color="border-blue-600" />
+            </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t("common.loading")}
             </h2>
@@ -1554,7 +1562,7 @@ export const QuizListStudentView: React.FC = () => {
           {/* Quizzes Grid */}
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <LoadingSpinner size="sm" color="border-blue-600" />
             </div>
           ) : (
             <div className="max-w-8xl mx-auto">
@@ -1779,15 +1787,11 @@ export const QuizListStudentView: React.FC = () => {
           )}
 
           {quizzes.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Chưa có quiz nào
-              </h3>
-              <p className="text-gray-600">
-                Các quiz sẽ hiển thị ở đây khi giáo viên tạo.
-              </p>
-            </div>
+            <EmptyState
+              icon={<FileText className="h-16 w-16" />}
+              title="Chưa có quiz nào"
+              description="Các quiz sẽ hiển thị ở đây khi giáo viên tạo."
+            />
           )}
         </>
       </div>

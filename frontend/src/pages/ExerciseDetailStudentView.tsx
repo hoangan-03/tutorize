@@ -28,6 +28,7 @@ import {
   SubmissionStatus,
 } from "../types/api";
 import { useAuth } from "../contexts/AuthContext";
+import { LoadingSpinner } from "../components/ui";
 import { useTranslation } from "react-i18next";
 import { PDFViewer, ActionButton, Badge } from "../components/ui";
 import { exerciseService } from "../services/exerciseService";
@@ -373,7 +374,7 @@ export const ExerciseDetailStudentView: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-8">
         <div className="mx-auto p-2 lg:p-6 lg:px-16 xl:px-20">
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <LoadingSpinner size="sm" color="border-blue-600" />
           </div>
         </div>
       </div>
@@ -1031,7 +1032,11 @@ export const ExerciseDetailStudentView: React.FC = () => {
                         text={
                           isSubmitting ? (
                             <div className="flex items-center justify-center">
-                              <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
+                              <LoadingSpinner
+                                size="sm"
+                                color="border-white"
+                                className="mr-2"
+                              />
                               {existingSubmission && editing
                                 ? t("exercises.updating")
                                 : t("exercises.submitting")}

@@ -1,40 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, ReactNode } from "react";
-import { useAuth as useRealAuth } from "../hooks/useAuth";
-import {
-  User,
-  LoginRequest,
-  RegisterRequest,
-  UpdateProfileRequest,
-  AuthResponse,
-  Role,
-} from "../types/api";
+import { useAuth as useRealAuth, UseAuthReturn } from "../hooks/useAuth";
+import { Role } from "../types/api";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { useAuth } from "../hooks/useAuth";
 
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  login: (credentials: LoginRequest) => Promise<AuthResponse>;
-  register: (userData: RegisterRequest) => Promise<AuthResponse>;
-  logout: () => Promise<void>;
-  updateProfile: (
-    data: UpdateProfileRequest
-  ) => Promise<{ message: string; profile: any }>;
-  changePassword: (data: {
-    currentPassword: string;
-    newPassword: string;
-  }) => Promise<{ message: string }>;
-  forgotPassword: (
-    email: string
-  ) => Promise<{ message: string; tempPassword?: string }>;
-  refreshUser: () => Promise<void>;
-  clearError: () => void;
-
-  isTeacher: boolean;
+interface AuthContextType extends UseAuthReturn {
   isStudent: boolean;
   loginDemo: () => void;
 }

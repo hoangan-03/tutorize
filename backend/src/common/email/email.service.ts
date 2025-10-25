@@ -179,7 +179,7 @@ export class EmailService {
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${this.frontendUrl}/dashboard" 
+              <a href="${this.frontendUrl}/quiz" 
                  style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
                 Bắt đầu học ngay
               </a>

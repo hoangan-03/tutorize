@@ -9,7 +9,7 @@ import {
   Role,
 } from "../types/api";
 
-interface UseAuthReturn {
+export interface UseAuthReturn {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -64,6 +64,12 @@ export const useAuth = (): UseAuthReturn => {
 
     authService.saveToken(response.accessToken);
     authService.saveUser(response.user);
+
+    // Save refresh token if available
+    if (response.refreshToken) {
+      authService.saveRefreshToken(response.refreshToken);
+    }
+
     setUser(response.user);
     setToken(response.accessToken);
 
@@ -79,6 +85,12 @@ export const useAuth = (): UseAuthReturn => {
 
     authService.saveToken(response.accessToken);
     authService.saveUser(response.user);
+
+    // Save refresh token if available
+    if (response.refreshToken) {
+      authService.saveRefreshToken(response.refreshToken);
+    }
+
     setUser(response.user);
     setToken(response.accessToken);
 

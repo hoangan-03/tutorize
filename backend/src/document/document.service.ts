@@ -112,12 +112,14 @@ export class DocumentService {
     });
 
     if (!document) {
-      throw new NotFoundException('Không tìm thấy tài liệu');
+      throw new NotFoundException('Document not found');
     }
 
     // Check access permission
     if (document.uploadedBy !== userId) {
-      throw new ForbiddenException('Không có quyền truy cập tài liệu này');
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
     }
 
     return document;
@@ -133,11 +135,13 @@ export class DocumentService {
     });
 
     if (!document) {
-      throw new NotFoundException('Không tìm thấy tài liệu');
+      throw new NotFoundException('Document not found');
     }
 
     if (document.uploadedBy !== userId) {
-      throw new ForbiddenException('Không có quyền cập nhật tài liệu này');
+      throw new ForbiddenException(
+        'You do not have permission to update this document',
+      );
     }
 
     return this.prisma.document.update({
@@ -152,11 +156,13 @@ export class DocumentService {
     });
 
     if (!document) {
-      throw new NotFoundException('Không tìm thấy tài liệu');
+      throw new NotFoundException('Document not found');
     }
 
     if (document.uploadedBy !== userId) {
-      throw new ForbiddenException('Không có quyền xóa tài liệu này');
+      throw new ForbiddenException(
+        'You do not have permission to delete this document',
+      );
     }
 
     // Delete file from filesystem if it exists

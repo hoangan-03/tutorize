@@ -25,7 +25,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExercises, useExerciseManagement } from "../hooks";
 import { Exercise, Subject, ExerciseStatus } from "../types/api";
-import { Badge } from "../components/ui";
+import { Badge, LoadingSpinner } from "../components/ui";
 import { formatDate, getDefaultDeadline } from "../components/utils";
 
 export const ExerciseListTeacherView: React.FC = () => {
@@ -409,7 +409,7 @@ export const ExerciseListTeacherView: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {isLoading ? (
             <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+              <LoadingSpinner color="border-blue-600" />
             </div>
           ) : exercises.length === 0 ? (
             <div className="text-center py-16">

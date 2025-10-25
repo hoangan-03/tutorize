@@ -14,11 +14,13 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
+  // Enable CORS with credentials support (for httpOnly cookies)
   app.enableCors({
     origin: process.env.CORS_ORIGIN
       ? process.env.CORS_ORIGIN.split(',')
       : ['http://localhost:5173'],
-    credentials: true,
+    credentials: true, // Allow cookies to be sent cross-origin
+    exposedHeaders: ['set-cookie'], // Expose set-cookie header
   });
 
   app.useGlobalPipes(

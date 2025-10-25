@@ -13,6 +13,7 @@ import {
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { ActionButton } from "./ActionButton";
+import { LoadingSpinner } from "./LoadingSpinner";
 import { t } from "i18next";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
@@ -139,6 +140,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
               onClick={goToPrevPage}
               disabled={pageNumber <= 1}
               className="p-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              title="Previous Page"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -151,6 +153,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
               onClick={goToNextPage}
               disabled={pageNumber >= numPages}
               className="p-2 rounded-md border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              title="Next Page"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -160,6 +163,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
             <button
               onClick={zoomOut}
               className="p-2 rounded-md border border-gray-300 hover:bg-gray-50"
+              title="Zoom Out"
             >
               <ZoomOut className="h-4 w-4" />
             </button>
@@ -171,6 +175,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
             <button
               onClick={zoomIn}
               className="p-2 rounded-md border border-gray-300 hover:bg-gray-50"
+              title="Zoom In"
             >
               <ZoomIn className="h-4 w-4" />
             </button>
@@ -179,7 +184,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
               onClick={downloadFile}
               colorTheme="blue"
               textColor="text-white"
-              hasIcon={true}
+              hasIcon={true}  
               icon={Download}
               text={t("exercises.downloadPDF")}
               className="border border-white/20 backdrop-blur-sm"
@@ -192,7 +197,9 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
       <div className="p-4">
         {loading && (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="flex justify-center">
+              <LoadingSpinner size="sm" color="border-blue-600" />
+            </div>
             <p className="text-gray-600 mt-2">Loading...</p>
           </div>
         )}

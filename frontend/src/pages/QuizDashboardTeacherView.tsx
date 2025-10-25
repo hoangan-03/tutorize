@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { ActionButton } from "../components/ui";
+import { ActionButton, LoadingSpinner } from "../components/ui";
 import React, { useState } from "react";
 import {
   Users,
@@ -95,7 +95,7 @@ export const QuizDashboard: React.FC<QuizDashboardProps> = ({
     return (
       <div className="max-w-8xl mx-auto">
         <div className="flex justify-center items-center py-16">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+          <LoadingSpinner color="border-blue-600" />
         </div>
       </div>
     );
@@ -530,7 +530,9 @@ export const QuizDashboardTeacherView: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="flex justify-center mb-4">
+            <LoadingSpinner size="sm" color="border-blue-600" />
+          </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             Đang tải thống kê quiz
           </h2>

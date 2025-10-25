@@ -22,13 +22,12 @@ import { IeltsTestForm } from "./IeltsTestForm";
 import { WritingTestManagement } from "./WritingTestManagement";
 import { BookOpen, Plus, PenSquare } from "lucide-react";
 import { formatDateTime } from "../components/utils";
-import { RichTextEditor } from "../components/ui";
+import { RichTextEditor, LoadingSpinner, EmptyState } from "../components/ui";
 import {
   IeltsStatsCards,
   IeltsTestCard,
   WritingTaskCard,
   IeltsItemRow,
-  EmptyState,
 } from "./IeltsComponents";
 
 const StudentIeltsView: React.FC<{
@@ -84,7 +83,7 @@ const StudentIeltsView: React.FC<{
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -452,7 +451,7 @@ const TeacherIeltsView: React.FC<{
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {loading ? (
             <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+              <LoadingSpinner />
             </div>
           ) : readingTests.length === 0 ? (
             <EmptyState

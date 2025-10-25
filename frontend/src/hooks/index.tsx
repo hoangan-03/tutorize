@@ -60,3 +60,5 @@ export {
 } from "./useDocuments";
 
 export { useModal } from "../contexts/ModalContext";
+
+export { useFormInput } from "./useFormInput";

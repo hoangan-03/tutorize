@@ -23,7 +23,7 @@ export class UserService {
     });
 
     if (existingUser) {
-      throw new ConflictException('Email đã được sử dụng');
+      throw new ConflictException('Email already in use');
     }
 
     // Hash password
@@ -122,7 +122,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException('User not found');
     }
 
     // Remove password from response
@@ -141,7 +141,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException('User not found');
     }
 
     // Only admin can update other users, users can update themselves
@@ -151,7 +151,9 @@ export class UserService {
     });
 
     if (currentUser?.role !== $Enums.Role.TEACHER && currentUserId !== id) {
-      throw new ForbiddenException('Không có quyền cập nhật người dùng này');
+      throw new ForbiddenException(
+        'You do not have permission to update this user',
+      );
     }
 
     const { password, ...updateData } = updateUserDto;
@@ -185,7 +187,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('Không tìm thấy người dùng');
+      throw new NotFoundException('User not found');
     }
 
     const updatedUser = await this.prisma.user.update({

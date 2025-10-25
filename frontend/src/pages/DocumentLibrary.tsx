@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, Download, Eye, BookOpen } from "lucide-react";
 import { useDocuments } from "../hooks/useDocuments";
-import { Badge } from "../components/ui";
+import { Badge, LoadingSpinner } from "../components/ui";
 
 export const DocumentLibrary: React.FC = () => {
   const { t } = useTranslation();
@@ -104,7 +104,7 @@ export const DocumentLibrary: React.FC = () => {
       {/* Documents Grid */}
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <LoadingSpinner size="sm" color="border-blue-600" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

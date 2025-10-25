@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useIeltsWritingTestSubmissions, useIeltsWritingTest } from "../hooks";
 import { IeltsWritingSubmission, IeltsWritingTest } from "@/types/api";
+import { LoadingSpinner } from "../components/ui";
 
 export const IeltsWritingSubmissionsList: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -135,7 +136,9 @@ export const IeltsWritingSubmissionsList: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {isLoading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="flex justify-center">
+                <LoadingSpinner size="sm" color="border-blue-600" />
+              </div>
               <p className="mt-2 text-gray-600">{t("common.loading")}</p>
             </div>
           ) : submissions && submissions.length > 0 ? (

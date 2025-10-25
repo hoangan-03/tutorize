@@ -263,7 +263,7 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     // Hide correct answers for students
@@ -295,7 +295,7 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     // Check if user can see answers
@@ -346,7 +346,7 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     // Only creator or admin can update
@@ -355,7 +355,9 @@ export class QuizService {
     });
 
     if (user?.role !== 'TEACHER' && quiz.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền cập nhật quiz này');
+      throw new ForbiddenException(
+        'You do not have permission to update this quiz',
+      );
     }
 
     // Exclude non-persisted fields (showResultsImmediately) during update as well
@@ -487,7 +489,7 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     // Only creator or admin can delete
@@ -496,7 +498,9 @@ export class QuizService {
     });
 
     if (user?.role !== Role.TEACHER && quiz.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xóa quiz này');
+      throw new ForbiddenException(
+        'You do not have permission to delete this quiz',
+      );
     }
 
     await this.prisma.quiz.delete({
@@ -516,7 +520,7 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     // Only creator or admin can update status
@@ -526,7 +530,7 @@ export class QuizService {
 
     if (user?.role !== Role.TEACHER && quiz.createdBy !== userId) {
       throw new ForbiddenException(
-        'Không có quyền cập nhật trạng thái quiz này',
+        'You do not have permission to update this quiz status',
       );
     }
 
@@ -639,7 +643,7 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     if (quiz.status !== 'ACTIVE') {
@@ -747,7 +751,7 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     if (user?.role !== 'TEACHER' && quiz.createdBy !== userId) {
@@ -800,7 +804,7 @@ export class QuizService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp');
+      throw new NotFoundException('Submission not found');
     }
 
     // Only creator or admin can grade
@@ -809,7 +813,7 @@ export class QuizService {
     });
 
     if (user?.role !== 'TEACHER' && submission.quiz.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền chấm điểm');
+      throw new ForbiddenException('You do not have permission to grade');
     }
 
     const gradedSubmission = await this.prisma.quizSubmission.update({
@@ -1016,7 +1020,7 @@ export class QuizService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp');
+      throw new NotFoundException('Submission not found');
     }
 
     // Check permission: user can view their own submission or teacher can view submissions for their quizzes
@@ -1102,12 +1106,12 @@ export class QuizService {
     });
 
     if (!quiz) {
-      throw new NotFoundException('Không tìm thấy quiz');
+      throw new NotFoundException('Quiz not found');
     }
 
     // Check if the quiz allows review
     if (!quiz.isAllowedReviewed) {
-      throw new ForbiddenException('Quiz này không cho phép xem lại bài làm');
+      throw new ForbiddenException('This quiz does not allow review');
     }
 
     // Get the submission
@@ -1165,7 +1169,7 @@ export class QuizService {
     });
 
     if (!submission) {
-      throw new NotFoundException('Không tìm thấy bài nộp');
+      throw new NotFoundException('Submission not found');
     }
 
     // Check if this submission belongs to the specified quiz
@@ -1356,7 +1360,9 @@ export class QuizService {
     });
 
     if (!quiz || quiz.createdBy !== userId) {
-      throw new ForbiddenException('Không có quyền xem thống kê quiz này');
+      throw new ForbiddenException(
+        'You do not have permission to view this quiz statistics',
+      );
     }
 
     // Get submissions for this quiz

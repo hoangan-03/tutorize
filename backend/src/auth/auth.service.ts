@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../common/email/email.service';
+import { TokenBlacklistService } from './services/token-blacklist.service';
 import {
   RegisterDto,
   LoginDto,
@@ -28,6 +29,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
+    private tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -292,20 +294,131 @@ export class AuthService {
     };
   }
 
+  /**
+   * Generate access and refresh tokens for user
+   * Access token: short-lived (15 minutes)
+   * Refresh token: long-lived (7 days)
+   */
   private async generateTokens(user: any) {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      type: 'access',
     };
 
-    const accessToken = this.jwtService.sign(payload);
+    const refreshPayload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      type: 'refresh',
+    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
+    });
+
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
+    });
 
     return {
       accessToken,
+      refreshToken,
       tokenType: 'Bearer',
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
+      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
     };
+  }
+
+  /**
+   * Logout user by blacklisting their token
+   * @param token JWT token to blacklist
+   */
+  async logout(token: string): Promise<{ message: string }> {
+    try {
+      // Verify token trước khi blacklist
+      const decoded = this.jwtService.decode(token) as JwtPayload;
+
+      if (!decoded || !decoded.exp) {
+        throw new BadRequestException('Token không hợp lệ');
+      }
+
+      // Tính thời gian còn lại của token
+      const expiresIn = decoded.exp * 1000 - Date.now();
+
+      if (expiresIn > 0) {
+        // Chỉ blacklist token nếu còn hạn
+        this.tokenBlacklistService.addToBlacklist(token, expiresIn);
+      }
+
+      return { message: 'Đăng xuất thành công' };
+    } catch (error) {
+      // Ngay cả khi có lỗi, vẫn return success để không leak thông tin
+      return { message: 'Đăng xuất thành công' };
+    }
+  }
+
+  /**
+   * Refresh access token using refresh token
+   * @param refreshToken Refresh token
+   */
+  async refreshAccessToken(refreshToken: string) {
+    try {
+      // Verify refresh token
+      const payload = this.jwtService.verify<JwtPayload>(refreshToken);
+
+      // Check if it's a refresh token
+      if (payload.type !== 'refresh') {
+        throw new UnauthorizedException('Token không hợp lệ');
+      }
+
+      // Check if token is blacklisted
+      if (this.tokenBlacklistService.isBlacklisted(refreshToken)) {
+        throw new UnauthorizedException(
+          'Token đã bị thu hồi - vui lòng đăng nhập lại',
+        );
+      }
+
+      // Get user from database
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        include: { profile: true },
+      });
+
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException(
+          'Người dùng không tồn tại hoặc đã bị khóa',
+        );
+      }
+
+      // Generate new access token
+      const newPayload: JwtPayload = {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        type: 'access',
+      };
+
+      const accessToken = this.jwtService.sign(newPayload, {
+        expiresIn: this.configService.get<string>(
+          'JWT_ACCESS_EXPIRES_IN',
+          '15m',
+        ),
+      });
+
+      return {
+        accessToken,
+        tokenType: 'Bearer',
+        expiresIn: this.configService.get<string>(
+          'JWT_ACCESS_EXPIRES_IN',
+          '15m',
+        ),
+      };
+    } catch (error) {
+      throw new UnauthorizedException(
+        'Refresh token không hợp lệ hoặc đã hết hạn',
+      );
+    }
   }
 
   async validateUser(email: string, password: string) {

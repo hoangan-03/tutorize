@@ -10,6 +10,7 @@ import {
   BookOpenIcon,
 } from "@heroicons/react/24/solid";
 import { formatDateTime } from "../components/utils";
+import { LoadingSpinner, ErrorDisplay } from "../components/ui";
 
 export const IeltsResultStudentView: React.FC = () => {
   const { submissionId } = useParams<{ submissionId: string }>();
@@ -49,7 +50,7 @@ export const IeltsResultStudentView: React.FC = () => {
       <div>
         <Header mobileMenuOpen={false} setMobileMenuOpen={() => {}} />
         <div className="flex justify-center items-center h-64">
-          <p className="text-lg">{t("ielts.result.loading")}</p>
+          <LoadingSpinner />
         </div>
       </div>
     );
@@ -59,18 +60,12 @@ export const IeltsResultStudentView: React.FC = () => {
     return (
       <div>
         <Header mobileMenuOpen={false} setMobileMenuOpen={() => {}} />
-        <div className="text-center p-8">
-          <h2 className="text-xl text-red-600">
-            {t("ielts.result.errorTitle")}
-          </h2>
-          <p>{error}</p>
-          <button
-            onClick={handleBack}
-            className="mt-4 px-4 py-2 bg-gray-500 text-white rounded"
-          >
-            {t("ielts.result.back")}
-          </button>
-        </div>
+        <ErrorDisplay
+          title={t("ielts.result.errorTitle")}
+          message={error}
+          onBack={handleBack}
+          backText={t("ielts.result.back")}
+        />
       </div>
     );
   }
